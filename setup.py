@@ -12,7 +12,13 @@ setup(
     author='Open Computing Facility',
     author_email='help@ocf.berkeley.edu',
     install_requires=[
-        'celery',
+        'celery[redis]',
         'ocflib',
+        'pyyaml',
     ],
+    entry_points={
+        'console_scripts': {
+            'create-worker = create.worker:main',
+        }
+    }
 )
