@@ -3,7 +3,7 @@ Description=Celery worker for OCF account creation
 
 [Service]
 User=create
-ExecStart=/usr/share/python/ocf-create/bin/python -c 'while True: pass'
+ExecStart=/usr/share/python/ocf-create/bin/create-worker
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 

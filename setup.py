@@ -14,7 +14,6 @@ setup(
     install_requires=[
         'celery[redis]',
         'ocflib',
-        'pyyaml',
     ],
     entry_points={
         'console_scripts': {

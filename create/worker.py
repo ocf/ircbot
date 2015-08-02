@@ -6,8 +6,7 @@ celery worker process.
 """
 import argparse
 import os
-
-import yaml
+from configparser import ConfigParser
 
 
 def main():
@@ -37,18 +36,18 @@ def main():
         '-c',
         '--config',
         type=str,
-        default='/etc/ocf-create/config.yaml',
+        default='/etc/ocf-create/ocf-create.conf',
         help='Config file to read from.',
     )
     args = parser.parse_args()
 
     broker, backend = args.broker, args.backend
     if not broker or not backend:
-        with open(args.config) as f:
-            config = yaml.safe_load(f)
+        config = ConfigParser()
+        config.read(args.config)
 
-            broker = broker or config.broker
-            backend = backend or config.backend
+        broker = broker or config.get('celery', 'broker')
+        backend = backend or config.get('celery', 'backend')
 
     os.environ['CREATE_CELERY_BROKER'] = broker
     os.environ['CREATE_CELERY_BACKEND'] = backend

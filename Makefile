@@ -1,9 +1,5 @@
-SRC = atool
-
-check: tox
-
-tox: autoversion
-	tox
+check:
+	pre-commit run --all-files
 
 builddeb: autoversion
 	dpkg-buildpackage -us -uc -b
@@ -13,10 +9,9 @@ autoversion:
 	rm -f debian/changelog
 	DEBFULLNAME="Open Computing Facility" DEBEMAIL="help@ocf.berkeley.edu" VISUAL=true \
 		dch -v `cat .version` -D stable --no-force-save-on-release \
-		--create --package "ocf-atool" "Package for Debian."
+		--create --package "ocf-create" "Package for Debian."
 
-test: autoversion
-	pre-commit run --all-files
+test: autoversion check
 
 clean:
-	rm -rf debian/ocf-create debian/*.debhelper create.egg-info debian/*.log debian/ocf-create.substvars .tox
+	rm -rf debian/ocf-create debian/*.debhelper create.egg-info debian/*.log debian/ocf-create.substvars
