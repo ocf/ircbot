@@ -4,3 +4,7 @@
 
 override_dh_virtualenv:
 	dh_virtualenv --python=/usr/bin/python3
+
+override_dh_fixperms:
+	dh_fixperms
+	chmod 600 debian/ocf-create/etc/ocf-create/ocf-create.conf
