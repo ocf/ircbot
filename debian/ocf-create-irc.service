@@ -1,0 +1,11 @@
+[Unit]
+Description=IRC bot for OCF account creation
+
+[Service]
+User=create
+Environment="PATH=/usr/share/python/ocf-create/bin/"
+ExecStart=/usr/share/python/ocf-create/bin/create-ircbot
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

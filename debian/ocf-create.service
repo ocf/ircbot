@@ -5,7 +5,7 @@ Description=Celery worker for OCF account creation
 User=create
 Environment="PATH=/usr/share/python/ocf-create/bin/"
 ExecStart=/usr/share/python/ocf-create/bin/create-worker
-Restart=on-failure
+Restart=always
 
 [Install]
 WantedBy=multi-user.target

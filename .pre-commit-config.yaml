@@ -21,11 +21,11 @@
     hooks:
     -   id: reorder-python-imports
         language_version: python3
--   repo: https://github.com/FalconSocial/pre-commit-mirrors-pep257.git
-    sha: 67c970e89857fdcebcd59ace94950a3331985a3b
-    hooks:
-    -   id: pep257
-        exclude: (^setup\.py|__init__\.py)$
+# -   repo: https://github.com/FalconSocial/pre-commit-mirrors-pep257.git
+#     sha: 67c970e89857fdcebcd59ace94950a3331985a3b
+#     hooks:
+#     -   id: pep257
+#         exclude: (^setup\.py|__init__\.py)$
 -   repo: https://github.com/Lucas-C/pre-commit-hooks.git
     sha: 43020827f28dfea6b2fd2bf4ddf27088fb06ad1b
     hooks:

@@ -14,10 +14,12 @@ setup(
     install_requires=[
         'celery[redis]',
         'ocflib',
+        'irc',
     ],
     entry_points={
         'console_scripts': {
             'create-worker = create.worker:main',
+            'create-ircbot = create.ircbot:main',
         }
     }
 )
