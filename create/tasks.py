@@ -8,14 +8,25 @@ appropriate environment variables, and exec-ing celery. It is the recommended
 way to use create.
 """
 import os
+from configparser import ConfigParser
 
 from celery import Celery
+from ocflib.account.submission import AccountCreationCredentials
 from ocflib.account.submission import get_tasks
 
+conf = ConfigParser()
+conf.read(os.environ['CREATE_CONFIG_FILE'])
 
 celery = Celery(
-    broker=os.environ['CREATE_CELERY_BROKER'],
-    backend=os.environ['CREATE_CELERY_BACKEND'],
+    broker=conf.get('celery', 'broker'),
+    backend=conf.get('celery', 'backend'),
 )
-for task in get_tasks(celery):
+
+creds = AccountCreationCredentials(**{
+    field:
+        conf.get(*field.split('_'))
+        for field in AccountCreationCredentials._fields
+})
+
+for task in get_tasks(celery, credentials=creds):
     locals()[task.__name__] = task
