@@ -13,13 +13,15 @@ setup(
     author_email='help@ocf.berkeley.edu',
     install_requires=[
         'celery[redis]',
-        'ocflib',
         'irc',
+        'ocflib',
+        'pyyaml',
     ],
     entry_points={
         'console_scripts': {
             'create-worker = create.worker:main',
             'create-ircbot = create.ircbot:main',
+            'approve = create.approve:main',
         }
     }
 )
