@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import sys
+import time
 from configparser import ConfigParser
 from textwrap import dedent
 
@@ -17,7 +19,6 @@ TEMPLATE = dedent(
     user_name:
     group_name:
     callink_oid:
-    account_name:
     signatory:
     email:
 
@@ -33,6 +34,17 @@ TEMPLATE = dedent(
 )
 
 
+def wait_for_task(task):
+    print('Waiting...', end='')
+    while not task.ready():
+        time.sleep(0.25)
+        print('.', end='')
+        sys.stdout.flush()
+    print()
+    if isinstance(task.result, Exception):
+        raise task.result
+
+
 def main():
     content = TEMPLATE
 
@@ -43,6 +55,15 @@ def main():
         except yaml.YAMLError as ex:
             print('Error parsing your YAML:')
             print(ex)
+            input('Press enter to continue...')
+            continue
+
+        missing_key = False
+        for key in ['user_name', 'group_name', 'callink_oid', 'email']:
+            if account.get(key) is None:
+                print('Missing value for key: ' + key)
+                missing_key = True
+        if missing_key:
             input('Press enter to continue...')
             continue
 
@@ -87,7 +108,9 @@ def main():
             backend=conf.get('celery', 'backend'),
         )
         tasks = get_tasks(celery)
-        tasks.create_account.delay(request)
+        task = tasks.create_account.delay(request)
+
+        wait_for_task(task)
 
 
 if __name__ == '__main__':
