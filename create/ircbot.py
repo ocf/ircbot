@@ -88,6 +88,22 @@ def celery_listener(uri):
                 ),
             )
 
+        def on_account_approved(event):
+            bot_announce(
+                IRC_CHANNELS_ANNOUNCE,
+                '`{user}` was approved, now pending creation.'.format(
+                    user=event['user_name'],
+                ),
+            )
+
+        def on_account_rejected(event):
+            bot_announce(
+                IRC_CHANNELS_ANNOUNCE,
+                '`{user}` was rejected.'.format(
+                    user=event['user_name'],
+                ),
+            )
+
         while True:
             with connection as conn:
                 recv = EventReceiver(
@@ -95,6 +111,8 @@ def celery_listener(uri):
                     handlers={
                         'ocflib.account_created': on_account_created,
                         'ocflib.account_submitted': on_account_submitted,
+                        'ocflib.account_approved': on_account_approved,
+                        'ocflib.account_rejected': on_account_rejected,
                     },
                 )
                 recv.capture(limit=None, timeout=None)
