@@ -40,8 +40,20 @@ TEMPLATE = dedent(
 
 def wait_for_task(task):
     print('Waiting...', end='')
+    last_status_len = 0
     while not task.ready():
         time.sleep(0.25)
+
+        meta = task.info
+        if isinstance(meta, dict) and 'status' in meta:
+            status = meta['status']
+            if len(status) > last_status_len:
+                for line in status[last_status_len:]:
+                    print()
+                    print(line, end='')
+
+                last_status_len = len(status)
+
         print('.', end='')
         sys.stdout.flush()
     print()
