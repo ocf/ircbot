@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 """IRC bot for printing info and handling commmands for account creation."""
+import argparse
+import os
+import threading
+
 import irc.bot
+from celery.events import EventReceiver
+from kombu import Connection
 
 
 IRC_HOST = 'irc'
@@ -9,6 +15,8 @@ IRC_NICKNAME = 'create'
 
 IRC_CHANNELS = ('#rebuild', '#atool')
 IRC_CHANNELS_ANNOUNCE = ('#atool',)
+
+bot = None  # sorry
 
 
 class CreateBot(irc.bot.SingleServerIRCBot):
@@ -47,10 +55,74 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             print(is_oper)
 
 
-def main():
-    bot = CreateBot()
-    bot.start()
+def bot_announce(targets, message):
+    global bot
+    if bot:
+        for target in targets:
+            bot.connection.privmsg(target, message)
 
+
+def celery_listener(uri):
+    """Listen for events from Celery, relay to IRC."""
+    connection = Connection(uri)
+
+    while True:
+        def on_account_created(event):
+            request = event['request']
+            bot_announce(
+                IRC_CHANNELS_ANNOUNCE,
+                '`{user}` created ({real_name})'.format(
+                    user=request['user_name'],
+                    real_name=request['real_name'],
+                ),
+            )
+
+        def on_account_submitted(event):
+            request = event['request']
+            bot_announce(
+                IRC_CHANNELS,
+                '`{user}` ({real_name}) needs approval: {reasons}'.format(
+                    user=request['user_name'],
+                    real_name=request['real_name'],
+                    reasons=', '.join(request['reasons']),
+                ),
+            )
+
+        while True:
+            with connection as conn:
+                recv = EventReceiver(
+                    conn,
+                    handlers={
+                        'ocflib.account_created': on_account_created,
+                        'ocflib.account_submitted': on_account_submitted,
+                    },
+                )
+                recv.capture(limit=None, timeout=None)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='OCF account creation IRC bot',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        '-c',
+        '--config',
+        default='/etc/ocf-create/ocf-create.conf',
+        help='Config file to read from.',
+    )
+    args = parser.parse_args()
+    os.environ['CREATE_CONFIG_FILE'] = args.config
+
+    # create a thread to run the irc bot
+    global bot
+    bot = CreateBot()
+    bot_thread = threading.Thread(target=bot.start)
+    bot_thread.start()
+
+    # run create listener in main thread
+    from create.tasks import conf  # requires CREATE_CONFIG_FILE, so inline
+    celery_listener(conf.get('celery', 'broker'))
 
 if __name__ == '__main__':
     main()

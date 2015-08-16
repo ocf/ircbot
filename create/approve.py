@@ -135,6 +135,7 @@ def main():
         task = tasks.create_account.delay(request)
 
         wait_for_task(task)
+        new_request = None
         response = task.result
 
         if response.status == NewAccountResponse.REJECTED:
