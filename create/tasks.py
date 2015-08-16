@@ -11,6 +11,7 @@ import os
 from configparser import ConfigParser
 
 from celery import Celery
+from celery.signals import setup_logging
 from ocflib.account.submission import AccountCreationCredentials
 from ocflib.account.submission import get_tasks
 
@@ -27,6 +28,14 @@ creds = AccountCreationCredentials(**{
         conf.get(*field.split('_'))
         for field in AccountCreationCredentials._fields
 })
+
+# if in debug mode, disable celery logging so that stdin / stdout / stderr
+# don't get tampered with (otherwise, interactive debuggers won't work)
+if os.environ.get('CREATE_DEBUG', ''):
+    def no_logging(*args, **kwargs):
+        pass
+    setup_logging.connect(no_logging)
+
 
 for task in get_tasks(celery, credentials=creds):
     locals()[task.__name__] = task

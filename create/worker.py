@@ -17,18 +17,28 @@ def main():
     parser.add_argument(
         '-l',
         '--log-level',
-        type=str,
         default='info',
         help='Backend URI to use for Celery.',
     )
     parser.add_argument(
         '-c',
         '--config',
-        type=str,
         default='/etc/ocf-create/ocf-create.conf',
         help='Config file to read from.',
     )
+    parser.add_argument(
+        '-d',
+        '--debug',
+        default=False,
+        action='store_true',
+        help='Whether to run in debug mode (allows interactive debuggers).',
+    )
     args = parser.parse_args()
+    extra_args = ()
+
+    if args.debug:
+        extra_args += ('-P', 'solo')
+        os.environ['CREATE_DEBUG'] = '1'
 
     os.environ['CREATE_CONFIG_FILE'] = args.config
     os.execvp(
@@ -37,8 +47,10 @@ def main():
             'celery',
             'worker',
             '-A', 'create.tasks',
+            '--without-gossip',
+            '--without-mingle',
             '-l', args.log_level,
-        ),
+        ) + extra_args,
     )
 
 
