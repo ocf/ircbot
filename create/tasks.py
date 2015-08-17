@@ -37,5 +37,6 @@ if os.environ.get('CREATE_DEBUG', ''):
     setup_logging.connect(no_logging)
 
 
-for task in get_tasks(celery, credentials=creds):
+tasks = get_tasks(celery, credentials=creds)
+for task in tasks:
     locals()[task.__name__] = task

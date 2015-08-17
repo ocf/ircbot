@@ -7,8 +7,8 @@ from textwrap import dedent
 import yaml
 from celery import Celery
 from ocflib.account.creation import encrypt_password
+from ocflib.account.creation import NewAccountRequest
 from ocflib.account.submission import get_tasks
-from ocflib.account.submission import NewAccountRequest
 from ocflib.account.submission import NewAccountResponse
 from ocflib.account.validators import validate_password
 from ocflib.misc.shell import bold
@@ -179,7 +179,7 @@ def main():
             # TODO: report via ocflib
             print(bold(red('Error: Entered unexpected state.')))
             print(red('The request we submitted was:'))
-            print(red(response))
+            print(red(request))
             print(red('The new request we submitted (if any) was:'))
             print(red(new_request))
             print(red('The response we received was:'))

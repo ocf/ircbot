@@ -6,6 +6,7 @@ import threading
 
 import irc.bot
 from celery.events import EventReceiver
+from celery.exceptions import TimeoutError
 from kombu import Connection
 
 
@@ -13,7 +14,7 @@ IRC_HOST = 'irc'
 IRC_PORT = 6667
 IRC_NICKNAME = 'create'
 
-IRC_CHANNELS = ('#rebuild', '#atool')
+IRC_CHANNELS = ('#rebuild', '#atool', '#rebuild2')
 IRC_CHANNELS_ANNOUNCE = ('#atool',)
 
 bot = None  # sorry
@@ -21,7 +22,8 @@ bot = None  # sorry
 
 class CreateBot(irc.bot.SingleServerIRCBot):
 
-    def __init__(self):
+    def __init__(self, tasks):
+        self.tasks = tasks
         irc.bot.SingleServerIRCBot.__init__(
             self,
             [(IRC_HOST, IRC_PORT)],
@@ -46,13 +48,35 @@ class CreateBot(irc.bot.SingleServerIRCBot):
 
         assert len(event.arguments) == 1
         msg = event.arguments[0]
-        if (
-            msg.startswith(IRC_NICKNAME + ' ') or
-            msg.startswith(IRC_NICKNAME + ':')
-        ):
-            command = msg[len(IRC_NICKNAME) + 1:].strip()
-            conn.privmsg(event.target, command)
-            print(is_oper)
+        if msg.startswith(IRC_NICKNAME + ' ') or msg.startswith(IRC_NICKNAME + ':'):
+            command, *args = msg[len(IRC_NICKNAME) + 1:].strip().split(' ')
+
+            def respond(msg):
+                conn.privmsg(event.target, '{}: {}'.format(user, msg))
+
+            if is_oper:
+                if command == 'list':
+                    task = self.tasks.get_pending_requests.delay()
+                    try:
+                        task.wait(timeout=5)
+                        if task.result:
+                            for request in task.result:
+                                respond(request)
+                        else:
+                            respond('no pending requests')
+                    except TimeoutError:
+                        respond('timed out loading list of requests, sorry!')
+                elif command == 'approve':
+                    user_name = args[0]
+                    self.tasks.approve_request.delay(user_name)
+                    respond('approved {}, the account is being created'.format(user_name))
+                elif command == 'reject':
+                    user_name = args[0]
+                    self.tasks.reject_request.delay(user_name)
+                    respond('rejected {}, better luck next time'.format(user_name))
+
+            if command.startswith('thank'):
+                respond('you\'re welcome')
 
 
 def bot_announce(targets, message):
@@ -89,18 +113,20 @@ def celery_listener(uri):
             )
 
         def on_account_approved(event):
+            request = event['request']
             bot_announce(
                 IRC_CHANNELS_ANNOUNCE,
                 '`{user}` was approved, now pending creation.'.format(
-                    user=event['user_name'],
+                    user=request['user_name'],
                 ),
             )
 
         def on_account_rejected(event):
+            request = event['request']
             bot_announce(
                 IRC_CHANNELS_ANNOUNCE,
                 '`{user}` was rejected.'.format(
-                    user=event['user_name'],
+                    user=request['user_name'],
                 ),
             )
 
@@ -132,14 +158,17 @@ def main():
     args = parser.parse_args()
     os.environ['CREATE_CONFIG_FILE'] = args.config
 
+    # these imports require CREATE_CONFIG_FILE set, so we do them inline
+    from create.tasks import conf
+    from create.tasks import tasks
+
     # create a thread to run the irc bot
     global bot
-    bot = CreateBot()
+    bot = CreateBot(tasks)
     bot_thread = threading.Thread(target=bot.start)
     bot_thread.start()
 
     # run create listener in main thread
-    from create.tasks import conf  # requires CREATE_CONFIG_FILE, so inline
     celery_listener(conf.get('celery', 'broker'))
 
 if __name__ == '__main__':
