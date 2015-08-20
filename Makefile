@@ -15,3 +15,11 @@ test: autoversion check
 
 clean:
 	rm -rf debian/ocf-create debian/*.debhelper create.egg-info debian/*.log debian/ocf-create.substvars
+
+update-requirements:
+	$(eval TMP := $(shell mktemp -d))
+	virtualenv -p python3 $(TMP)
+	. $(TMP)/bin/activate && \
+		pip install --upgrade pip && \
+		pip install . && \
+		pip freeze | grep -v '^create==' | sed 's/^ocflib==.*/ocflib/' > requirements.txt
