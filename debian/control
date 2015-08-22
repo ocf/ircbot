@@ -2,7 +2,8 @@ Source: ocf-create
 Section: python
 Priority: extra
 Maintainer: Open Computing Facility <help@ocf.berkeley.edu>
-Build-Depends: debhelper (>= 9), python3, dh-virtualenv, dh-systemd (>= 1.5)
+Build-Depends: debhelper (>= 9), python3, dh-virtualenv, dh-systemd (>= 1.5),
+ libcrack2-dev
 Standards-Version: 3.9.6
 
 Package: ocf-create
