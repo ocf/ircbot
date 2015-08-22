@@ -38,8 +38,17 @@ TEMPLATE = dedent(
 )
 
 
-def wait_for_task(task):
+def wait_for_task(celery, task):
+    """Wait for a validate_then_create_account task."""
     print('Waiting...', end='')
+    task.wait()  # this should be almost instant
+
+    if isinstance(task.result, NewAccountResponse):
+        print()
+        return task.result
+
+    task = celery.AsyncResult(task.result)
+
     last_status_len = 0
     while not task.ready():
         time.sleep(0.25)
@@ -59,6 +68,8 @@ def wait_for_task(task):
     print()
     if isinstance(task.result, Exception):
         raise task.result
+    else:
+        return task.result
 
 
 def main():
@@ -132,11 +143,10 @@ def main():
             backend=conf.get('celery', 'backend'),
         )
         tasks = get_tasks(celery)
-        task = tasks.create_account.delay(request)
+        task = tasks.validate_then_create_account.delay(request)
 
-        wait_for_task(task)
+        response = wait_for_task(celery, task)
         new_request = None
-        response = task.result
 
         if response.status == NewAccountResponse.REJECTED:
             print(bold(red(
@@ -162,9 +172,8 @@ def main():
                 new_request = request._replace(
                     handle_warnings=NewAccountRequest.WARNINGS_CREATE,
                 )
-                task = tasks.create_account.delay(new_request)
-                wait_for_task(task)
-                response = task.result
+                task = tasks.validate_then_create_account.delay(new_request)
+                response = wait_for_task(celery, task)
             else:
                 input('Starting over, press enter to continue...')
                 continue
