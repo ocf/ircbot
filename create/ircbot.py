@@ -14,7 +14,7 @@ IRC_HOST = 'irc'
 IRC_PORT = 6667
 IRC_NICKNAME = 'create'
 
-IRC_CHANNELS = ('#rebuild', '#atool', '#rebuild2')
+IRC_CHANNELS = ('#rebuild', '#atool')
 IRC_CHANNELS_ANNOUNCE = ('#atool',)
 
 bot = None  # sorry
