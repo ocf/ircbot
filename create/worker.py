@@ -18,7 +18,7 @@ def main():
         '-l',
         '--log-level',
         default='info',
-        help='Backend URI to use for Celery.',
+        help='Logging level',
     )
     parser.add_argument(
         '-c',
