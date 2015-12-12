@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import time
+from argparse import ArgumentParser
 from configparser import ConfigParser
 from textwrap import dedent
 
@@ -21,10 +22,10 @@ from ocflib.ucb.groups import group_by_oid
 
 TEMPLATE = dedent(
     """\
-    user_name: {empty}
+    user_name:
     group_name: {group_name}
     callink_oid: {callink_oid}
-    signatory: {empty}
+    signatory:
     email: {email}
 
     # Please ensure that:
@@ -78,28 +79,28 @@ def main():
     def_callink_oid = ''
     def_email = ''
 
-    if len(sys.argv) == 2:
-        try:
-            oid = int(sys.argv[1])
-            group = group_by_oid(oid)
-            if not group:
-                print(red('No group with OID {}').format(oid))
-                return
-            if group['accounts']:
-                print(yellow('Warning: there is an existing group account '
-                             'with OID {}').format(oid))
-            def_group_name = group['name']
-            def_callink_oid = str(oid)
-            def_email = group['email']
-        except ValueError:
-            print(red('Invalid OID: {}').format(sys.argv[1]))
+    parser = ArgumentParser(description='Create new OCF group accounts.')
+    parser.add_argument('oid', type=int, nargs='?', help='CalLink OID for the group.')
+    args = parser.parse_args()
+
+    if args.oid:
+        group = group_by_oid(args.oid)
+        if not group:
+            print(red('No group with OID {}').format(args.oid))
             return
-    elif len(sys.argv) > 2:
-        print('Usage: approve [OID]')
-        return
+        if group['accounts']:
+            print(yellow(
+                'Warning: there is an existing group account with OID {}: {}'.format(
+                    args.oid,
+                    ', '.join(group['accounts']),
+                ),
+            ))
+            input('Press any key to continue...')
+        def_group_name = group['name']
+        def_callink_oid = args.oid
+        def_email = group['email']
 
     content = TEMPLATE.format(
-        empty='',
         group_name=def_group_name,
         callink_oid=def_callink_oid,
         email=def_email
