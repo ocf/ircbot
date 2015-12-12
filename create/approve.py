@@ -17,14 +17,15 @@ from ocflib.misc.shell import green
 from ocflib.misc.shell import prompt_for_new_password
 from ocflib.misc.shell import red
 from ocflib.misc.shell import yellow
+from ocflib.ucb.groups import group_by_oid
 
 TEMPLATE = dedent(
     """\
-    user_name:
-    group_name:
-    callink_oid:
-    signatory:
-    email:
+    user_name: {empty}
+    group_name: {group_name}
+    callink_oid: {callink_oid}
+    signatory: {empty}
+    email: {email}
 
     # Please ensure that:
     #  * Person requesting account is signatory of group
@@ -73,7 +74,36 @@ def wait_for_task(celery, task):
 
 
 def main():
-    content = TEMPLATE
+    def_group_name = ''
+    def_callink_oid = ''
+    def_email = ''
+
+    if len(sys.argv) == 2:
+        try:
+            oid = int(sys.argv[1])
+            group = group_by_oid(oid)
+            if not group:
+                print(red('No group with OID {}').format(oid))
+                return
+            if group['accounts']:
+                print(yellow('Warning: there is an existing group account '
+                             'with OID {}').format(oid))
+            def_group_name = group['name']
+            def_callink_oid = str(oid)
+            def_email = group['email']
+        except ValueError:
+            print(red('Invalid OID: {}').format(sys.argv[1]))
+            return
+    elif len(sys.argv) > 2:
+        print('Usage: approve [OID]')
+        return
+
+    content = TEMPLATE.format(
+        empty='',
+        group_name=def_group_name,
+        callink_oid=def_callink_oid,
+        email=def_email
+    )
 
     while True:
         content = edit_file(content)
