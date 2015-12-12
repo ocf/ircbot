@@ -9,11 +9,15 @@ way to use create.
 """
 import os
 from configparser import ConfigParser
+from textwrap import dedent
+from traceback import format_exc
 
 from celery import Celery
 from celery.signals import setup_logging
+from ocflib.account.creation import NewAccountRequest
 from ocflib.account.submission import AccountCreationCredentials
 from ocflib.account.submission import get_tasks
+from ocflib.misc.mail import send_problem_report
 
 conf = ConfigParser()
 conf.read(os.environ['CREATE_CONFIG_FILE'])
@@ -37,6 +41,62 @@ if os.environ.get('CREATE_DEBUG', ''):
     setup_logging.connect(no_logging)
 
 
+def censor(arg):
+    """Censor passwords from objects to prepare for error reporting."""
+    if isinstance(arg, NewAccountRequest):
+        return arg._replace(
+            encrypted_password='(removed)',
+        )
+    else:
+        return arg
+
+
+def failure_handler(exc, task_id, args, kwargs, einfo):
+    """Handle errors in Celery tasks by reporting via ocflib.
+
+    We want to report actual errors, not just validation errors. Unfortunately
+    it's hard to pick them out. For now, we just ignore ValueErrors and report
+    everything else.
+
+    It's likely that we'll need to revisit that some time in the future.
+    """
+    if isinstance(exc, ValueError):
+        return
+
+    args = list(map(censor, args))
+    kwargs = {k: censor(v) for k, v in kwargs.items()}
+
+    try:
+        send_problem_report(dedent(
+            """\
+            An exception occured in create:
+
+            {traceback}
+
+            Task Details:
+              * task_id: {task_id}
+              * args: {args}
+              * kwargs: {kwargs}"""
+        ).format(
+            traceback=einfo,
+            task_id=task_id,
+            args=args,
+            kwargs=kwargs,
+            einfo=einfo,
+        ))
+    except Exception as ex:
+        print(ex)  # just in case it errors again here
+        send_problem_report(dedent(
+            """\
+            An exception occured in create, but we errored trying to report it:
+
+            {traceback}
+            """
+        ).format(traceback=format_exc()))
+        raise
+
+
 tasks = get_tasks(celery, credentials=creds)
 for task in tasks:
     locals()[task.__name__] = task
+    task.on_failure = failure_handler
