@@ -21,11 +21,12 @@ from ocflib.misc.shell import yellow
 from ocflib.ucb.groups import group_by_oid
 
 TEMPLATE = dedent(
+    # "\n\" is to hack around linters complaining about trailing whitespace
     """\
-    user_name:
+    user_name: \n\
     group_name: {group_name}
     callink_oid: {callink_oid}
-    signatory:
+    signatory: \n\
     email: {email}
 
     # Please ensure that:
