@@ -4,6 +4,6 @@ if ! getent passwd create > /dev/null; then
 	adduser --system create --home /etc/ocf-create
 fi
 
-chown create:approve /etc/ocf-create/ocf-create.conf
+chown create:ocfstaff /etc/ocf-create/ocf-create.conf
 
 # vim: ft=sh
