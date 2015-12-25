@@ -14,7 +14,6 @@ from traceback import format_exc
 
 from celery import Celery
 from celery.signals import setup_logging
-from ocflib.account.creation import NewAccountRequest
 from ocflib.account.submission import AccountCreationCredentials
 from ocflib.account.submission import get_tasks
 from ocflib.misc.mail import send_problem_report
@@ -41,16 +40,6 @@ if os.environ.get('CREATE_DEBUG', ''):
     setup_logging.connect(no_logging)
 
 
-def censor(arg):
-    """Censor passwords from objects to prepare for error reporting."""
-    if isinstance(arg, NewAccountRequest):
-        return arg._replace(
-            encrypted_password='(removed)',
-        )
-    else:
-        return arg
-
-
 def failure_handler(exc, task_id, args, kwargs, einfo):
     """Handle errors in Celery tasks by reporting via ocflib.
 
@@ -63,9 +52,6 @@ def failure_handler(exc, task_id, args, kwargs, einfo):
     if isinstance(exc, ValueError):
         return
 
-    args = list(map(censor, args))
-    kwargs = {k: censor(v) for k, v in kwargs.items()}
-
     try:
         send_problem_report(dedent(
             """\
@@ -75,8 +61,8 @@ def failure_handler(exc, task_id, args, kwargs, einfo):
 
             Task Details:
               * task_id: {task_id}
-              * args: {args}
-              * kwargs: {kwargs}"""
+
+            Try `journalctl -u ocf-create` for more details."""
         ).format(
             traceback=einfo,
             task_id=task_id,
