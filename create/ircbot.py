@@ -90,58 +90,57 @@ def celery_listener(uri):
     """Listen for events from Celery, relay to IRC."""
     connection = Connection(uri)
 
+    def on_account_created(event):
+        request = event['request']
+        bot_announce(
+            IRC_CHANNELS_ANNOUNCE,
+            '{user} created ({real_name})'.format(
+                user=request['user_name'],
+                real_name=request['real_name'],
+            ),
+        )
+
+    def on_account_submitted(event):
+        request = event['request']
+        bot_announce(
+            IRC_CHANNELS,
+            '{user} ({real_name}) needs approval: {reasons}'.format(
+                user=request['user_name'],
+                real_name=request['real_name'],
+                reasons=', '.join(request['reasons']),
+            ),
+        )
+
+    def on_account_approved(event):
+        request = event['request']
+        bot_announce(
+            IRC_CHANNELS_ANNOUNCE,
+            '{user} was approved, now pending creation.'.format(
+                user=request['user_name'],
+            ),
+        )
+
+    def on_account_rejected(event):
+        request = event['request']
+        bot_announce(
+            IRC_CHANNELS_ANNOUNCE,
+            '{user} was rejected.'.format(
+                user=request['user_name'],
+            ),
+        )
+
     while True:
-        def on_account_created(event):
-            request = event['request']
-            bot_announce(
-                IRC_CHANNELS_ANNOUNCE,
-                '`{user}` created ({real_name})'.format(
-                    user=request['user_name'],
-                    real_name=request['real_name'],
-                ),
+        with connection as conn:
+            recv = EventReceiver(
+                conn,
+                handlers={
+                    'ocflib.account_created': on_account_created,
+                    'ocflib.account_submitted': on_account_submitted,
+                    'ocflib.account_approved': on_account_approved,
+                    'ocflib.account_rejected': on_account_rejected,
+                },
             )
-
-        def on_account_submitted(event):
-            request = event['request']
-            bot_announce(
-                IRC_CHANNELS,
-                '`{user}` ({real_name}) needs approval: {reasons}'.format(
-                    user=request['user_name'],
-                    real_name=request['real_name'],
-                    reasons=', '.join(request['reasons']),
-                ),
-            )
-
-        def on_account_approved(event):
-            request = event['request']
-            bot_announce(
-                IRC_CHANNELS_ANNOUNCE,
-                '`{user}` was approved, now pending creation.'.format(
-                    user=request['user_name'],
-                ),
-            )
-
-        def on_account_rejected(event):
-            request = event['request']
-            bot_announce(
-                IRC_CHANNELS_ANNOUNCE,
-                '`{user}` was rejected.'.format(
-                    user=request['user_name'],
-                ),
-            )
-
-        while True:
-            with connection as conn:
-                recv = EventReceiver(
-                    conn,
-                    handlers={
-                        'ocflib.account_created': on_account_created,
-                        'ocflib.account_submitted': on_account_submitted,
-                        'ocflib.account_approved': on_account_approved,
-                        'ocflib.account_rejected': on_account_rejected,
-                    },
-                )
-                recv.capture(limit=None, timeout=None)
+            recv.capture(limit=None, timeout=None)
 
 
 def main():
