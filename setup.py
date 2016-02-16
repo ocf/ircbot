@@ -24,6 +24,9 @@ setup(
             'create-worker = create.worker:main',
             'create-ircbot = create.ircbot:main',
             'approve = create.approve:main',
-        }
-    }
+        },
+    },
+    classifiers=[
+        'Programming Language :: Python :: 3',
+    ],
 )
