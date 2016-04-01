@@ -2,12 +2,15 @@
 """IRC bot for printing info and handling commmands for account creation."""
 import argparse
 import os
+import re
 import threading
 
 import irc.bot
 from celery.events import EventReceiver
 from celery.exceptions import TimeoutError
 from kombu import Connection
+from ocflib.infra.rt import rt_connection
+from ocflib.infra.rt import RtTicket
 
 
 IRC_HOST = 'irc'
@@ -17,7 +20,9 @@ IRC_NICKNAME = 'create'
 IRC_CHANNELS = ('#rebuild', '#atool')
 IRC_CHANNELS_ANNOUNCE = ('#atool',)
 
-bot = None  # sorry
+# TODO: any way to factor out mutable globals?
+bot = None
+rt_password = None
 
 
 class CreateBot(irc.bot.SingleServerIRCBot):
@@ -48,11 +53,21 @@ class CreateBot(irc.bot.SingleServerIRCBot):
 
         assert len(event.arguments) == 1
         msg = event.arguments[0]
-        if msg.startswith(IRC_NICKNAME + ' ') or msg.startswith(IRC_NICKNAME + ':'):
-            command, *args = msg[len(IRC_NICKNAME) + 1:].strip().split(' ')
 
-            def respond(msg):
-                conn.privmsg(event.target, '{}: {}'.format(user, msg))
+        def respond(msg):
+            conn.privmsg(event.target, '{}: {}'.format(user, msg))
+
+        tickets = re.findall(r'rt#([0-9]+)', msg)
+        if tickets:
+            rt = rt_connection(user='create', password=rt_password)
+            for ticket in tickets:
+                try:
+                    t = RtTicket.from_number(rt, int(ticket))
+                    respond(str(t))
+                except AssertionError:
+                    pass
+        elif msg.startswith(IRC_NICKNAME + ' ') or msg.startswith(IRC_NICKNAME + ':'):
+            command, *args = msg[len(IRC_NICKNAME) + 1:].strip().split(' ')
 
             if is_oper:
                 if command == 'list':
@@ -160,6 +175,10 @@ def main():
     # these imports require CREATE_CONFIG_FILE set, so we do them inline
     from create.tasks import conf
     from create.tasks import tasks
+
+    # rt password
+    global rt_password
+    rt_password = conf.get('rt', 'password')
 
     # create a thread to run the irc bot
     global bot
