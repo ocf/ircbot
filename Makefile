@@ -14,7 +14,7 @@ autoversion:
 		dch -v `sed s/-/+/g .version` -D stable --no-force-save-on-release \
 		--create --package "ocf-create" "Package for Debian."
 
-venv: vendor/venv-update requirements.txt setup.py
+venv: autoversion vendor/venv-update requirements.txt setup.py
 	vendor/venv-update venv= -ppython3.4 venv install= -r requirements.txt -e .
 
 
