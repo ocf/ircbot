@@ -3,9 +3,11 @@
 import argparse
 import os
 import re
+import ssl
 import threading
 
 import irc.bot
+import irc.connection
 from celery.events import EventReceiver
 from celery.exceptions import TimeoutError
 from kombu import Connection
@@ -14,7 +16,7 @@ from ocflib.infra.rt import RtTicket
 
 
 IRC_HOST = 'irc'
-IRC_PORT = 6667
+IRC_PORT = 6697
 IRC_NICKNAME = 'create'
 
 IRC_CHANNELS = ('#rebuild', '#atool')
@@ -29,11 +31,13 @@ class CreateBot(irc.bot.SingleServerIRCBot):
 
     def __init__(self, tasks):
         self.tasks = tasks
+        factory = irc.connection.Factory(wrapper=ssl.wrap_socket)
         irc.bot.SingleServerIRCBot.__init__(
             self,
             [(IRC_HOST, IRC_PORT)],
             IRC_NICKNAME,
             IRC_NICKNAME,
+            connect_factory=factory
         )
 
     def on_welcome(self, conn, event):
