@@ -22,15 +22,12 @@ IRC_NICKNAME = 'create'
 IRC_CHANNELS = ('#rebuild', '#atool')
 IRC_CHANNELS_ANNOUNCE = ('#atool',)
 
-# TODO: any way to factor out mutable globals?
-bot = None
-rt_password = None
-
 
 class CreateBot(irc.bot.SingleServerIRCBot):
 
-    def __init__(self, tasks):
+    def __init__(self, tasks, rt_password):
         self.tasks = tasks
+        self.rt_password = rt_password
         factory = irc.connection.Factory(wrapper=ssl.wrap_socket)
         irc.bot.SingleServerIRCBot.__init__(
             self,
@@ -63,7 +60,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
 
         tickets = re.findall(r'rt#([0-9]+)', msg)
         if tickets:
-            rt = rt_connection(user='create', password=rt_password)
+            rt = rt_connection(user='create', password=self.rt_password)
             for ticket in tickets:
                 try:
                     t = RtTicket.from_number(rt, int(ticket))
@@ -98,14 +95,13 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 respond('you\'re welcome')
 
 
-def bot_announce(targets, message):
-    global bot
+def bot_announce(bot, targets, message):
     if bot:
         for target in targets:
             bot.connection.privmsg(target, message)
 
 
-def celery_listener(uri):
+def celery_listener(bot, uri):
     """Listen for events from Celery, relay to IRC."""
     connection = Connection(uri)
 
@@ -181,17 +177,15 @@ def main():
     from create.tasks import tasks
 
     # rt password
-    global rt_password
     rt_password = conf.get('rt', 'password')
 
     # create a thread to run the irc bot
-    global bot
-    bot = CreateBot(tasks)
+    bot = CreateBot(tasks, rt_password)
     bot_thread = threading.Thread(target=bot.start)
     bot_thread.start()
 
     # run create listener in main thread
-    celery_listener(conf.get('celery', 'broker'))
+    celery_listener(bot, conf.get('celery', 'broker'))
 
 if __name__ == '__main__':
     main()
