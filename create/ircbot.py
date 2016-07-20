@@ -108,6 +108,7 @@ def celery_listener(bot, uri):
     def on_account_created(event):
         request = event['request']
         bot_announce(
+            bot,
             IRC_CHANNELS_ANNOUNCE,
             '{user} created ({real_name})'.format(
                 user=request['user_name'],
@@ -118,6 +119,7 @@ def celery_listener(bot, uri):
     def on_account_submitted(event):
         request = event['request']
         bot_announce(
+            bot,
             IRC_CHANNELS,
             '{user} ({real_name}) needs approval: {reasons}'.format(
                 user=request['user_name'],
@@ -129,6 +131,7 @@ def celery_listener(bot, uri):
     def on_account_approved(event):
         request = event['request']
         bot_announce(
+            bot,
             IRC_CHANNELS_ANNOUNCE,
             '{user} was approved, now pending creation.'.format(
                 user=request['user_name'],
@@ -138,6 +141,7 @@ def celery_listener(bot, uri):
     def on_account_rejected(event):
         request = event['request']
         bot_announce(
+            bot,
             IRC_CHANNELS_ANNOUNCE,
             '{user} was rejected.'.format(
                 user=request['user_name'],
