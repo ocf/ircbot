@@ -35,7 +35,7 @@ creds = AccountCreationCredentials(**{
 # if in debug mode, disable celery logging so that stdin / stdout / stderr
 # don't get tampered with (otherwise, interactive debuggers won't work)
 if os.environ.get('CREATE_DEBUG', ''):
-    # pylint: disable=unused-variable
+    # pylint: disable=unused-argument
     def no_logging(*args, **kwargs):
         pass
     setup_logging.connect(no_logging)
