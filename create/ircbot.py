@@ -8,8 +8,8 @@ import threading
 
 import irc.bot
 import irc.connection
+from celery import exceptions
 from celery.events import EventReceiver
-from celery.exceptions import TimeoutError
 from kombu import Connection
 from ocflib.infra.rt import rt_connection
 from ocflib.infra.rt import RtTicket
@@ -37,7 +37,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             connect_factory=factory
         )
 
-    def on_welcome(self, conn, event):
+    def on_welcome(self, conn, _):
         for channel in IRC_CHANNELS:
             conn.join(channel)
 
@@ -47,7 +47,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         if event.target in self.channels:
             # event.source is like 'ckuehl!~ckuehl@nitrogen.techxonline.net'
             assert event.source.count('!') == 1
-            user, __ = event.source.split('!')
+            user, _ = event.source.split('!')
 
             if user in self.channels[event.target].opers():
                 is_oper = True
@@ -69,30 +69,32 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                     pass
         elif msg.startswith(IRC_NICKNAME + ' ') or msg.startswith(IRC_NICKNAME + ':'):
             command, *args = msg[len(IRC_NICKNAME) + 1:].strip().split(' ')
+            self.handle_command(is_oper, command, args, respond)
 
-            if is_oper:
-                if command == 'list':
-                    task = self.tasks.get_pending_requests.delay()
-                    try:
-                        task.wait(timeout=5)
-                        if task.result:
-                            for request in task.result:
-                                respond(request)
-                        else:
-                            respond('no pending requests')
-                    except TimeoutError:
-                        respond('timed out loading list of requests, sorry!')
-                elif command == 'approve':
-                    user_name = args[0]
-                    self.tasks.approve_request.delay(user_name)
-                    respond('approved {}, the account is being created'.format(user_name))
-                elif command == 'reject':
-                    user_name = args[0]
-                    self.tasks.reject_request.delay(user_name)
-                    respond('rejected {}, better luck next time'.format(user_name))
+    def handle_command(self, is_oper, command, args, respond):
+        if is_oper:
+            if command == 'list':
+                task = self.tasks.get_pending_requests.delay()
+                try:
+                    task.wait(timeout=5)
+                    if task.result:
+                        for request in task.result:
+                            respond(request)
+                    else:
+                        respond('no pending requests')
+                except exceptions.TimeoutError:
+                    respond('timed out loading list of requests, sorry!')
+            elif command == 'approve':
+                user_name = args[0]
+                self.tasks.approve_request.delay(user_name)
+                respond('approved {}, the account is being created'.format(user_name))
+            elif command == 'reject':
+                user_name = args[0]
+                self.tasks.reject_request.delay(user_name)
+                respond('rejected {}, better luck next time'.format(user_name))
 
-            if command.startswith('thank'):
-                respond('you\'re welcome')
+        if command.startswith('thank'):
+            respond('you\'re welcome')
 
 
 def bot_announce(bot, targets, message):
