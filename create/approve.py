@@ -82,6 +82,7 @@ def wait_for_task(celery, task):
 
 
 def get_group_information(group_oid):
+    """Returns tuple (group name, group oid, group email)."""
     if group_oid:
         group = group_by_oid(group_oid)
 
@@ -133,6 +134,7 @@ def make_account_request(account, password):
 
 
 def create_account(request):
+    """Returns tuple (tasks queue, celery connection, task reponse)."""
     conf = ConfigParser()
     conf.read('/etc/ocf-create/ocf-create.conf')
 
@@ -145,7 +147,7 @@ def create_account(request):
 
     response = wait_for_task(celery, task)
 
-    return tasks, celery, response
+    return (tasks, celery, response)
 
 
 def error_report(request, new_request, response):
