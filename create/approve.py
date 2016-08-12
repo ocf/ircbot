@@ -14,6 +14,7 @@ from ocflib.account.submission import get_tasks
 from ocflib.account.submission import NewAccountResponse
 from ocflib.account.validators import validate_password
 from ocflib.constants import CREATE_PUBLIC_KEY
+from ocflib.misc.mail import send_problem_report
 from ocflib.misc.shell import bold
 from ocflib.misc.shell import edit_file
 from ocflib.misc.shell import green
@@ -61,6 +62,7 @@ def wait_for_task(celery, task):
         meta = task.info
         if isinstance(meta, dict) and 'status' in meta:
             status = meta['status']
+
             if len(status) > last_status_len:
                 for line in status[last_status_len:]:
                     print()
@@ -70,43 +72,124 @@ def wait_for_task(celery, task):
 
         print('.', end='')
         sys.stdout.flush()
+
     print()
+
     if isinstance(task.result, Exception):
         raise task.result
     else:
         return task.result
 
 
+def get_group_information(group_oid):
+    """Returns tuple (group name, group oid, group email)."""
+    if group_oid:
+        group = group_by_oid(group_oid)
+
+        if not group:
+            print(red('No group with OID {}').format(group_oid))
+            sys.exit(1)
+
+        if group['accounts']:
+            print(yellow(
+                'Warning: there is an existing group account with OID {}: {}'.format(
+                    group_oid,
+                    ', '.join(group['accounts']),
+                ),
+            ))
+            input('Press enter to continue...')
+
+        return (group['name'], group_oid, group['email'])
+    else:
+        return ('', '', '')
+
+
+def make_account_request(account, password):
+    request = NewAccountRequest(
+        user_name=account['user_name'],
+        real_name=account['group_name'],
+        is_group=True,
+        calnet_uid=None,
+        callink_oid=account['callink_oid'],
+        email=account['email'],
+        encrypted_password=encrypt_password(
+            password,
+            RSA.importKey(CREATE_PUBLIC_KEY),
+        ),
+        handle_warnings=NewAccountRequest.WARNINGS_WARN,
+    )
+
+    print()
+    print(bold('Pending account request:'))
+    print(dedent(
+        """\
+        User Name: {request.user_name}
+        Group Name: {request.real_name}
+        CalLink OID: {request.callink_oid}
+        Email: {request.email}
+        """
+    ).format(request=request))
+
+    return request
+
+
+def create_account(request):
+    """Returns tuple (tasks queue, celery connection, task reponse)."""
+    conf = ConfigParser()
+    conf.read('/etc/ocf-create/ocf-create.conf')
+
+    celery = Celery(
+        broker=conf.get('celery', 'broker'),
+        backend=conf.get('celery', 'backend'),
+    )
+    tasks = get_tasks(celery)
+    task = tasks.validate_then_create_account.delay(request)
+
+    response = wait_for_task(celery, task)
+
+    return (tasks, celery, response)
+
+
+def error_report(request, new_request, response):
+    print(bold(red('Error: Entered unexpected state.')))
+    print(bold('An email has been sent to OCF staff'))
+
+    error_report = dedent(
+        """\
+        Error encountered running approve!
+
+        The request we submitted was:
+        {request}
+
+        The request we submitted after being flagged (if any) was:
+        {new_request}
+
+        The response we received was:
+        {response}
+        """
+    ).format(
+        request=request,
+        new_request=new_request,
+        reponse=response
+    )
+
+    send_problem_report(error_report)
+
+
 def main():
-    def_group_name = ''
-    def_callink_oid = ''
-    def_email = ''
+    def pause_error_msg():
+        input('Press enter to edit group information (or Ctrl-C to exit)...')
 
     parser = ArgumentParser(description='Create new OCF group accounts.')
     parser.add_argument('oid', type=int, nargs='?', help='CalLink OID for the group.')
     args = parser.parse_args()
 
-    if args.oid:
-        group = group_by_oid(args.oid)
-        if not group:
-            print(red('No group with OID {}').format(args.oid))
-            return
-        if group['accounts']:
-            print(yellow(
-                'Warning: there is an existing group account with OID {}: {}'.format(
-                    args.oid,
-                    ', '.join(group['accounts']),
-                ),
-            ))
-            input('Press any key to continue...')
-        def_group_name = group['name']
-        def_callink_oid = args.oid
-        def_email = group['email']
+    group_name, callink_oid, email = get_group_information(args.oid)
 
     content = TEMPLATE.format(
-        group_name=def_group_name,
-        callink_oid=def_callink_oid,
-        email=def_email
+        group_name=group_name,
+        callink_oid=callink_oid,
+        email=email
     )
 
     while True:
@@ -116,7 +199,7 @@ def main():
         except yaml.YAMLError as ex:
             print('Error parsing your YAML:')
             print(ex)
-            input('Press enter to continue...')
+            pause_error_msg()
             continue
 
         missing_key = False
@@ -125,7 +208,7 @@ def main():
                 print('Missing value for key: ' + key)
                 missing_key = True
         if missing_key:
-            input('Press enter to continue...')
+            pause_error_msg()
             continue
 
         try:
@@ -137,49 +220,16 @@ def main():
             # we want to allow cancelling during the "enter password" stage
             # without completely exiting approve
             print()
-            input('Press enter to start over (or ^C again to cancel)...')
+            pause_error_msg()
             continue
 
-        request = NewAccountRequest(
-            user_name=account['user_name'],
-            real_name=account['group_name'],
-            is_group=True,
-            calnet_uid=None,
-            callink_oid=account['callink_oid'],
-            email=account['email'],
-            encrypted_password=encrypt_password(
-                password,
-                RSA.importKey(CREATE_PUBLIC_KEY),
-            ),
-            handle_warnings=NewAccountRequest.WARNINGS_WARN,
-        )
+        request = make_account_request(account, password)
 
-        print()
-        print(bold('Pending account request:'))
-        print(dedent(
-            """\
-            User Name: {request.user_name}
-            Group Name: {request.real_name}
-            CalLink OID: {request.callink_oid}
-            Email: {request.email}
-            """
-        ).format(request=request))
-
-        if input('Submit request? [yN] ') != 'y':
-            input('Press enter to continue.')
+        if input('Submit request? [yN] ') not in ('y', 'Y'):
+            pause_error_msg()
             continue
 
-        conf = ConfigParser()
-        conf.read('/etc/ocf-create/ocf-create.conf')
-
-        celery = Celery(
-            broker=conf.get('celery', 'broker'),
-            backend=conf.get('celery', 'backend'),
-        )
-        tasks = get_tasks(celery)
-        task = tasks.validate_then_create_account.delay(request)
-
-        response = wait_for_task(celery, task)
+        tasks, celery, response = create_account(request)
         new_request = None
 
         if response.status == NewAccountResponse.REJECTED:
@@ -188,7 +238,8 @@ def main():
             )))
             for error in response.errors:
                 print(red('  - {}'.format(error)))
-            input('Press enter to start over (or ^C to cancel)...')
+
+            pause_error_msg()
             continue
         elif response.status == NewAccountResponse.FLAGGED:
             print(bold(yellow(
@@ -209,7 +260,7 @@ def main():
                 task = tasks.validate_then_create_account.delay(new_request)
                 response = wait_for_task(celery, task)
             else:
-                input('Starting over, press enter to continue...')
+                pause_error_msg()
                 continue
 
         if response.status == NewAccountResponse.CREATED:
@@ -219,16 +270,8 @@ def main():
             return
         else:
             # this shouldn't be possible; we must have entered some weird state
-            # TODO: report via ocflib
-            print(bold(red('Error: Entered unexpected state.')))
-            print(red('The request we submitted was:'))
-            print(red(request))
-            print(red('The new request we submitted (if any) was:'))
-            print(red(new_request))
-            print(red('The response we received was:'))
-            print(red(response))
-            print(bold(red('Not really sure what to do here, sorry.')))
-            input('Press enter to start over...')
+            error_report(request, new_request, response)
+            pause_error_msg()
 
 
 if __name__ == '__main__':
