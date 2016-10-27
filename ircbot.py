@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
 """IRC bot for printing info and handling commmands for account creation."""
 import argparse
-import os
+import getpass
 import re
 import ssl
 import threading
-import getpass
 from configparser import ConfigParser
-from celery import Celery
-from ocflib.account.submission import AccountCreationCredentials
-from ocflib.account.submission import get_tasks
 
 import irc.bot
 import irc.connection
+from celery import Celery
 from celery import exceptions
 from celery.events import EventReceiver
 from kombu import Connection
+from ocflib.account.submission import AccountCreationCredentials
+from ocflib.account.submission import get_tasks
 from ocflib.infra.rt import rt_connection
 from ocflib.infra.rt import RtTicket
 
@@ -117,7 +116,6 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 respond('you\'re most welcome')
             else:
                 respond('thanks, {}!'.format(thing), ping=False)
-
 
 
 def bot_announce(bot, targets, message):
