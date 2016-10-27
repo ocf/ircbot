@@ -1,0 +1,4 @@
+#!/bin/bash
+set -euxo pipefail
+cd /opt/ircbot
+exec /opt/ircbot/venv/bin/python -m ircbot

@@ -5,6 +5,11 @@ import os
 import re
 import ssl
 import threading
+import getpass
+from configparser import ConfigParser
+from celery import Celery
+from ocflib.account.submission import AccountCreationCredentials
+from ocflib.account.submission import get_tasks
 
 import irc.bot
 import irc.connection
@@ -17,10 +22,17 @@ from ocflib.infra.rt import RtTicket
 
 IRC_HOST = 'irc'
 IRC_PORT = 6697
-IRC_NICKNAME = 'create'
 
 IRC_CHANNELS = ('#rebuild', '#atool')
 IRC_CHANNELS_ANNOUNCE = ('#atool',)
+
+
+user = getpass.getuser()
+if user == 'nobody':
+    IRC_NICKNAME = 'create'
+else:
+    IRC_NICKNAME = 'create-{}'.format(user)
+    IRC_CHANNELS += ('#' + user,)
 
 
 class CreateBot(irc.bot.SingleServerIRCBot):
@@ -49,27 +61,31 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             assert event.source.count('!') == 1
             user, _ = event.source.split('!')
 
+            if user.startswith('create'):
+                return
+
             if user in self.channels[event.target].opers():
                 is_oper = True
 
-        assert len(event.arguments) == 1
-        msg = event.arguments[0]
+            assert len(event.arguments) == 1
+            msg = event.arguments[0]
 
-        def respond(msg):
-            conn.privmsg(event.target, '{}: {}'.format(user, msg))
+            def respond(msg, ping=True):
+                fmt = '{user}: {msg}' if ping else '{msg}'
+                conn.privmsg(event.target, fmt.format(user=user, msg=msg))
 
-        tickets = re.findall(r'rt#([0-9]+)', msg)
-        if tickets:
-            rt = rt_connection(user='create', password=self.rt_password)
-            for ticket in tickets:
-                try:
-                    t = RtTicket.from_number(rt, int(ticket))
-                    respond(str(t))
-                except AssertionError:
-                    pass
-        elif msg.startswith(IRC_NICKNAME + ' ') or msg.startswith(IRC_NICKNAME + ':'):
-            command, *args = msg[len(IRC_NICKNAME) + 1:].strip().split(' ')
-            self.handle_command(is_oper, command, args, respond)
+            tickets = re.findall(r'rt#([0-9]+)', msg)
+            if tickets:
+                rt = rt_connection(user='create', password=self.rt_password)
+                for ticket in tickets:
+                    try:
+                        t = RtTicket.from_number(rt, int(ticket))
+                        respond(str(t))
+                    except AssertionError:
+                        pass
+            elif msg.startswith((IRC_NICKNAME + ' ', IRC_NICKNAME + ': ')):
+                command, *args = msg[len(IRC_NICKNAME) + 1:].strip().split(' ')
+                self.handle_command(is_oper, command, args, respond)
 
     def handle_command(self, is_oper, command, args, respond):
         if is_oper:
@@ -93,8 +109,15 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 self.tasks.reject_request.delay(user_name)
                 respond('rejected {}, better luck next time'.format(user_name))
 
-        if command.startswith('thank'):
+        if command == 'thanks':
             respond('you\'re welcome')
+        elif command == 'thank':
+            thing = ' '.join(args)
+            if thing == 'you':
+                respond('you\'re most welcome')
+            else:
+                respond('thanks, {}!'.format(thing), ping=False)
+
 
 
 def bot_announce(bot, targets, message):
@@ -172,17 +195,25 @@ def main():
     parser.add_argument(
         '-c',
         '--config',
-        default='/etc/ocf-create/ocf-create.conf',
+        default='/etc/ocf-ircbot/ocf-ircbot.conf',
         help='Config file to read from.',
     )
     args = parser.parse_args()
-    os.environ['CREATE_CONFIG_FILE'] = args.config
 
-    # these imports require CREATE_CONFIG_FILE set, so we do them inline
-    from create.tasks import conf
-    from create.tasks import tasks
+    conf = ConfigParser()
+    conf.read(args.config)
 
-    # rt password
+    celery = Celery(
+        broker=conf.get('celery', 'broker'),
+        backend=conf.get('celery', 'backend'),
+    )
+    creds = AccountCreationCredentials(**{
+        field:
+            conf.get(*field.split('_'))
+            for field in AccountCreationCredentials._fields
+    })
+    tasks = get_tasks(celery, credentials=creds)
+
     rt_password = conf.get('rt', 'password')
 
     # create a thread to run the irc bot
