@@ -5,6 +5,7 @@ import getpass
 import re
 import ssl
 import threading
+import time
 from configparser import ConfigParser
 
 import irc.bot
@@ -31,7 +32,7 @@ if user == 'nobody':
     IRC_NICKNAME = 'create'
 else:
     IRC_NICKNAME = 'create-{}'.format(user)
-    IRC_CHANNELS += ('#' + user,)
+    IRC_CHANNELS = ('#' + user,)
 
 
 class CreateBot(irc.bot.SingleServerIRCBot):
@@ -40,8 +41,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         self.tasks = tasks
         self.rt_password = rt_password
         factory = irc.connection.Factory(wrapper=ssl.wrap_socket)
-        irc.bot.SingleServerIRCBot.__init__(
-            self,
+        super().__init__(
             [(IRC_HOST, IRC_PORT)],
             IRC_NICKNAME,
             IRC_NICKNAME,
@@ -119,9 +119,8 @@ class CreateBot(irc.bot.SingleServerIRCBot):
 
 
 def bot_announce(bot, targets, message):
-    if bot:
-        for target in targets:
-            bot.connection.privmsg(target, message)
+    for target in targets:
+        bot.connection.privmsg(target, message)
 
 
 def celery_listener(bot, uri):
@@ -214,13 +213,27 @@ def main():
 
     rt_password = conf.get('rt', 'password')
 
-    # create a thread to run the irc bot
+    # irc bot thread
     bot = CreateBot(tasks, rt_password)
-    bot_thread = threading.Thread(target=bot.start)
+    bot_thread = threading.Thread(target=bot.start, daemon=True)
     bot_thread.start()
 
-    # run create listener in main thread
-    celery_listener(bot, conf.get('celery', 'broker'))
+    # celery thread
+    celery_thread = threading.Thread(
+        target=celery_listener,
+        args=(bot, conf.get('celery', 'broker')),
+        daemon=True,
+    )
+    celery_thread.start()
+
+    while True:
+        for thread in (bot_thread, celery_thread):
+            if not thread.is_alive():
+                raise RuntimeError('Thread exited: {}'.format(thread))
+
+        time.sleep(0.1)
+
+
 
 if __name__ == '__main__':
     main()
