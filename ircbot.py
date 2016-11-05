@@ -7,6 +7,7 @@ import ssl
 import threading
 import time
 from configparser import ConfigParser
+from datetime import date
 
 import irc.bot
 import irc.connection
@@ -37,9 +38,11 @@ else:
 
 class CreateBot(irc.bot.SingleServerIRCBot):
 
-    def __init__(self, tasks, rt_password):
+    def __init__(self, tasks, nickserv_password, rt_password):
+        self.topics = {}
         self.tasks = tasks
         self.rt_password = rt_password
+        self.nickserv_password = nickserv_password
         factory = irc.connection.Factory(wrapper=ssl.wrap_socket)
         super().__init__(
             [(IRC_HOST, IRC_PORT)],
@@ -49,6 +52,8 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         )
 
     def on_welcome(self, conn, _):
+        conn.privmsg('NickServ', 'identify {}'.format(self.nickserv_password))
+
         for channel in IRC_CHANNELS:
             conn.join(channel)
 
@@ -117,6 +122,26 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             else:
                 respond('thanks, {}!'.format(thing), ping=False)
 
+        if command == 'newday':
+            self.bump_topic()
+
+    def on_currenttopic(self, connection, event):
+        channel, topic = event.arguments
+        self.topics[channel] = topic
+
+    def on_topic(self, connection, event):
+        topic, = event.arguments
+        self.topics[event.target] = topic
+
+    def bump_topic(self):
+        for channel, topic in self.topics.items():
+            def plusone(m):
+                return '{}: {}'.format(m.group(1), int(m.group(2)) + 1)
+
+            new_topic = re.sub('(days since.*?): (\d+)', plusone, topic)
+            if topic != new_topic:
+                self.connection.topic(channel, new_topic=new_topic)
+
 
 def bot_announce(bot, targets, message):
     for target in targets:
@@ -184,6 +209,15 @@ def celery_listener(bot, uri):
             recv.capture(limit=None, timeout=None)
 
 
+def timer(bot):
+    last_date = None
+    while True:
+        last_date, old = date.today(), last_date
+        if old and last_date != old:
+            bot.bump_topic()
+        time.sleep(1)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='OCF account creation IRC bot',
@@ -212,9 +246,10 @@ def main():
     tasks = get_tasks(celery, credentials=creds)
 
     rt_password = conf.get('rt', 'password')
+    nickserv_password = conf.get('nickserv', 'password')
 
     # irc bot thread
-    bot = CreateBot(tasks, rt_password)
+    bot = CreateBot(tasks, nickserv_password, rt_password)
     bot_thread = threading.Thread(target=bot.start, daemon=True)
     bot_thread.start()
 
@@ -226,13 +261,20 @@ def main():
     )
     celery_thread.start()
 
+    # timer thread
+    timer_thread = threading.Thread(
+        target=timer,
+        args=(bot,),
+        daemon=True,
+    )
+    timer_thread.start()
+
     while True:
-        for thread in (bot_thread, celery_thread):
+        for thread in (bot_thread, celery_thread, timer_thread):
             if not thread.is_alive():
                 raise RuntimeError('Thread exited: {}'.format(thread))
 
         time.sleep(0.1)
-
 
 
 if __name__ == '__main__':
