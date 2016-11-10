@@ -2,26 +2,18 @@ node('slave') {
     step([$class: 'WsCleanup'])
 
     stage('check-out-code') {
-        // TODO: I think we can factor out the "src" subdirectory now that we
-        // don't build a Debian package?
-        dir('src') {
-            checkout scm
-        }
+        checkout scm
     }
 
     stage('test') {
-        dir('src') {
-            sh 'make test'
-        }
+        sh 'make test'
     }
 
     stage('test-cook-image') {
-        dir('src') {
-            sh 'make cook-image'
-        }
+        sh 'make cook-image'
     }
 
-    stash 'src'
+    stash 'build'
 }
 
 
@@ -32,25 +24,21 @@ if (env.BRANCH_NAME == 'master') {
     ]) {
         node('slave') {
             step([$class: 'WsCleanup'])
-            unstash 'src'
+            unstash 'build'
 
             stage('cook-prod-image') {
-                dir('src') {
-                    sh 'make cook-image'
-                }
+                sh 'make cook-image'
             }
 
-            stash 'src'
+            stash 'build'
         }
 
         node('deploy') {
             step([$class: 'WsCleanup'])
-            unstash 'src'
+            unstash 'build'
 
             stage('push-to-registry') {
-                dir('src') {
-                    sh 'make push-image'
-                }
+                sh 'make push-image'
             }
 
             stage('deploy-to-prod') {
