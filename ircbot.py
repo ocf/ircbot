@@ -39,6 +39,7 @@ else:
 class CreateBot(irc.bot.SingleServerIRCBot):
 
     def __init__(self, tasks, nickserv_password, rt_password):
+        self.recent_messages = []
         self.topics = {}
         self.tasks = tasks
         self.rt_password = rt_password
@@ -61,6 +62,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         is_oper = False
 
         if event.target in self.channels:
+            # TODO: irc library provides a nice way to parse these
             # event.source is like 'ckuehl!~ckuehl@nitrogen.techxonline.net'
             assert event.source.count('!') == 1
             user, _ = event.source.split('!')
@@ -78,7 +80,9 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 fmt = '{user}: {msg}' if ping else '{msg}'
                 conn.privmsg(event.target, fmt.format(user=user, msg=msg))
 
+            # maybe do something with it
             tickets = re.findall(r'rt#([0-9]+)', msg)
+            replacement = re.search(r's(.)(.+)\1(.*)\1', msg)
             if tickets:
                 rt = rt_connection(user='create', password=self.rt_password)
                 for ticket in tickets:
@@ -90,6 +94,19 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             elif msg.startswith((IRC_NICKNAME + ' ', IRC_NICKNAME + ': ')):
                 command, *args = msg[len(IRC_NICKNAME) + 1:].strip().split(' ')
                 self.handle_command(is_oper, command, args, respond)
+            elif replacement:
+                old = replacement.group(2)
+                new = '\x02{}\x02'.format(replacement.group(3))
+                for user, msg in self.recent_messages[::-1]:
+                    new_msg = re.sub(old, new, msg)
+                    if new_msg != msg:
+                        respond('<{}> {}'.format(user, new_msg), ping=False)
+                        break
+
+            # everything gets logged
+            self.recent_messages.append((user, msg))
+            while len(self.recent_messages) > 10:
+                self.recent_messages.pop(0)
 
     def handle_command(self, is_oper, command, args, respond):
         if is_oper:
