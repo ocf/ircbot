@@ -24,7 +24,7 @@ RUN virtualenv -ppython3 /opt/ircbot/venv \
     && /opt/ircbot/venv/bin/pip install \
         -r /opt/ircbot/requirements.txt
 
-COPY ircbot.py /opt/ircbot/
+COPY ircbot /opt/ircbot/ircbot
 
 COPY services /opt/ircbot/services
 RUN chown -R nobody:nogroup /opt/ircbot

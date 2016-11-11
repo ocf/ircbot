@@ -20,6 +20,8 @@ from ocflib.account.submission import get_tasks
 from ocflib.infra.rt import rt_connection
 from ocflib.infra.rt import RtTicket
 
+from ircbot import rackspace_monitoring
+
 
 IRC_HOST = 'irc'
 IRC_PORT = 6697
@@ -38,12 +40,13 @@ else:
 
 class CreateBot(irc.bot.SingleServerIRCBot):
 
-    def __init__(self, tasks, nickserv_password, rt_password):
+    def __init__(self, tasks, nickserv_password, rt_password, rackspace_apikey):
         self.recent_messages = []
         self.topics = {}
         self.tasks = tasks
         self.rt_password = rt_password
         self.nickserv_password = nickserv_password
+        self.rackspace_apikey = rackspace_apikey
         factory = irc.connection.Factory(wrapper=ssl.wrap_socket)
         super().__init__(
             [(IRC_HOST, IRC_PORT)],
@@ -133,6 +136,12 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 self.tasks.reject_request.delay(user_name)
                 respond('rejected {}, better luck next time'.format(user_name))
 
+            if command == 'newday':
+                self.bump_topic()
+
+            if command == 'status':
+                respond(rackspace_monitoring.get_summary(self.rackspace_apikey))
+
         if command == 'thanks':
             respond('you\'re welcome')
         elif command == 'thank':
@@ -141,9 +150,6 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 respond('you\'re most welcome')
             else:
                 respond('thanks, {}!'.format(thing), ping=False)
-
-        if command == 'newday':
-            self.bump_topic()
 
     def on_currenttopic(self, connection, event):
         channel, topic = event.arguments
@@ -267,9 +273,10 @@ def main():
 
     rt_password = conf.get('rt', 'password')
     nickserv_password = conf.get('nickserv', 'password')
+    rackspace_apikey = conf.get('rackspace', 'apikey')
 
     # irc bot thread
-    bot = CreateBot(tasks, nickserv_password, rt_password)
+    bot = CreateBot(tasks, nickserv_password, rt_password, rackspace_apikey)
     bot_thread = threading.Thread(target=bot.start, daemon=True)
     bot_thread.start()
 
