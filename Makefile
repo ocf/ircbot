@@ -4,6 +4,7 @@ DOCKER_TAG = docker-push.ocf.berkeley.edu/ircbot:$(DOCKER_REVISION)
 .PHONY: test
 test:
 	pre-commit run --all-files
+	pre-commit install -f --install-hooks
 
 venv: vendor/venv-update requirements.txt setup.py
 	vendor/venv-update venv= -ppython3.4 venv install= -r requirements.txt

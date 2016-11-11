@@ -16,7 +16,6 @@ def _get_overview(api_key):
     assert req.status_code == 200, req.status_code
     j = req.json()
     token_id = j['access']['token']['id']
-    tenant_id = j['access']['token']['tenant']['id']
 
     service, = [
         service
@@ -24,7 +23,6 @@ def _get_overview(api_key):
         if service['type'] == 'rax:monitor'
     ]
     public_url = service['endpoints'][0]['publicURL']
-
 
     req = requests.get(
         public_url + '/views/overview',
