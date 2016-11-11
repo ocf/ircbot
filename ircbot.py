@@ -82,7 +82,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
 
             # maybe do something with it
             tickets = re.findall(r'rt#([0-9]+)', msg)
-            replacement = re.search(r'\bs(.)(.+)\1(.*)\1', msg)
+            replacement = re.search(r'(?:^| )s([^ ])(.+)\1(.*)\1g?(?:$| )', msg)
             if tickets:
                 rt = rt_connection(user='create', password=self.rt_password)
                 for ticket in tickets:
@@ -98,10 +98,13 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 old = replacement.group(2)
                 new = '\x02{}\x02'.format(replacement.group(3))
                 for user, msg in self.recent_messages[::-1]:
-                    new_msg = re.sub(old, new, msg)
-                    if new_msg != msg:
-                        respond('<{}> {}'.format(user, new_msg), ping=False)
-                        break
+                    try:
+                        new_msg = re.sub(old, new, msg)
+                        if new_msg != msg:
+                            respond('<{}> {}'.format(user, new_msg), ping=False)
+                            break
+                    except re.error:
+                        continue
 
             # everything gets logged
             self.recent_messages.append((user, msg))
