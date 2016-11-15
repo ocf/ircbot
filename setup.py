@@ -11,6 +11,7 @@ setup(
         # Celery 3.1.19 has a bug with Redis UNIX sockets that breaks create:
         # https://github.com/celery/celery/issues/2903
         'celery[redis]<3.1.18',
+        'ckuehl-upsidedown',
         'irc',
         'ocflib',
     ],

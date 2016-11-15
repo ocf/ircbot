@@ -11,6 +11,7 @@ from datetime import date
 
 import irc.bot
 import irc.connection
+import upsidedown
 from celery import Celery
 from celery import exceptions
 from celery.events import EventReceiver
@@ -150,6 +151,16 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 respond('you\'re most welcome')
             else:
                 respond('thanks, {}!'.format(thing), ping=False)
+
+        shrug = re.match('^s+h+r+(u+)g+$', command)
+        if shrug:
+            width = len(shrug.group(1))
+            respond('¯\\' + ('_' * width) + '(ツ)' + ('_' * width) + '/¯')
+
+        if command in {'ban', 'flip', 'sorry'}:
+            respond('(╯°□°）╯︵ ┻━┻ {}'.format(
+                upsidedown.transform(' '.join(args)),
+            ))
 
     def on_currenttopic(self, connection, event):
         channel, topic = event.arguments
