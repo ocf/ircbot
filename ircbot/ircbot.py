@@ -86,7 +86,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
 
             # maybe do something with it
             tickets = re.findall(r'rt#([0-9]+)', msg)
-            replacement = re.search(r'(?:^| )s([^ ])(.+)\1(.*)\1g?(?:$| )', msg)
+            replacement = re.search(r'(?:^| )s([^ ])(.+)\1(.*)\1g?$', msg)
             if tickets:
                 rt = rt_connection(user='create', password=self.rt_password)
                 for ticket in tickets:
