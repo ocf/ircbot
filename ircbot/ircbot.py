@@ -87,6 +87,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             # maybe do something with it
             tickets = re.findall(r'rt#([0-9]+)', msg)
             replacement = re.search(r'(?:^| )s([^ ])(.+)\1(.*)\1g?$', msg)
+            shrug = re.search(r's+h+r+(u+)g+', msg)
             if tickets:
                 rt = rt_connection(user='create', password=self.rt_password)
                 for ticket in tickets:
@@ -95,6 +96,9 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                         respond(str(t))
                     except AssertionError:
                         pass
+            elif shrug:
+                width = len(shrug.group(1))
+                respond('¯\\' + ('_' * width) + '(ツ)' + ('_' * width) + '/¯', ping=False)
             elif msg.startswith((IRC_NICKNAME + ' ', IRC_NICKNAME + ': ')):
                 command, *args = msg[len(IRC_NICKNAME) + 1:].strip().split(' ')
                 self.handle_command(is_oper, command, args, respond)
@@ -151,11 +155,6 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 respond('you\'re most welcome')
             else:
                 respond('thanks, {}!'.format(thing), ping=False)
-
-        shrug = re.match('^s+h+r+(u+)g+$', command)
-        if shrug:
-            width = len(shrug.group(1))
-            respond('¯\\' + ('_' * width) + '(ツ)' + ('_' * width) + '/¯')
 
         if command in {'ban', 'flip', 'sorry'}:
             respond('(╯°□°）╯︵ ┻━┻ {}'.format(
