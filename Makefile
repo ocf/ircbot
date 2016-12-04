@@ -25,7 +25,7 @@ update-requirements:
 .PHONY: cook-image
 cook-image:
 	# TODO: make ocflib an argument
-	docker build -t $(DOCKER_TAG) .
+	docker build --pull -t $(DOCKER_TAG) .
 
 .PHONY: push-image
 push-image:
