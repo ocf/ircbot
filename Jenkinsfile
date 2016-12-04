@@ -9,10 +9,6 @@ node('slave') {
         sh 'make test'
     }
 
-    stage('test-cook-image') {
-        sh 'make cook-image'
-    }
-
     stash 'build'
 }
 
@@ -47,6 +43,15 @@ if (env.BRANCH_NAME == 'master') {
                     [$class: 'StringParameterValue', name: 'version', value: version],
                 ]
             }
+        }
+    }
+} else {
+    node('slave') {
+        step([$class: 'WsCleanup'])
+        unstash 'build'
+
+        stage('test-cook-image') {
+            sh 'make cook-image'
         }
     }
 }
