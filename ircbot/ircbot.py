@@ -22,6 +22,7 @@ from ocflib.infra.rt import rt_connection
 from ocflib.infra.rt import RtTicket
 
 from ircbot import rackspace_monitoring
+from ircbot import weather
 
 
 IRC_HOST = 'irc'
@@ -41,13 +42,14 @@ else:
 
 class CreateBot(irc.bot.SingleServerIRCBot):
 
-    def __init__(self, tasks, nickserv_password, rt_password, rackspace_apikey):
+    def __init__(self, tasks, nickserv_password, rt_password, rackspace_apikey, weather_apikey):
         self.recent_messages = []
         self.topics = {}
         self.tasks = tasks
         self.rt_password = rt_password
         self.nickserv_password = nickserv_password
         self.rackspace_apikey = rackspace_apikey
+        self.weather_apikey = weather_apikey
         factory = irc.connection.Factory(wrapper=ssl.wrap_socket)
         super().__init__(
             [(IRC_HOST, IRC_PORT)],
@@ -160,6 +162,17 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             respond('(╯°□°）╯︵ ┻━┻ {}'.format(
                 upsidedown.transform(' '.join(args)),
             ))
+
+        if command in {'weather', 'cold', 'hot'}:
+            where = ' '.join(args) or 'Berkeley, CA'
+            location = weather.find_match(where)
+            summary = None
+            if location:
+                summary = weather.get_summary(self.weather_apikey, location)
+            if summary:
+                respond(summary, ping=False)
+            else:
+                respond('idk where {} is'.format(where))
 
     def on_currenttopic(self, connection, event):
         channel, topic = event.arguments
@@ -284,9 +297,10 @@ def main():
     rt_password = conf.get('rt', 'password')
     nickserv_password = conf.get('nickserv', 'password')
     rackspace_apikey = conf.get('rackspace', 'apikey')
+    weather_apikey = conf.get('weather_underground', 'apikey')
 
     # irc bot thread
-    bot = CreateBot(tasks, nickserv_password, rt_password, rackspace_apikey)
+    bot = CreateBot(tasks, nickserv_password, rt_password, rackspace_apikey, weather_apikey)
     bot_thread = threading.Thread(target=bot.start, daemon=True)
     bot_thread.start()
 
