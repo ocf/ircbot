@@ -158,12 +158,12 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             else:
                 respond('thanks, {}!'.format(thing), ping=False)
 
-        if command in ('ban', 'flip', 'sorry'):
+        if command in {'ban', 'flip', 'sorry'}:
             respond('(╯°□°）╯︵ ┻━┻ {}'.format(
                 upsidedown.transform(' '.join(args)),
             ))
 
-        if command in ('weather', 'cold', 'hot'):
+        if command in {'weather', 'cold', 'hot'}:
             where = ' '.join(args) or 'Berkeley, CA'
             location = weather.find_match(where)
             summary = None
