@@ -150,11 +150,11 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 respond(rackspace_monitoring.get_summary(self.rackspace_apikey))
 
         if command == 'thanks':
-            respond('you\'re welcome')
+            respond("you're welcome")
         elif command == 'thank':
             thing = ' '.join(args)
             if thing == 'you':
-                respond('you\'re most welcome')
+                respond("you're most welcome")
             else:
                 respond('thanks, {}!'.format(thing), ping=False)
 
