@@ -7,7 +7,7 @@ test:
 	pre-commit install -f --install-hooks
 
 venv: vendor/venv-update requirements.txt setup.py
-	vendor/venv-update venv= -ppython3.4 venv install= -r requirements.txt
+	vendor/venv-update venv= -ppython3 venv install= -r requirements.txt
 
 .PHONY: clean
 clean:
