@@ -1,9 +1,0 @@
-#!/bin/bash
-set -euxo pipefail
-exec 2>&1
-
-exec /usr/bin/spiped \
-    -e -D -g -F -k /etc/ocf-ircbot/create-redis.key \
-    -p /dev/null \
-    -s 127.0.0.1:6378 \
-    -t create:6379
