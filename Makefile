@@ -2,12 +2,14 @@ DOCKER_REVISION ?= testing-$(USER)
 DOCKER_TAG = docker-push.ocf.berkeley.edu/ircbot:$(DOCKER_REVISION)
 
 .PHONY: test
-test:
-	pre-commit run --all-files
-	pre-commit install -f --install-hooks
+test: venv
+	venv/bin/pre-commit run --all-files
+	venv/bin/pre-commit install -f --install-hooks
 
-venv: vendor/venv-update requirements.txt setup.py
-	vendor/venv-update venv= -ppython3 venv install= -r requirements.txt
+venv: vendor/venv-update requirements.txt requirements-dev.txt
+	vendor/venv-update \
+		venv= -ppython3 venv \
+		install= -r requirements.txt -r requirements-dev.txt
 
 .PHONY: clean
 clean:
@@ -30,3 +32,8 @@ cook-image:
 .PHONY: push-image
 push-image:
 	docker push $(DOCKER_TAG)
+
+.PHONY: update-requirements
+update-requirements: venv
+	venv/bin/upgrade-requirements
+	sed -i 's/^ocflib==.*/ocflib/' requirements.txt

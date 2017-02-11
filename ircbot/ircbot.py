@@ -200,9 +200,12 @@ def bot_announce(bot, targets, message):
         bot.connection.privmsg(target, message)
 
 
-def celery_listener(bot, uri):
+def celery_listener(bot, celery, uri):
     """Listen for events from Celery, relay to IRC."""
-    connection = Connection(uri)
+    # TODO: verify ssl cert
+    connection = Connection(uri, ssl={
+        'ssl_cert_reqs': ssl.CERT_NONE,
+    })
 
     def on_account_created(event):
         request = event['request']
@@ -251,6 +254,7 @@ def celery_listener(bot, uri):
         with connection as conn:
             recv = EventReceiver(
                 conn,
+                app=celery,
                 handlers={
                     'ocflib.account_created': on_account_created,
                     'ocflib.account_submitted': on_account_submitted,
@@ -290,6 +294,21 @@ def main():
         broker=conf.get('celery', 'broker'),
         backend=conf.get('celery', 'backend'),
     )
+    # TODO: use ssl verification
+    celery.conf.broker_use_ssl = {
+        'ssl_cert_reqs': ssl.CERT_NONE,
+    }
+    # `redis_backend_use_ssl` is an OCF patch which was proposed upstream:
+    # https://github.com/celery/celery/pull/3831
+    celery.conf.redis_backend_use_ssl = {
+        'ssl_cert_reqs': ssl.CERT_NONE,
+    }
+
+    # TODO: stop using pickle
+    celery.conf.task_serializer = 'pickle'
+    celery.conf.result_serializer = 'pickle'
+    celery.conf.accept_content = {'pickle'}
+
     creds = AccountCreationCredentials(**{
         field:
             conf.get(*field.split('_'))
@@ -310,7 +329,7 @@ def main():
     # celery thread
     celery_thread = threading.Thread(
         target=celery_listener,
-        args=(bot, conf.get('celery', 'broker')),
+        args=(bot, celery, conf.get('celery', 'broker')),
         daemon=True,
     )
     celery_thread.start()
