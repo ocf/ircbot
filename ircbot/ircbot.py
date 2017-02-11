@@ -31,6 +31,9 @@ IRC_PORT = 6697
 IRC_CHANNELS = ('#rebuild', '#atool')
 IRC_CHANNELS_ANNOUNCE = ('#atool',)
 
+RT = re.compile('rt#([0-9]+)')
+REPLACE = re.compile('(?:^| )s([!@"#$%&\'*./:;=?\\^_`|~])(.+)\1(.*)\1g?$')
+SHRUG = re.compile('s+h+r+(u+)g+')
 
 user = getpass.getuser()
 if user == 'nobody':
@@ -87,10 +90,9 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 conn.privmsg(event.target, fmt.format(user=user, msg=msg))
 
             # maybe do something with it
-            tickets = re.findall(r'rt#([0-9]+)', msg)
-            replace = r'(?:^| )s([!"#$%&\'*./:;=?\\^_`|~])(.+)\1(.*)\1g?$'
-            replacement = re.search(replace, msg)
-            shrug = re.search(r's+h+r+(u+)g+', msg)
+            tickets = RT.findall(msg)
+            replacement = REPLACE.search(msg)
+            shrug = SHRUG.search(msg)
             if tickets:
                 rt = rt_connection(user='create', password=self.rt_password)
                 for ticket in tickets:
