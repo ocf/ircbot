@@ -15,15 +15,6 @@ venv: vendor/venv-update requirements.txt requirements-dev.txt
 clean:
 	rm -rf venv
 
-.PHONY: update-requirements
-update-requirements:
-	$(eval TMP := $(shell mktemp -d))
-	virtualenv -p python3 $(TMP)
-	. $(TMP)/bin/activate && \
-		pip install --upgrade pip && \
-		pip install . && \
-		pip freeze | grep -v '^ircbot==' | sed 's/^ocflib==.*/ocflib/' > requirements.txt
-
 .PHONY: cook-image
 cook-image:
 	# TODO: make ocflib an argument
