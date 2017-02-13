@@ -87,7 +87,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
 
             # maybe do something with it
             tickets = re.findall(r'rt#([0-9]+)', msg)
-            replace = r'(?:^| )s([!"#$%&\'*./:;=?\\^_`|~])(.+)\1(.*)\1g?$'
+            replace = r'(?:^| )s([!@"#$%&\'*./:;=?\\^_`|~])(.+)\1(.*)\1g?$'
             replacement = re.search(replace, msg)
             shrug = re.search(r's+h+r+(u+)g+', msg)
             if tickets:
