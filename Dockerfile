@@ -5,6 +5,7 @@ RUN apt-get update \
         build-essential \
         cracklib-runtime \
         libcrack2-dev \
+        libffi-dev \
         libssl-dev \
         python3 \
         python3-dev \
