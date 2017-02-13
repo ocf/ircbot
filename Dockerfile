@@ -1,10 +1,11 @@
-FROM docker.ocf.berkeley.edu/theocf/debian:jessie
+FROM docker.ocf.berkeley.edu/theocf/debian:stretch
 
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         build-essential \
         cracklib-runtime \
         libcrack2-dev \
+        libffi-dev \
         libssl-dev \
         python3 \
         python3-dev \
