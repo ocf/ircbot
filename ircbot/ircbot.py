@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """IRC bot for printing info and handling commmands for account creation."""
 import argparse
+import collections
 import getpass
 import re
 import ssl
@@ -38,11 +39,13 @@ else:
     IRC_NICKNAME = 'create-{}'.format(user)
     IRC_CHANNELS = ('#' + user,)
 
+NUM_RECENT_MESSAGES = 10
+
 
 class CreateBot(irc.bot.SingleServerIRCBot):
 
     def __init__(self, tasks, nickserv_password, rt_password, rackspace_apikey, weather_apikey):
-        self.recent_messages = []
+        self.recent_messages = collections.deque(maxlen=NUM_RECENT_MESSAGES)
         self.topics = {}
         self.tasks = tasks
         self.rt_password = rt_password
@@ -107,7 +110,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             elif replacement:
                 old = replacement.group(2)
                 new = '\x02{}\x02'.format(replacement.group(3))
-                for user, msg in self.recent_messages[::-1]:
+                for user, msg in self.recent_messages:
                     try:
                         new_msg = re.sub(old, new, msg)
                         if new_msg != msg:
@@ -117,9 +120,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                         continue
 
             # everything gets logged
-            self.recent_messages.append((user, msg))
-            while len(self.recent_messages) > 10:
-                self.recent_messages.pop(0)
+            self.recent_messages.appendleft((user, msg))
 
     def handle_command(self, is_oper, command, args, respond):
         if is_oper:
