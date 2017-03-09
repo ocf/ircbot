@@ -2,8 +2,11 @@ DOCKER_REVISION ?= testing-$(USER)
 DOCKER_TAG = docker-push.ocf.berkeley.edu/ircbot:$(DOCKER_REVISION)
 
 .PHONY: test
-test: venv
+test: venv install-hooks
 	venv/bin/pre-commit run --all-files
+
+.PHONY: install-hooks
+install-hooks: venv
 	venv/bin/pre-commit install -f --install-hooks
 
 venv: vendor/venv-update requirements.txt requirements-dev.txt
