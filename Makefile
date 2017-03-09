@@ -11,6 +11,10 @@ venv: vendor/venv-update requirements.txt requirements-dev.txt
 		venv= -ppython3 venv \
 		install= -r requirements.txt -r requirements-dev.txt
 
+.PHONY: dev
+dev: venv
+	venv/bin/python -m ircbot.ircbot
+
 .PHONY: clean
 clean:
 	rm -rf venv
