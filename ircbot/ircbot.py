@@ -22,6 +22,7 @@ from ocflib.account.submission import get_tasks
 from ocflib.infra.rt import rt_connection
 from ocflib.infra.rt import RtTicket
 
+from ircbot import debian_security
 from ircbot import rackspace_monitoring
 from ircbot import weather
 
@@ -192,6 +193,9 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             if topic != new_topic:
                 self.connection.topic(channel, new_topic=new_topic)
 
+    def say(self, channel, message):
+        self.connection.privmsg(channel, message)
+
 
 def bot_announce(bot, targets, message):
     for target in targets:
@@ -265,10 +269,21 @@ def celery_listener(bot, celery, uri):
 
 def timer(bot):
     last_date = None
+    last_dsa_check = None
+
+    while not bot.connection.connected:
+        time.sleep(2)
+
     while True:
         last_date, old = date.today(), last_date
         if old and last_date != old:
             bot.bump_topic()
+
+        if last_dsa_check is None or time.time() - last_dsa_check > 60 * 5:
+            last_dsa_check = time.time()
+            for line in debian_security.get_new_dsas():
+                bot.say('#rebuild', line)
+
         time.sleep(1)
 
 

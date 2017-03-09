@@ -4,3 +4,4 @@ ckuehl-celery[redis]==4.0.2.post1
 ckuehl-upsidedown
 irc
 ocflib
+requests
