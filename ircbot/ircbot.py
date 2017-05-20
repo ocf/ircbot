@@ -93,13 +93,13 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 fmt = '{user}: {msg}' if ping else '{msg}'
                 full_msg = fmt.format(user=user, msg=msg)
                 # Length of the message is the contents plus \r\n at the end
-                msg_len = len(full_msg.encode('utf-8')) + 2
+                msg_len = len('PRIVMSG {} :{}\r\n'.format(event.target, full_msg.encode('utf-8')))
 
                 # The message must be split up if over the length limit set
                 # in RFC 2812 on the number of bytes sent
                 if msg_len > MAX_MSG_LEN:
-                    # Each chunk will have \r\n added to it, so subtract 2
-                    n = MAX_MSG_LEN - 2
+                    # Find out how large each chunk should be
+                    n = MAX_MSG_LEN - len('PRIVMSG {} :\r\n'.format(event.target))
                     # Split up the full message into chunks to send
                     msgs = [full_msg[i:i + n] for i in range(0, len(full_msg), n)]
 
