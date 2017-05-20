@@ -132,7 +132,14 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 self.handle_command(is_oper, command.lower(), args, respond)
             elif replacement:
                 old = replacement.group(2)
-                new = '\x02{}\x02'.format(replacement.group(3))
+
+                # By default, re.sub processes strings like r'\n' for escapes,
+                # turning it into an actual newline. By using a function for
+                # the replacement, we avoid the parsing of escape sequences.
+                # https://github.com/ocf/ircbot/issues/3
+                def new(_):
+                    return '\x02{}\x02'.format(replacement.group(3))
+
                 for user, msg in self.recent_messages:
                     try:
                         new_msg = re.sub(old, new, msg)
