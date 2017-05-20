@@ -126,7 +126,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 respond('¯\\' + ('_' * width) + '(ツ)' + ('_' * width) + '/¯', ping=False)
             elif msg.startswith((IRC_NICKNAME + ' ', IRC_NICKNAME + ': ')):
                 command, *args = msg[len(IRC_NICKNAME) + 1:].strip().split(' ')
-                self.handle_command(is_oper, command, args, respond)
+                self.handle_command(is_oper, command.lower(), args, respond)
             elif replacement:
                 old = replacement.group(2)
                 new = '\x02{}\x02'.format(replacement.group(3))
@@ -170,11 +170,11 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             if command == 'status':
                 respond(rackspace_monitoring.get_summary(self.rackspace_apikey))
 
-        if command == 'thanks':
+        if command.startswith('thanks'):
             respond("you're welcome")
         elif command == 'thank':
             thing = ' '.join(args)
-            if thing == 'you':
+            if thing.lower().startswith('you'):
                 respond("you're most welcome")
             else:
                 respond('thanks, {}!'.format(thing), ping=False)
