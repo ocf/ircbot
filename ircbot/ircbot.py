@@ -42,6 +42,9 @@ else:
 
 NUM_RECENT_MESSAGES = 10
 
+# Check for Debian security announcements every 5 minutes
+DSA_FREQ = 5
+
 # This is the max message length set by RFC 2812 on the number of bytes sent
 # in a single message, so messages need to split up into sections of this size
 MAX_MSG_LEN = 512
@@ -298,7 +301,7 @@ def timer(bot):
         if old and last_date != old:
             bot.bump_topic()
 
-        if last_dsa_check is None or time.time() - last_dsa_check > 60 * 5:
+        if last_dsa_check is None or time.time() - last_dsa_check > 60 * DSA_FREQ:
             last_dsa_check = time.time()
             for line in debian_security.get_new_dsas():
                 bot.say('#rebuild', line)
