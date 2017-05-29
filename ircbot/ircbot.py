@@ -112,7 +112,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                     conn.privmsg(event.target, full_msg)
 
             # maybe do something with it
-            tickets = re.findall(r'rt#([0-9]+)', msg)
+            tickets = re.findall(r'(?:rt#|ocf.io/rt/)([0-9]+)', msg)
             replace = r'(?:^| )s([!@"#$%&\'*./:;=?\\^_`|~])(.+)\1(.*)\1g?$'
             replacement = re.search(replace, msg)
             shrug = re.search(r's+h+r+(u+)g+', msg)
