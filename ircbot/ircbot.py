@@ -45,9 +45,11 @@ NUM_RECENT_MESSAGES = 10
 # Check for Debian security announcements every 5 minutes
 DSA_FREQ = 5
 
-# This is the max message length set by RFC 2812 on the number of bytes sent
-# in a single message, so messages need to split up into sections of this size
-MAX_MSG_LEN = 512
+# 512 bytes is the max message length set by RFC 2812 on the max single message
+# length, so messages need to split up into at least sections of that size,
+# however clients (hexchat at least) appear to start cutting off less than that
+# amount of text, so cut into small blocks to avoid that.
+MAX_CLIENT_MSG = 435
 
 
 class CreateBot(irc.bot.SingleServerIRCBot):
@@ -95,21 +97,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             def respond(msg, ping=True):
                 fmt = '{user}: {msg}' if ping else '{msg}'
                 full_msg = fmt.format(user=user, msg=msg)
-                # Length of the message is the contents plus \r\n at the end
-                msg_len = len('PRIVMSG {} :{}\r\n'.format(event.target, full_msg.encode('utf-8')))
-
-                # The message must be split up if over the length limit set
-                # in RFC 2812 on the number of bytes sent
-                if msg_len > MAX_MSG_LEN:
-                    # Find out how large each chunk should be
-                    n = MAX_MSG_LEN - len('PRIVMSG {} :\r\n'.format(event.target))
-                    # Split up the full message into chunks to send
-                    msgs = [full_msg[i:i + n] for i in range(0, len(full_msg), n)]
-
-                    for msg in msgs:
-                        conn.privmsg(event.target, msg)
-                else:
-                    conn.privmsg(event.target, full_msg)
+                self.say(event.target, full_msg)
 
             # maybe do something with it
             tickets = re.findall(r'(?:rt#|ocf.io/rt/)([0-9]+)', msg)
@@ -223,12 +211,24 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 self.connection.topic(channel, new_topic=new_topic)
 
     def say(self, channel, message):
-        self.connection.privmsg(channel, message)
+        # Find the length of the full message
+        msg_len = len('PRIVMSG {} :{}\r\n'.format(channel, message).encode('utf-8'))
+
+        # The message must be split up if over the length limit
+        if msg_len > MAX_CLIENT_MSG:
+            # Split up the full message into chunks to send
+            msg_range = range(0, len(message), MAX_CLIENT_MSG)
+            messages = [message[i:i + MAX_CLIENT_MSG] for i in msg_range]
+
+            for msg in messages:
+                self.connection.privmsg(channel, msg)
+        else:
+            self.connection.privmsg(channel, message)
 
 
 def bot_announce(bot, targets, message):
     for target in targets:
-        bot.connection.privmsg(target, message)
+        bot.say(target, message)
 
 
 def celery_listener(bot, celery, uri):
