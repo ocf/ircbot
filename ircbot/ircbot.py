@@ -44,6 +44,8 @@ NUM_RECENT_MESSAGES = 10
 
 # Check for Debian security announcements every 5 minutes
 DSA_FREQ = 5
+# Print out Rackspace monitoring status every minute
+MONITOR_FREQ = 1
 
 # 512 bytes is the max message length set by RFC 2812 on the max single message
 # length, so messages need to split up into at least sections of that size,
@@ -85,6 +87,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             assert event.source.count('!') == 1
             user, _ = event.source.split('!')
 
+            # Don't respond to other create bots to avoid loops
             if user.startswith('create'):
                 return
 
@@ -299,6 +302,8 @@ def celery_listener(bot, celery, uri):
 def timer(bot):
     last_date = None
     last_dsa_check = None
+    last_monitor_check = None
+    last_monitor_status = None
 
     while not bot.connection.connected:
         time.sleep(2)
@@ -310,8 +315,18 @@ def timer(bot):
 
         if last_dsa_check is None or time.time() - last_dsa_check > 60 * DSA_FREQ:
             last_dsa_check = time.time()
+
             for line in debian_security.get_new_dsas():
                 bot.say('#rebuild', line)
+
+        if last_monitor_check is None or time.time() - last_monitor_check > 60 * MONITOR_FREQ:
+            last_monitor_check = time.time()
+            new_monitor_status = rackspace_monitoring.get_summary(bot.rackspace_apikey)
+
+            # Only print out Rackspace status if it has changed since the last check
+            if last_monitor_status != new_monitor_status:
+                bot.say('#rebuild', new_monitor_status)
+                last_monitor_status = new_monitor_status
 
         time.sleep(1)
 
