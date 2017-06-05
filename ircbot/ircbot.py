@@ -236,9 +236,9 @@ def bot_announce(bot, targets, message):
 
 def celery_listener(bot, celery, uri):
     """Listen for events from Celery, relay to IRC."""
-    # TODO: verify ssl cert
     connection = Connection(uri, ssl={
-        'ssl_cert_reqs': ssl.CERT_NONE,
+        'ssl_ca_certs': '/etc/ssl/certs/ca-certificates.crt',
+        'ssl_cert_reqs': ssl.CERT_REQUIRED,
     })
 
     def on_account_created(event):
@@ -351,9 +351,9 @@ def main():
         broker=conf.get('celery', 'broker'),
         backend=conf.get('celery', 'backend'),
     )
-    # TODO: use ssl verification
     celery.conf.broker_use_ssl = {
-        'ssl_cert_reqs': ssl.CERT_NONE,
+        'ssl_ca_certs': '/etc/ssl/certs/ca-certificates.crt',
+        'ssl_cert_reqs': ssl.CERT_REQUIRED,
     }
     # `redis_backend_use_ssl` is an OCF patch which was proposed upstream:
     # https://github.com/celery/celery/pull/3831
