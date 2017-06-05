@@ -16,6 +16,7 @@ import upsidedown
 from celery import Celery
 from celery import exceptions
 from celery.events import EventReceiver
+from irc.client import NickMask
 from kombu import Connection
 from ocflib.account.submission import AccountCreationCredentials
 from ocflib.account.submission import get_tasks
@@ -82,10 +83,9 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         is_oper = False
 
         if event.target in self.channels:
-            # TODO: irc library provides a nice way to parse these
             # event.source is like 'ckuehl!~ckuehl@nitrogen.techxonline.net'
             assert event.source.count('!') == 1
-            user, _ = event.source.split('!')
+            user = NickMask(event.source).nick
 
             # Don't respond to other create bots to avoid loops
             if user.startswith('create'):
