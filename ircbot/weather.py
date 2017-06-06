@@ -34,7 +34,7 @@ def color(temp, text=None):
         color += '05'
     else:
         color += '04'
-    return '{}{}{}'.format(color, text, '\x0301')
+    return '{}{}{}'.format(color, text, '\x03')
 
 
 def find_match(query):
