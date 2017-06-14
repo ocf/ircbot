@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""IRC bot for printing info and handling commmands for account creation."""
+"""IRC bot for doing stupid stuff and sometimes handling commmands for account creation."""
 import argparse
 import collections
 import getpass
+import random
 import re
 import ssl
 import threading
@@ -107,6 +108,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             replace = r'(?:^| )s([!@"#$%&\'*./:;=?\\^_`|~])(.+)\1(.*)\1g?$'
             replacement = re.search(replace, msg)
             shrug = re.search(r's+h+r+(u+)g+', msg)
+            sux = re.match(r'!sux (.+)$', msg)
             if tickets:
                 rt = rt_connection(user='create', password=self.rt_password)
                 for ticket in tickets:
@@ -139,6 +141,15 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                             break
                     except re.error:
                         continue
+            elif msg == '!flip':
+                respond('my quantum randomness says: {}'.format(
+                    random.choice(('approve', 'reject')),
+                ))
+            elif sux:
+                respond(
+                    'fuck {0}; {0} sucks; {0} is dying; {0} is dead to me; {0} hit wtc'.format(sux.group(1)),
+                    ping=False,
+                )
 
             # everything gets logged
             self.recent_messages.appendleft((user, msg))
@@ -172,7 +183,12 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 respond(rackspace_monitoring.get_summary(self.rackspace_apikey))
 
         if command.startswith('thanks'):
-            respond("you're welcome")
+            respond(random.choice((
+                "you're welcome",
+                'you are most welcome',
+                'any time',
+                'sure thing boss',
+            )))
         elif command == 'thank':
             thing = ' '.join(args)
             if thing.lower().startswith('you'):
