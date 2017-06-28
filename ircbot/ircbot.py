@@ -340,9 +340,10 @@ def timer(bot):
             new_monitor_status = rackspace_monitoring.get_summary(bot.rackspace_apikey)
 
             # Only print out Rackspace status if it has changed since the last check
-            if last_monitor_status != new_monitor_status:
+            if last_monitor_status and last_monitor_status != new_monitor_status:
                 bot.say('#rebuild', new_monitor_status)
-                last_monitor_status = new_monitor_status
+
+            last_monitor_status = new_monitor_status
 
         time.sleep(1)
 
