@@ -1,4 +1,5 @@
 import urllib.parse
+from bisect import bisect
 
 import requests
 
@@ -17,24 +18,25 @@ def icon(temp):
 def color(temp, text=None):
     if text is None:
         text = '{}°F'.format(temp)
-    color = '\x03'
-    if temp < 40:
-        color += '11'
-    elif temp < 50:
-        color += '10'
-    elif temp < 60:
-        color += '14'
-    elif temp < 70:
-        color += '10'
-    elif temp < 75:
-        color += '01'
-    elif temp < 80:
-        color += '07'
-    elif temp < 90:
-        color += '05'
-    else:
-        color += '04'
-    return '{}{}{}'.format(color, text, '\x03')
+
+    temp_ranges = [40, 50, 60, 70, 75, 80, 90]
+    colors = [
+        '\x0312',  # Light blue (< 40)
+        '\x0311',  # Light cyan (40-50)
+        '\x0310',  # Teal (50-60)
+        '\x0314',  # Grey (60-70)
+        '\x0F',   # Reset (default text color, 70-75)
+        '\x0307',  # Orange (75-80)
+        '\x0305',  # Maroon (80-90)
+        '\x0304',  # Red (> 90)
+    ]
+
+    # Bisect returns where an element falls in an ordered list, so it can be
+    # used for numeric table lookups like this:
+    # https://docs.python.org/3/library/bisect.html#other-examples
+    color = colors[bisect(temp_ranges, temp)]
+
+    return '{}{}\x03'.format(color, text)
 
 
 def find_match(query):
