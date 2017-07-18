@@ -202,7 +202,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 upsidedown.transform(' '.join(args)),
             ))
 
-        if command in {'remoji'}:
+        if command in {'emoji', 'remoji'}:
             getattr(emoji, command)(respond, ' '.join(args))
 
         if command in {'weather', 'cold', 'hot'}:
