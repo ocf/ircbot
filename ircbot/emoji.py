@@ -1,3 +1,4 @@
+import shlex
 import unicodedata
 
 
@@ -15,7 +16,8 @@ char_mapping = tuple(char_mapping)
 
 
 def emoji(respond, query):
-    query = query.upper()
+    # allow quoted results
+    query = ' '.join(shlex.split(query)).upper()
     ret = ''
     for name, c in char_mapping:
         if query in name:
