@@ -25,6 +25,7 @@ from ocflib.infra.rt import rt_connection
 from ocflib.infra.rt import RtTicket
 
 from ircbot import debian_security
+from ircbot import emoji
 from ircbot import rackspace_monitoring
 from ircbot import weather
 
@@ -200,6 +201,9 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             respond('(╯°□°）╯︵ ┻━┻ {}'.format(
                 upsidedown.transform(' '.join(args)),
             ))
+
+        if command in {'remoji'}:
+            getattr(emoji, command)(respond, ' '.join(args))
 
         if command in {'weather', 'cold', 'hot'}:
             where = ' '.join(args) or 'Berkeley, CA'
