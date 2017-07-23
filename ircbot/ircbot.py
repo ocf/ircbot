@@ -26,6 +26,7 @@ from ocflib.infra.rt import RtTicket
 
 from ircbot import debian_security
 from ircbot import emoji
+from ircbot import quotes
 from ircbot import rackspace_monitoring
 from ircbot import weather
 
@@ -59,7 +60,15 @@ MAX_CLIENT_MSG = 435
 
 class CreateBot(irc.bot.SingleServerIRCBot):
 
-    def __init__(self, tasks, nickserv_password, rt_password, rackspace_apikey, weather_apikey):
+    def __init__(
+            self,
+            tasks,
+            nickserv_password,
+            rt_password,
+            rackspace_apikey,
+            weather_apikey,
+            mysql_password,
+    ):
         self.recent_messages = collections.deque(maxlen=NUM_RECENT_MESSAGES)
         self.topics = {}
         self.tasks = tasks
@@ -67,6 +76,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         self.nickserv_password = nickserv_password
         self.rackspace_apikey = rackspace_apikey
         self.weather_apikey = weather_apikey
+        self.mysql_password = mysql_password
         factory = irc.connection.Factory(wrapper=ssl.wrap_socket)
         super().__init__(
             [(IRC_HOST, IRC_PORT)],
@@ -151,6 +161,10 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                     'fuck {0}; {0} sucks; {0} is dying; {0} is dead to me; {0} hit wtc'.format(sux.group(1)),
                     ping=False,
                 )
+            elif msg.startswith('!quote'):
+                cmd, *words = msg.split(' ')[1:]
+                if cmd in {'rand', 'show', 'add', 'delete', 'help'}:
+                    getattr(quotes, cmd)(self.mysql_password, respond, words)
 
             # everything gets logged
             self.recent_messages.appendleft((user, msg))
@@ -398,9 +412,10 @@ def main():
     nickserv_password = conf.get('nickserv', 'password')
     rackspace_apikey = conf.get('rackspace', 'apikey')
     weather_apikey = conf.get('weather_underground', 'apikey')
+    mysql_password = conf.get('mysql', 'password')
 
     # irc bot thread
-    bot = CreateBot(tasks, nickserv_password, rt_password, rackspace_apikey, weather_apikey)
+    bot = CreateBot(tasks, nickserv_password, rt_password, rackspace_apikey, weather_apikey, mysql_password)
     bot_thread = threading.Thread(target=bot.start, daemon=True)
     bot_thread.start()
 
