@@ -19,6 +19,8 @@ def emoji(respond, query):
     # allow quoted results
     query = ' '.join(shlex.split(query)).upper()
     ret = ''
+    if query == 'DEBIAN':
+        ret += '🍥'
     for name, c in char_mapping:
         if query in name:
             ret += c
