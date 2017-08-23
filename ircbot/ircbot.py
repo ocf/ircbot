@@ -216,6 +216,11 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 upsidedown.transform(' '.join(args)),
             ))
 
+        if command == 'magic':
+            respond('(ノﾟοﾟ)ノﾐ★゜・。。・゜゜・。{} 。・゜☆゜・。。・゜'.format(
+                '  '.join([' '.join(arg) for arg in args or ['magic']])
+            ))
+
         if command in {'emoji', 'remoji'}:
             getattr(emoji, command)(respond, ' '.join(args))
 
