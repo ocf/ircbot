@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""IRC bot for doing stupid stuff and sometimes handling commmands for account creation."""
+"""IRC bot for doing stupid stuff and sometimes handling commands for account creation."""
 import argparse
 import collections
 import getpass
