@@ -19,24 +19,28 @@ def color(temp, text=None):
     if text is None:
         text = '{}°F'.format(temp)
 
-    temp_ranges = [40, 50, 60, 70, 75, 80, 90]
-    colors = [
-        '\x0312',  # Light blue (< 40)
-        '\x0311',  # Light cyan (40-50)
-        '\x0310',  # Teal (50-60)
-        '\x0314',  # Grey (60-70)
-        '\x0F',   # Reset (default text color, 70-75)
-        '\x0307',  # Orange (75-80)
-        '\x0305',  # Maroon (80-90)
-        '\x0304',  # Red (> 90)
-    ]
+    # The keys here are the lower bound of these colors, the last key is very
+    # large so that it matches anything above the second-to-last key. This
+    # also means the first value matches anything under it.
+    temp_ranges = {
+        40: '\x0312',  # Light blue (< 40)
+        50: '\x0311',  # Light cyan
+        60: '\x0310',  # Teal
+        70: '\x0314',  # Grey
+        75: '\x0F',   # Reset (default text color)
+        80: '\x0307',  # Orange
+        90: '\x0305',  # Maroon
+        999: '\x0304',  # Red (> 90)
+    }
+    temps = sorted(temp_ranges)
 
     # Bisect returns where an element falls in an ordered list, so it can be
     # used for numeric table lookups like this:
     # https://docs.python.org/3/library/bisect.html#other-examples
-    color = colors[bisect(temp_ranges, temp)]
+    index = bisect(temps, temp)
+    color = temp_ranges[temps[index]]
 
-    return '{}{}\x03'.format(color, text)
+    return '{}{}\x0F'.format(color, text)
 
 
 def find_match(query):
