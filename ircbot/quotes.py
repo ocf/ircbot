@@ -1,10 +1,19 @@
 from ircbot import db
 
 
-def rand(mysql_password, respond, _):
+def rand(mysql_password, respond, arg):
     with db.cursor(password=mysql_password) as c:
         c.execute(
-            'SELECT * FROM quotes WHERE is_deleted = 0 ORDER BY RAND() LIMIT 1',
+            'SELECT * FROM quotes WHERE is_deleted = 0 ' +
+            ' '.join(
+                'AND quote LIKE %s'
+                for _ in arg
+            ) +
+            ' ORDER BY RAND() LIMIT 1',
+            tuple(
+                '%{}%'.format(a)
+                for a in arg
+            ),
         )
         quote = c.fetchone()
 
