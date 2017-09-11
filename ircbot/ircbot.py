@@ -171,18 +171,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
 
     def handle_command(self, is_oper, command, args, respond):
         if is_oper:
-            if command == 'list':
-                task = self.tasks.get_pending_requests.delay()
-                try:
-                    task.wait(timeout=5)
-                    if task.result:
-                        for request in task.result:
-                            respond(request)
-                    else:
-                        respond('no pending requests')
-                except exceptions.TimeoutError:
-                    respond('timed out loading list of requests, sorry!')
-            elif command == 'approve':
+            if command == 'approve':
                 user_name = args[0]
                 self.tasks.approve_request.delay(user_name)
                 respond('approved {}, the account is being created'.format(user_name))
@@ -194,10 +183,20 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             if command == 'newday':
                 self.bump_topic()
 
-            if command == 'status':
-                respond(rackspace_monitoring.get_summary(self.rackspace_apikey))
-
-        if command.startswith('thanks'):
+        if command == 'list':
+            task = self.tasks.get_pending_requests.delay()
+            try:
+                task.wait(timeout=5)
+                if task.result:
+                    for request in task.result:
+                        respond(request)
+                else:
+                    respond('no pending requests')
+            except exceptions.TimeoutError:
+                respond('timed out loading list of requests, sorry!')
+        elif command == 'status':
+            respond(rackspace_monitoring.get_summary(self.rackspace_apikey))
+        elif command.startswith('thanks'):
             respond(random.choice((
                 "you're welcome",
                 'you are most welcome',
