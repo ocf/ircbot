@@ -131,6 +131,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                         respond(str(t))
                     except AssertionError:
                         pass
+
             elif shrug:
                 width = len(shrug.group(1))
                 respond('¯\\' + ('_' * width) + '(ツ)' + ('_' * width) + '/¯', ping=False)
@@ -165,9 +166,12 @@ class CreateBot(irc.bot.SingleServerIRCBot):
 
             elif sux:
                 respond(
-                    'fuck {0}; {0} sucks; {0} is dying; {0} is dead to me; {0} hit wtc'.format(sux.group(1)),
+                    'fuck {0}; {0} sucks; {0} is dying; {0} is dead to me; {0} hit wtc'.format(
+                        sux.group(1)
+                    ),
                     ping=False,
                 )
+
             elif msg.startswith('!quote'):
                 cmd, *words = msg.split(' ')[1:]
                 if cmd in {'rand', 'show', 'add', 'delete', 'help'}:
@@ -184,11 +188,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                     respond('{} is not in the lab'.format(username))
 
             elif msg.startswith('!inspire'):
-                search = msg.strip().split(' ')
-                if len(search) > 1:
-                    respond(inspire.like(self.mysql_password, ' '.join(search[1:])))
-                else:
-                    respond(inspire.rand(self.mysql_password))
+                respond(inspire.inspire(self.mysql_password, msg))
 
             # everything gets logged
             self.recent_messages.appendleft((user, msg))
@@ -443,7 +443,8 @@ def main():
     mysql_password = conf.get('mysql', 'password')
 
     # irc bot thread
-    bot = CreateBot(tasks, nickserv_password, rt_password, rackspace_apikey, weather_apikey, mysql_password)
+    bot = CreateBot(tasks, nickserv_password, rt_password,
+                    rackspace_apikey, weather_apikey, mysql_password)
     bot_thread = threading.Thread(target=bot.start, daemon=True)
     bot_thread.start()
 
