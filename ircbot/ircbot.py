@@ -23,13 +23,14 @@ from ocflib.account.submission import AccountCreationCredentials
 from ocflib.account.submission import get_tasks
 from ocflib.infra.rt import rt_connection
 from ocflib.infra.rt import RtTicket
+from ocflib.lab.stats import staff_in_lab
 
 from ircbot import debian_security
 from ircbot import emoji
+from ircbot import inspire
 from ircbot import quotes
 from ircbot import rackspace_monitoring
 from ircbot import weather
-
 
 IRC_HOST = 'irc'
 IRC_PORT = 6697
@@ -120,6 +121,8 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             replacement = re.search(replace, msg)
             shrug = re.search(r's+h+r+(u+)g+', msg)
             sux = re.match(r'!sux (.+)$', msg)
+            in_lab = re.search(r'is ([a-z]+) in the lab', msg)
+
             if tickets:
                 rt = rt_connection(user='create', password=self.rt_password)
                 for ticket in tickets:
@@ -128,12 +131,15 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                         respond(str(t))
                     except AssertionError:
                         pass
+
             elif shrug:
                 width = len(shrug.group(1))
                 respond('¯\\' + ('_' * width) + '(ツ)' + ('_' * width) + '/¯', ping=False)
+
             elif msg.startswith((IRC_NICKNAME + ' ', IRC_NICKNAME + ': ')):
                 command, *args = msg[len(IRC_NICKNAME) + 1:].strip().split(' ')
                 self.handle_command(is_oper, command.lower(), args, respond)
+
             elif replacement:
                 old = replacement.group(2)
 
@@ -152,19 +158,37 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                             break
                     except re.error:
                         continue
+
             elif msg == '!flip':
                 respond('my quantum randomness says: {}'.format(
                     random.choice(('approve', 'reject')),
                 ))
+
             elif sux:
                 respond(
-                    'fuck {0}; {0} sucks; {0} is dying; {0} is dead to me; {0} hit wtc'.format(sux.group(1)),
+                    'fuck {0}; {0} sucks; {0} is dying; {0} is dead to me; {0} hit wtc'.format(
+                        sux.group(1)
+                    ),
                     ping=False,
                 )
+
             elif msg.startswith('!quote'):
                 cmd, *words = msg.split(' ')[1:]
                 if cmd in {'rand', 'show', 'add', 'delete', 'help'}:
                     getattr(quotes, cmd)(self.mysql_password, respond, words)
+
+            elif in_lab:
+                username = in_lab.group(1).strip()
+
+                for session in staff_in_lab():
+                    if username == session.user:
+                        respond('{} is in the lab'.format(username))
+                        break
+                else:
+                    respond('{} is not in the lab'.format(username))
+
+            elif msg.startswith('!inspire'):
+                respond(inspire.inspire(self.mysql_password, msg))
 
             # everything gets logged
             self.recent_messages.appendleft((user, msg))
@@ -419,7 +443,8 @@ def main():
     mysql_password = conf.get('mysql', 'password')
 
     # irc bot thread
-    bot = CreateBot(tasks, nickserv_password, rt_password, rackspace_apikey, weather_apikey, mysql_password)
+    bot = CreateBot(tasks, nickserv_password, rt_password,
+                    rackspace_apikey, weather_apikey, mysql_password)
     bot_thread = threading.Thread(target=bot.start, daemon=True)
     bot_thread.start()
 
