@@ -3,13 +3,11 @@ import re
 
 
 def register(bot):
-    bot.listen(
-        r'(?:^| )s([!@"#$%&\'*./:;=?\\^_`|~])(.+)\1(.*)\1g?$', replace,
-        help='regex-replace some text',
-    )
+    bot.listen(r'(?:^| )s([!@"#$%&\'*./:;=?\\^_`|~])(.+)\1(.*)\1g?$', replace)
 
 
 def replace(text, match, bot, respond):
+    """Regex-replace some text."""
     old = match.group(2)
 
     # By default, re.sub processes strings like r'\n' for escapes,

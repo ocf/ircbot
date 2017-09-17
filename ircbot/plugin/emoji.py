@@ -17,17 +17,12 @@ char_mapping = tuple(char_mapping)
 
 
 def register(bot):
-    bot.listen(
-        r'^emoji (.+)$', emoji, require_mention=True,
-        help='search for emojis by name',
-    )
-    bot.listen(
-        r'^remoji (.+)$', remoji, require_mention=True,
-        help='show names for emojis',
-    )
+    bot.listen(r'^emoji (.+)$', emoji, require_mention=True)
+    bot.listen(r'^remoji (.+)$', remoji, require_mention=True)
 
 
 def emoji(text, match, bot, respond):
+    """Search for emojis by name."""
     # allow quoted results
     query = ' '.join(shlex.split(match.group(1))).upper()
     ret = ''
@@ -46,6 +41,7 @@ def emoji(text, match, bot, respond):
 
 
 def remoji(text, match, bot, respond):
+    """Show names for emojis."""
     query = match.group(1)
     for c in query[:5]:
         respond('{}: {}'.format(c, unicodedata.name(c)))

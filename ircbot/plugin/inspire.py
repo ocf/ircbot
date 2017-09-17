@@ -3,13 +3,11 @@ from ircbot import db
 
 
 def register(bot):
-    bot.listen(
-        r'^!inspire ?(.*)$', inspire,
-        help='print a quote, optionally filtering',
-    )
+    bot.listen(r'^!inspire ?(.*)$', inspire)
 
 
 def inspire(text, match, bot, respond):
+    """Print a quote, optionally filtering."""
     term = match.group(1) or ''
     with db.cursor(password=bot.mysql_password) as c:
         c.execute(

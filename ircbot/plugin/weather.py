@@ -6,13 +6,11 @@ import requests
 
 
 def register(bot):
-    bot.listen(
-        r'^(?:weather|hot|cold) ?(.*)$', weather, require_mention=True,
-        help='show weather for a location (defaults to Berkeley)',
-    )
+    bot.listen(r'^(?:weather|hot|cold) ?(.*)$', weather, require_mention=True)
 
 
 def weather(text, match, bot, respond):
+    """Show weather for a location (defaults to Berkeley)."""
     where = match.group(1) or 'Berkeley, CA'
     location = find_match(where)
     summary = None

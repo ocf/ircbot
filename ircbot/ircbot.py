@@ -49,10 +49,21 @@ MONITOR_FREQ = 1
 # amount of text, so cut into small blocks to avoid that.
 MAX_CLIENT_MSG = 435
 
-Listener = collections.namedtuple(
+
+class Listener(collections.namedtuple(
     'Listener',
-    ('pattern', 'fn', 'require_mention', 'require_oper', 'help'),
-)
+    ('pattern', 'fn', 'require_mention', 'require_oper'),
+)):
+
+    __slots__ = ()
+
+    @property
+    def help(self):
+        return self.fn.__doc__
+
+    @property
+    def plugin_name(self):
+        return self.fn.__module__
 
 
 class CreateBot(irc.bot.SingleServerIRCBot):
@@ -83,12 +94,14 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         self.weather_apikey = weather_apikey
         self.mysql_password = mysql_password
         self.listeners = set()
+        self.plugins = {}
 
         self.register_plugins()
 
     def register_plugins(self):
         for importer, mod_name, _ in pkgutil.iter_modules(['ircbot/plugin']):
             mod = importer.find_module(mod_name).load_module(mod_name)
+            self.plugins[mod_name] = mod
             register = getattr(mod, 'register', None)
             if register is not None:
                 register(self)
@@ -99,14 +112,12 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             fn,
             require_mention=False,
             require_oper=False,
-            help=None,
     ):
         self.listeners.add(Listener(
             pattern=re.compile(pattern),
             fn=fn,
             require_mention=require_mention,
             require_oper=require_oper,
-            help=None,
         ))
 
     def on_welcome(self, conn, _):

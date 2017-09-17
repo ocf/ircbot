@@ -3,13 +3,11 @@ import requests
 
 
 def register(bot):
-    bot.listen(
-        r'^status$', status, require_mention=True,
-        help='show current Rackspace Monitoring status',
-    )
+    bot.listen(r'^status$', status, require_mention=True)
 
 
 def status(text, match, bot, respond):
+    """Show current Rackspace Monitoring status."""
     respond(get_summary(bot.rackspace_apikey))
 
 

@@ -3,22 +3,10 @@ from ircbot import db
 
 
 def register(bot):
-    bot.listen(
-        r'^!quote rand ?(.*)$', rand,
-        help='show a random quote, optionally filtered by a search term',
-    )
-    bot.listen(
-        r'^!quote show (.+)$', show,
-        help='show quote(s) by id',
-    )
-    bot.listen(
-        r'^!quote add (.+)$', add,
-        help='add a new quote',
-    )
-    bot.listen(
-        r'^!quote delete (.+)$', delete,
-        help='delete a quote by id',
-    )
+    bot.listen(r'^!quote rand ?(.*)$', rand)
+    bot.listen(r'^!quote show (.+)$', show)
+    bot.listen(r'^!quote add (.+)$', add)
+    bot.listen(r'^!quote delete (.+)$', delete)
 
 
 def _print_quote(respond, quote):
@@ -29,6 +17,7 @@ def _print_quote(respond, quote):
 
 
 def rand(text, match, bot, respond):
+    """Show a random quote, optionally filtered by a search term."""
     arg = match.group(1).split()
     with db.cursor(password=bot.mysql_password) as c:
         c.execute(
@@ -52,6 +41,7 @@ def rand(text, match, bot, respond):
 
 
 def show(text, match, bot, respond):
+    """Show quote(s) by ID."""
     arg = match.group(1).split()
     quote_ids = []
 
@@ -76,6 +66,7 @@ def show(text, match, bot, respond):
 
 
 def add(text, match, bot, respond):
+    """Add a new quote."""
     with db.cursor(password=bot.mysql_password) as c:
         c.execute(
             'INSERT INTO quotes (quote) VALUES (%s)',
@@ -86,6 +77,7 @@ def add(text, match, bot, respond):
 
 
 def delete(text, match, bot, respond):
+    """Delete a quote."""
     arg = match.group(1)
     try:
         quote_id = int(arg)
