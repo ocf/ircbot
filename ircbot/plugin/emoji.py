@@ -1,3 +1,4 @@
+"""Search (or reverse search) for emojis."""
 import shlex
 import unicodedata
 
@@ -15,9 +16,20 @@ for i in range(0x10ffff):
 char_mapping = tuple(char_mapping)
 
 
-def emoji(respond, query):
+def register(bot):
+    bot.listen(
+        r'^emoji (.+)$', emoji, require_mention=True,
+        help='search for emojis by name',
+    )
+    bot.listen(
+        r'^remoji (.+)$', remoji, require_mention=True,
+        help='show names for emojis',
+    )
+
+
+def emoji(text, match, bot, respond):
     # allow quoted results
-    query = ' '.join(shlex.split(query)).upper()
+    query = ' '.join(shlex.split(match.group(1))).upper()
     ret = ''
     if query == 'DEBIAN':
         ret += '🍥'
@@ -33,7 +45,8 @@ def emoji(respond, query):
         respond(ret)
 
 
-def remoji(respond, query):
+def remoji(text, match, bot, respond):
+    query = match.group(1)
     for c in query[:5]:
         respond('{}: {}'.format(c, unicodedata.name(c)))
     rest = query[5:]

@@ -1,7 +1,27 @@
+"""Show the weather."""
 import urllib.parse
 from bisect import bisect
 
 import requests
+
+
+def register(bot):
+    bot.listen(
+        r'^(?:weather|hot|cold) ?(.*)$', weather, require_mention=True,
+        help='show weather for a location (defaults to Berkeley)',
+    )
+
+
+def weather(text, match, bot, respond):
+    where = match.group(1) or 'Berkeley, CA'
+    location = find_match(where)
+    summary = None
+    if location:
+        summary = get_summary(bot.weather_apikey, location)
+    if summary:
+        respond(summary, ping=False)
+    else:
+        respond('idk where {} is'.format(where))
 
 
 def icon(temp):

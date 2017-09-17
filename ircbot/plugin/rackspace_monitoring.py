@@ -1,4 +1,16 @@
+"""Provide external system monitoring info."""
 import requests
+
+
+def register(bot):
+    bot.listen(
+        r'^status$', status, require_mention=True,
+        help='show current Rackspace Monitoring status',
+    )
+
+
+def status(text, match, bot, respond):
+    respond(get_summary(bot.rackspace_apikey))
 
 
 def _get_overview(api_key):
