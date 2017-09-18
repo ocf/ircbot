@@ -9,17 +9,17 @@ def register(bot):
     bot.listen(r'^(?:weather|hot|cold) ?(.*)$', weather, require_mention=True)
 
 
-def weather(text, match, bot, respond):
+def weather(bot, msg):
     """Show weather for a location (defaults to Berkeley)."""
-    where = match.group(1) or 'Berkeley, CA'
+    where = msg.match.group(1) or 'Berkeley, CA'
     location = find_match(where)
     summary = None
     if location:
         summary = get_summary(bot.weather_apikey, location)
     if summary:
-        respond(summary, ping=False)
+        msg.respond(summary, ping=False)
     else:
-        respond('idk where {} is'.format(where))
+        msg.respond('idk where {} is'.format(where))
 
 
 def icon(temp):

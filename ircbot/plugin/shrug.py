@@ -5,7 +5,7 @@ def register(bot):
     bot.listen(r's+h+r+(u+)g+', shrug)
 
 
-def shrug(text, match, bot, respond):
+def shrug(bot, msg):
     """Shhhrrrruuuuuuuuuuuuuugggg."""
-    width = len(match.group(1))
-    respond('¯\\' + ('_' * width) + '(ツ)' + ('_' * width) + '/¯', ping=False)
+    width = len(msg.match.group(1))
+    msg.respond('¯\\' + ('_' * width) + '(ツ)' + ('_' * width) + '/¯', ping=False)

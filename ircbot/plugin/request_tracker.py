@@ -12,12 +12,12 @@ def register(bot):
     bot.listen(REGEX.pattern, show_ticket)
 
 
-def show_ticket(text, match, bot, respond):
+def show_ticket(bot, msg):
     """Show RT ticket details."""
     rt = rt_connection(user='create', password=bot.rt_password)
-    for ticket in REGEX.findall(text):
+    for ticket in REGEX.findall(msg.text):
         try:
             t = RtTicket.from_number(rt, int(ticket))
-            respond(str(t))
+            msg.respond(str(t))
         except AssertionError:
             pass

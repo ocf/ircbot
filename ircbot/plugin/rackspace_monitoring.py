@@ -6,9 +6,9 @@ def register(bot):
     bot.listen(r'^status$', status, require_mention=True)
 
 
-def status(text, match, bot, respond):
+def status(bot, msg):
     """Show current Rackspace Monitoring status."""
-    respond(get_summary(bot.rackspace_apikey))
+    msg.respond(get_summary(bot.rackspace_apikey))
 
 
 def _get_overview(api_key):

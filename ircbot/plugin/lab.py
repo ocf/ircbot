@@ -6,12 +6,12 @@ def register(bot):
     bot.listen(r'is ([a-z]+) in the lab', in_lab, require_mention=True)
 
 
-def in_lab(text, match, bot, respond):
+def in_lab(bot, msg):
     """Check if a staffer is in the lab."""
-    username = match.group(1).strip()
+    username = msg.match.group(1).strip()
     for session in staff_in_lab():
         if username == session.user:
-            respond('{} is in the lab'.format(username))
+            msg.respond('{} is in the lab'.format(username))
             break
     else:
-        respond('{} is not in the lab'.format(username))
+        msg.respond('{} is not in the lab'.format(username))

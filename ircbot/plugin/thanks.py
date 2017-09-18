@@ -7,9 +7,9 @@ def register(bot):
     bot.listen(r'^thank (.*)$', thank_someone, require_mention=True)
 
 
-def thanks(text, match, bot, respond):
+def thanks(bot, msg):
     """Thank create for being a helpful robot."""
-    respond(random.choice((
+    msg.respond(random.choice((
         "you're welcome",
         'you are most welcome',
         'any time',
@@ -17,6 +17,6 @@ def thanks(text, match, bot, respond):
     )))
 
 
-def thank_someone(text, match, bot, respond):
+def thank_someone(bot, msg):
     """Have create thank somebody on your behalf."""
-    respond('thanks, {}!'.format(match.group(1)), ping=False)
+    msg.respond('thanks, {}!'.format(msg.match.group(1)), ping=False)

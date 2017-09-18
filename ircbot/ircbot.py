@@ -66,6 +66,26 @@ class Listener(collections.namedtuple(
         return self.fn.__module__
 
 
+class MatchedMessage(collections.namedtuple(
+    'MatchedMessage',
+    ('channel', 'text', 'raw_text', 'match', 'is_oper', 'nick', 'respond'),
+)):
+    """A message matching a listener.
+
+    :param channel: IRC channel (as a string).
+    :param text: The message text after processing. Processing includes
+                 chopping off the bot nickname from the front.
+    :param raw_text: The raw, unparsed text. Usually "text" is more useful.
+    :param match: The regex match object.
+    :param is_oper: Whether the user is an operator.
+    :param nick: The nickname of the user.
+    :param respond: A function to respond to this message in the correct
+                    channel and pinging the correct person.
+    """
+
+    __slots__ = ()
+
+
 class CreateBot(irc.bot.SingleServerIRCBot):
 
     def __init__(
@@ -141,19 +161,20 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 is_oper = True
 
             assert len(event.arguments) == 1
-            msg = event.arguments[0]
+            raw_text = event.arguments[0]
 
-            def respond(msg, ping=True):
-                fmt = '{user}: {msg}' if ping else '{msg}'
-                full_msg = fmt.format(user=user, msg=msg)
-                self.say(event.target, full_msg)
+            def respond(raw_text, ping=True):
+                fmt = '{user}: {raw_text}' if ping else '{raw_text}'
+                full_raw_text = fmt.format(user=user, raw_text=raw_text)
+                self.say(event.target, full_raw_text)
 
-            was_mentioned = msg.startswith((IRC_NICKNAME + ' ', IRC_NICKNAME + ': '))
+            was_mentioned = raw_text.startswith((IRC_NICKNAME + ' ', IRC_NICKNAME + ': '))
 
             for listener in self.listeners:
-                text = msg
+                text = raw_text
                 if listener.require_mention:
                     if was_mentioned:
+                        # Chop off the bot nickname.
                         text = ' '.join(text.split(' ')[1:])
                     else:
                         continue
@@ -163,10 +184,19 @@ class CreateBot(irc.bot.SingleServerIRCBot):
 
                 match = listener.pattern.search(text)
                 if match is not None:
-                    listener.fn(text, match, self, respond)
+                    msg = MatchedMessage(
+                        channel=event.target,
+                        text=text,
+                        raw_text=raw_text,
+                        match=match,
+                        is_oper=is_oper,
+                        nick=user,
+                        respond=respond,
+                    )
+                    listener.fn(self, msg)
 
             # everything gets logged
-            self.recent_messages.appendleft((user, msg))
+            self.recent_messages.appendleft((user, raw_text))
 
     def on_currenttopic(self, connection, event):
         channel, topic = event.arguments

@@ -10,11 +10,11 @@ def _magic(thing):
     return '(ノﾟοﾟ)ノﾐ★゜・。。・゜゜・。{} 。・゜☆゜・。。・゜'.format(thing)
 
 
-def magic(text, match, bot, respond):
+def magic(bot, msg):
     """(ノﾟοﾟ)ノﾐ★゜・。。・゜"""
-    respond(_magic(match.group(1) or 'magic'), ping=False)
+    msg.respond(_magic(msg.match.group(1) or 'magic'), ping=False)
 
 
-def mystery(text, match, bot, respond):
+def mystery(bot, msg):
     """~it is a mystery~"""
-    respond(_magic('https://mystery.fuqu.jp/'), ping=False)
+    msg.respond(_magic('https://mystery.fuqu.jp/'), ping=False)

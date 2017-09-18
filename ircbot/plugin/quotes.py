@@ -16,9 +16,9 @@ def _print_quote(respond, quote):
     )
 
 
-def rand(text, match, bot, respond):
+def rand(bot, msg):
     """Show a random quote, optionally filtered by a search term."""
-    arg = match.group(1).split()
+    arg = msg.match.group(1).split()
     with db.cursor(password=bot.mysql_password) as c:
         c.execute(
             'SELECT * FROM quotes WHERE is_deleted = 0 ' +
@@ -35,21 +35,21 @@ def rand(text, match, bot, respond):
         quote = c.fetchone()
 
     if quote is not None:
-        _print_quote(respond, quote)
+        _print_quote(msg.respond, quote)
     else:
-        respond('There are... no quotes?')
+        msg.respond('There are... no quotes?')
 
 
-def show(text, match, bot, respond):
+def show(bot, msg):
     """Show quote(s) by ID."""
-    arg = match.group(1).split()
+    arg = msg.match.group(1).split()
     quote_ids = []
 
     for a in arg:
         try:
             quote_ids.append(int(a.lstrip('#')))
         except ValueError:
-            respond('Not a valid ID: {}'.format(a))
+            msg.respond('Not a valid ID: {}'.format(a))
             break
     else:
         with db.cursor(password=bot.mysql_password) as c:
@@ -60,33 +60,33 @@ def show(text, match, bot, respond):
                 )
                 quote = c.fetchone()
                 if quote is not None:
-                    _print_quote(respond, quote)
+                    _print_quote(msg.respond, quote)
                 else:
-                    respond('Quote #{} does not exist.'.format(quote_id))
+                    msg.respond('Quote #{} does not exist.'.format(quote_id))
 
 
-def add(text, match, bot, respond):
+def add(bot, msg):
     """Add a new quote."""
     with db.cursor(password=bot.mysql_password) as c:
         c.execute(
             'INSERT INTO quotes (quote) VALUES (%s)',
-            (match.group(1),)
+            (msg.match.group(1),)
         )
 
-    respond('Your quote was added as #{}'.format(c.lastrowid))
+    msg.respond('Your quote was added as #{}'.format(c.lastrowid))
 
 
-def delete(text, match, bot, respond):
+def delete(bot, msg):
     """Delete a quote."""
-    arg = match.group(1)
+    arg = msg.match.group(1)
     try:
         quote_id = int(arg)
     except ValueError:
-        respond('Not a valid ID: {}'.format(arg))
+        msg.respond('Not a valid ID: {}'.format(arg))
     else:
         with db.cursor(password=bot.mysql_password) as c:
             c.execute(
                 'UPDATE quotes SET is_deleted = 1 WHERE id = %s',
                 (quote_id,)
             )
-        respond('Quote #{} has been deleted.'.format(quote_id))
+        msg.respond('Quote #{} has been deleted.'.format(quote_id))

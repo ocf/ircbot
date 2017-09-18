@@ -21,10 +21,10 @@ def register(bot):
     bot.listen(r'^remoji (.+)$', remoji, require_mention=True)
 
 
-def emoji(text, match, bot, respond):
+def emoji(bot, msg):
     """Search for emojis by name."""
     # allow quoted results
-    query = ' '.join(shlex.split(match.group(1))).upper()
+    query = ' '.join(shlex.split(msg.match.group(1))).upper()
     ret = ''
     if query == 'DEBIAN':
         ret += '🍥'
@@ -32,19 +32,19 @@ def emoji(text, match, bot, respond):
         if query in name:
             ret += c
     if not ret:
-        respond('No results 😢')
+        msg.respond('No results 😢')
     elif len(ret) > 50:
-        respond('Showing 1-50 of {} results'.format(len(ret)))
-        respond(ret[:50])
+        msg.respond('Showing 1-50 of {} results'.format(len(ret)))
+        msg.respond(ret[:50])
     else:
-        respond(ret)
+        msg.respond(ret)
 
 
-def remoji(text, match, bot, respond):
+def remoji(bot, msg):
     """Show names for emojis."""
-    query = match.group(1)
+    query = msg.match.group(1)
     for c in query[:5]:
-        respond('{}: {}'.format(c, unicodedata.name(c)))
+        msg.respond('{}: {}'.format(c, unicodedata.name(c)))
     rest = query[5:]
     if rest:
-        respond('{} characters remaining: {}'.format(len(rest), rest))
+        msg.respond('{} characters remaining: {}'.format(len(rest), rest))
