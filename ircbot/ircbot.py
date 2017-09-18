@@ -175,7 +175,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 if listener.require_mention:
                     if was_mentioned:
                         # Chop off the bot nickname.
-                        text = ' '.join(text.split(' ')[1:])
+                        text = text.split(' ', 1)[1]
                     else:
                         continue
 
