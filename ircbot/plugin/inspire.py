@@ -16,4 +16,7 @@ def inspire(bot, msg):
             'ORDER BY RAND() LIMIT 1',
             '%{}%'.format(term),
         )
-        msg.respond(c.fetchone()['text'])
+
+        quote = c.fetchone()
+
+        msg.respond(quote['text'] if quote else "Nothing inspirational matching '{}' found.".format(term))
