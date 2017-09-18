@@ -3,7 +3,7 @@
 import argparse
 import collections
 import getpass
-import random
+import pkgutil
 import re
 import ssl
 import threading
@@ -13,24 +13,15 @@ from datetime import date
 
 import irc.bot
 import irc.connection
-import upsidedown
 from celery import Celery
-from celery import exceptions
 from celery.events import EventReceiver
 from irc.client import NickMask
 from kombu import Connection
 from ocflib.account.submission import AccountCreationCredentials
 from ocflib.account.submission import get_tasks
-from ocflib.infra.rt import rt_connection
-from ocflib.infra.rt import RtTicket
-from ocflib.lab.stats import staff_in_lab
 
-from ircbot import debian_security
-from ircbot import emoji
-from ircbot import inspire
-from ircbot import quotes
-from ircbot import rackspace_monitoring
-from ircbot import weather
+from ircbot.plugin import debian_security
+from ircbot.plugin import rackspace_monitoring
 
 IRC_HOST = 'irc'
 IRC_PORT = 6697
@@ -59,6 +50,42 @@ MONITOR_FREQ = 1
 MAX_CLIENT_MSG = 435
 
 
+class Listener(collections.namedtuple(
+    'Listener',
+    ('pattern', 'fn', 'require_mention', 'require_oper'),
+)):
+
+    __slots__ = ()
+
+    @property
+    def help(self):
+        return self.fn.__doc__
+
+    @property
+    def plugin_name(self):
+        return self.fn.__module__
+
+
+class MatchedMessage(collections.namedtuple(
+    'MatchedMessage',
+    ('channel', 'text', 'raw_text', 'match', 'is_oper', 'nick', 'respond'),
+)):
+    """A message matching a listener.
+
+    :param channel: IRC channel (as a string).
+    :param text: The message text after processing. Processing includes
+                 chopping off the bot nickname from the front.
+    :param raw_text: The raw, unparsed text. Usually "text" is more useful.
+    :param match: The regex match object.
+    :param is_oper: Whether the user is an operator.
+    :param nick: The nickname of the user.
+    :param respond: A function to respond to this message in the correct
+                    channel and pinging the correct person.
+    """
+
+    __slots__ = ()
+
+
 class CreateBot(irc.bot.SingleServerIRCBot):
 
     def __init__(
@@ -70,14 +97,6 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             weather_apikey,
             mysql_password,
     ):
-        self.recent_messages = collections.deque(maxlen=NUM_RECENT_MESSAGES)
-        self.topics = {}
-        self.tasks = tasks
-        self.rt_password = rt_password
-        self.nickserv_password = nickserv_password
-        self.rackspace_apikey = rackspace_apikey
-        self.weather_apikey = weather_apikey
-        self.mysql_password = mysql_password
         factory = irc.connection.Factory(wrapper=ssl.wrap_socket)
         super().__init__(
             [(IRC_HOST, IRC_PORT)],
@@ -86,6 +105,41 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             connect_factory=factory
         )
 
+        self.recent_messages = collections.deque(maxlen=NUM_RECENT_MESSAGES)
+        self.topics = {}
+        self.tasks = tasks
+        self.rt_password = rt_password
+        self.nickserv_password = nickserv_password
+        self.rackspace_apikey = rackspace_apikey
+        self.weather_apikey = weather_apikey
+        self.mysql_password = mysql_password
+        self.listeners = set()
+        self.plugins = {}
+
+        self.register_plugins()
+
+    def register_plugins(self):
+        for importer, mod_name, _ in pkgutil.iter_modules(['ircbot/plugin']):
+            mod = importer.find_module(mod_name).load_module(mod_name)
+            self.plugins[mod_name] = mod
+            register = getattr(mod, 'register', None)
+            if register is not None:
+                register(self)
+
+    def listen(
+            self,
+            pattern,
+            fn,
+            require_mention=False,
+            require_oper=False,
+    ):
+        self.listeners.add(Listener(
+            pattern=re.compile(pattern),
+            fn=fn,
+            require_mention=require_mention,
+            require_oper=require_oper,
+        ))
+
     def on_welcome(self, conn, _):
         conn.privmsg('NickServ', 'identify {}'.format(self.nickserv_password))
 
@@ -93,10 +147,9 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             conn.join(channel)
 
     def on_pubmsg(self, conn, event):
-        is_oper = False
-
         if event.target in self.channels:
-            # event.source is like 'ckuehl!~ckuehl@nitrogen.techxonline.net'
+            is_oper = False
+            # event.source is like 'ckuehl!~ckuehl@raziel.ckuehl.me'
             assert event.source.count('!') == 1
             user = NickMask(event.source).nick
 
@@ -108,155 +161,42 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 is_oper = True
 
             assert len(event.arguments) == 1
-            msg = event.arguments[0]
+            raw_text = event.arguments[0]
 
-            def respond(msg, ping=True):
-                fmt = '{user}: {msg}' if ping else '{msg}'
-                full_msg = fmt.format(user=user, msg=msg)
-                self.say(event.target, full_msg)
+            def respond(raw_text, ping=True):
+                fmt = '{user}: {raw_text}' if ping else '{raw_text}'
+                full_raw_text = fmt.format(user=user, raw_text=raw_text)
+                self.say(event.target, full_raw_text)
 
-            # maybe do something with it
-            tickets = re.findall(r'(?:rt#|ocf.io/rt/)([0-9]+)', msg)
-            replace = r'(?:^| )s([!@"#$%&\'*./:;=?\\^_`|~])(.+)\1(.*)\1g?$'
-            replacement = re.search(replace, msg)
-            shrug = re.search(r's+h+r+(u+)g+', msg)
-            sux = re.match(r'!sux (.+)$', msg)
-            in_lab = re.search(r'is ([a-z]+) in the lab', msg)
+            was_mentioned = raw_text.startswith((IRC_NICKNAME + ' ', IRC_NICKNAME + ': '))
 
-            if tickets:
-                rt = rt_connection(user='create', password=self.rt_password)
-                for ticket in tickets:
-                    try:
-                        t = RtTicket.from_number(rt, int(ticket))
-                        respond(str(t))
-                    except AssertionError:
-                        pass
-
-            elif shrug:
-                width = len(shrug.group(1))
-                respond('¯\\' + ('_' * width) + '(ツ)' + ('_' * width) + '/¯', ping=False)
-
-            elif msg.startswith((IRC_NICKNAME + ' ', IRC_NICKNAME + ': ')):
-                command, *args = msg[len(IRC_NICKNAME) + 1:].strip().split(' ')
-                self.handle_command(is_oper, command.lower(), args, respond)
-
-            elif replacement:
-                old = replacement.group(2)
-
-                # By default, re.sub processes strings like r'\n' for escapes,
-                # turning it into an actual newline. By using a function for
-                # the replacement, we avoid the parsing of escape sequences.
-                # https://github.com/ocf/ircbot/issues/3
-                def new(_):
-                    return '\x02{}\x02'.format(replacement.group(3))
-
-                for user, msg in self.recent_messages:
-                    try:
-                        new_msg = re.sub(old, new, msg)
-                        if new_msg != msg:
-                            respond('<{}> {}'.format(user, new_msg), ping=False)
-                            break
-                    except re.error:
+            for listener in self.listeners:
+                text = raw_text
+                if listener.require_mention:
+                    if was_mentioned:
+                        # Chop off the bot nickname.
+                        text = text.split(' ', 1)[1]
+                    else:
                         continue
 
-            elif msg == '!flip':
-                respond('my quantum randomness says: {}'.format(
-                    random.choice(('approve', 'reject')),
-                ))
+                if listener.require_oper and not is_oper:
+                    continue
 
-            elif sux:
-                respond(
-                    'fuck {0}; {0} sucks; {0} is dying; {0} is dead to me; {0} hit wtc'.format(
-                        sux.group(1)
-                    ),
-                    ping=False,
-                )
-
-            elif msg.startswith('!quote'):
-                cmd, *words = msg.split(' ')[1:]
-                if cmd in {'rand', 'show', 'add', 'delete', 'help'}:
-                    getattr(quotes, cmd)(self.mysql_password, respond, words)
-
-            elif in_lab:
-                username = in_lab.group(1).strip()
-
-                for session in staff_in_lab():
-                    if username == session.user:
-                        respond('{} is in the lab'.format(username))
-                        break
-                else:
-                    respond('{} is not in the lab'.format(username))
-
-            elif msg.startswith('!inspire'):
-                respond(inspire.inspire(self.mysql_password, msg))
+                match = listener.pattern.search(text)
+                if match is not None:
+                    msg = MatchedMessage(
+                        channel=event.target,
+                        text=text,
+                        raw_text=raw_text,
+                        match=match,
+                        is_oper=is_oper,
+                        nick=user,
+                        respond=respond,
+                    )
+                    listener.fn(self, msg)
 
             # everything gets logged
-            self.recent_messages.appendleft((user, msg))
-
-    def handle_command(self, is_oper, command, args, respond):
-        if is_oper:
-            if command == 'approve':
-                user_name = args[0]
-                self.tasks.approve_request.delay(user_name)
-                respond('approved {}, the account is being created'.format(user_name))
-            elif command == 'reject':
-                user_name = args[0]
-                self.tasks.reject_request.delay(user_name)
-                respond('rejected {}, better luck next time'.format(user_name))
-
-            if command == 'newday':
-                self.bump_topic()
-
-        if command == 'list':
-            task = self.tasks.get_pending_requests.delay()
-            try:
-                task.wait(timeout=5)
-                if task.result:
-                    for request in task.result:
-                        respond(request)
-                else:
-                    respond('no pending requests')
-            except exceptions.TimeoutError:
-                respond('timed out loading list of requests, sorry!')
-        elif command == 'status':
-            respond(rackspace_monitoring.get_summary(self.rackspace_apikey))
-        elif command.startswith('thanks'):
-            respond(random.choice((
-                "you're welcome",
-                'you are most welcome',
-                'any time',
-                'sure thing boss',
-            )))
-        elif command == 'thank':
-            thing = ' '.join(args)
-            if thing.lower().startswith('you'):
-                respond("you're most welcome")
-            else:
-                respond('thanks, {}!'.format(thing), ping=False)
-
-        if command in {'ban', 'flip', 'sorry'}:
-            respond('(╯°□°）╯︵ ┻━┻ {}'.format(
-                upsidedown.transform(' '.join(args)),
-            ))
-
-        if command == 'magic':
-            respond('(ノﾟοﾟ)ノﾐ★゜・。。・゜゜・。{} 。・゜☆゜・。。・゜'.format(
-                '  '.join([' '.join(arg) for arg in args or ['magic']])
-            ))
-
-        if command in {'emoji', 'remoji'}:
-            getattr(emoji, command)(respond, ' '.join(args))
-
-        if command in {'weather', 'cold', 'hot'}:
-            where = ' '.join(args) or 'Berkeley, CA'
-            location = weather.find_match(where)
-            summary = None
-            if location:
-                summary = weather.get_summary(self.weather_apikey, location)
-            if summary:
-                respond(summary, ping=False)
-            else:
-                respond('idk where {} is'.format(where))
+            self.recent_messages.appendleft((user, raw_text))
 
     def on_currenttopic(self, connection, event):
         channel, topic = event.arguments
@@ -298,6 +238,7 @@ def bot_announce(bot, targets, message):
 
 def celery_listener(bot, celery, uri):
     """Listen for events from Celery, relay to IRC."""
+    # TODO: this stuff should be moved to ircbot.plugin.create.
     connection = Connection(uri, ssl={
         'ssl_ca_certs': '/etc/ssl/certs/ca-certificates.crt',
         'ssl_cert_reqs': ssl.CERT_REQUIRED,
@@ -370,6 +311,7 @@ def timer(bot):
     while not bot.connection.connected:
         time.sleep(2)
 
+    # TODO: timers should register as plugins like listeners do
     while True:
         last_date, old = date.today(), last_date
         if old and last_date != old:
