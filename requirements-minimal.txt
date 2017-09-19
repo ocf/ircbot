@@ -1,5 +1,6 @@
 celery[redis]
 ckuehl-upsidedown
+github3.py
 irc
 ocflib
 pymysql
