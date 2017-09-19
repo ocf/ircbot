@@ -1,9 +1,9 @@
 aspy.yaml==0.3.0
 identify==1.0.5
 nodeenv==1.2.0
-pre-commit==0.18.0
+pre-commit==1.1.1
 py==1.4.34
-pytest==3.2.1
+pytest==3.2.2
 requirements-tools==1.1.2
-setuptools==36.4.0
+setuptools==36.5.0
 virtualenv==15.1.0
