@@ -10,6 +10,11 @@ def register(bot):
 def what_is(bot, msg):
     """Print out the current definition."""
     what_who, thing = msg.match.groups()
+
+    # Special case: "who is in the lab" should be ignored
+    if thing.startswith('in the lab'):
+        return
+
     with db.cursor(password=bot.mysql_password) as c:
         c.execute(
             'SELECT * FROM what_is WHERE thing = %s',
