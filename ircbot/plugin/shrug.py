@@ -8,4 +8,4 @@ def register(bot):
 def shrug(bot, msg):
     """Shhhrrrruuuuuuuuuuuuuugggg."""
     width = len(msg.match.group(1))
-    msg.respond('¯\\' + ('_' * width) + '(ツ)' + ('_' * width) + '/¯', ping=False)
+    msg.respond('¯\\' + ('_' * width) + '☃' + ('_' * width) + '/¯', ping=False)
