@@ -130,11 +130,12 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             self,
             pattern,
             fn,
+            flags=0,
             require_mention=False,
             require_oper=False,
     ):
         self.listeners.add(Listener(
-            pattern=re.compile(pattern),
+            pattern=re.compile(pattern, flags),
             fn=fn,
             require_mention=require_mention,
             require_oper=require_oper,
