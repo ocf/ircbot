@@ -5,8 +5,14 @@ from celery import exceptions
 
 
 def register(bot):
-    bot.listen(r'^approve (.+)$', approve, require_mention=True, require_oper=True)
-    bot.listen(r'^reject (.+)$', reject, require_mention=True, require_oper=True)
+    bot.listen(
+        r'^approve (.+)$', approve,
+        require_mention=True, require_privileged_oper=True,
+    )
+    bot.listen(
+        r'^reject (.+)$', reject,
+        require_mention=True, require_privileged_oper=True,
+    )
     bot.listen(r'^list$', list_pending, require_mention=True)
     bot.listen(r'^!flip$', flip)
 

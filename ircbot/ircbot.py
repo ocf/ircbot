@@ -26,21 +26,22 @@ from ircbot.plugin import rackspace_monitoring
 IRC_HOST = 'irc'
 IRC_PORT = 6697
 
-IRC_CHANNELS = ('#rebuild', '#atool')
-IRC_CHANNELS_ANNOUNCE = ('#atool',)
-
 user = getpass.getuser()
 if user == 'nobody':
     IRC_NICKNAME = 'create'
+    IRC_CHANNELS_OPER = frozenset(('#rebuild', '#atool'))
+    IRC_CHANNELS_ANNOUNCE = frozenset(('#atool',))
+    IRC_CHANNELS_JOIN_MYSQL = True
 else:
     IRC_NICKNAME = 'create-{}'.format(user)
-    IRC_CHANNELS = ('#' + user,)
+    IRC_CHANNELS_OPER = IRC_CHANNELS_ANNOUNCE = frozenset(('#' + user,))
+    IRC_CHANNELS_JOIN_MYSQL = False
 
 NUM_RECENT_MESSAGES = 10
 
 # Check for Debian security announcements every 5 minutes
 DSA_FREQ = 5
-# Print out Rackspace monitoring status every minute
+# Print out Rackspace monitoring status at most every minute
 MONITOR_FREQ = 1
 
 # 512 bytes is the max message length set by RFC 2812 on the max single message
@@ -52,7 +53,7 @@ MAX_CLIENT_MSG = 435
 
 class Listener(collections.namedtuple(
     'Listener',
-    ('pattern', 'fn', 'require_mention', 'require_oper'),
+    ('pattern', 'fn', 'require_mention', 'require_oper', 'require_privileged_oper'),
 )):
 
     __slots__ = ()
@@ -97,14 +98,6 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             weather_apikey,
             mysql_password,
     ):
-        factory = irc.connection.Factory(wrapper=ssl.wrap_socket)
-        super().__init__(
-            [(IRC_HOST, IRC_PORT)],
-            IRC_NICKNAME,
-            IRC_NICKNAME,
-            connect_factory=factory
-        )
-
         self.recent_messages = collections.deque(maxlen=NUM_RECENT_MESSAGES)
         self.topics = {}
         self.tasks = tasks
@@ -115,8 +108,18 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         self.mysql_password = mysql_password
         self.listeners = set()
         self.plugins = {}
+        self.extra_channels = set()  # plugins can add stuff here
 
+        # Register plugins before joining the server.
         self.register_plugins()
+
+        factory = irc.connection.Factory(wrapper=ssl.wrap_socket)
+        super().__init__(
+            [(IRC_HOST, IRC_PORT)],
+            IRC_NICKNAME,
+            IRC_NICKNAME,
+            connect_factory=factory
+        )
 
     def register_plugins(self):
         for importer, mod_name, _ in pkgutil.iter_modules(['ircbot/plugin']):
@@ -133,18 +136,21 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             flags=0,
             require_mention=False,
             require_oper=False,
+            require_privileged_oper=False,
     ):
         self.listeners.add(Listener(
             pattern=re.compile(pattern, flags),
             fn=fn,
             require_mention=require_mention,
             require_oper=require_oper,
+            require_privileged_oper=require_privileged_oper,
         ))
 
     def on_welcome(self, conn, _):
         conn.privmsg('NickServ', 'identify {}'.format(self.nickserv_password))
 
-        for channel in IRC_CHANNELS:
+        # Join the "main" IRC channels.
+        for channel in IRC_CHANNELS_OPER | IRC_CHANNELS_ANNOUNCE | self.extra_channels:
             conn.join(channel)
 
     def on_pubmsg(self, conn, event):
@@ -180,7 +186,16 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                     else:
                         continue
 
-                if listener.require_oper and not is_oper:
+                if (
+                    (listener.require_oper or listener.require_privileged_oper) and
+                    not is_oper
+                ):
+                    continue
+
+                # Prevent people from creating a channel, becoming oper,
+                # inviting the bot, and approving/rejecting accounts without
+                # "real" oper privilege.
+                if listener.require_privileged_oper and event.target not in IRC_CHANNELS_OPER:
                     continue
 
                 match = listener.pattern.search(text)
@@ -206,6 +221,11 @@ class CreateBot(irc.bot.SingleServerIRCBot):
     def on_topic(self, connection, event):
         topic, = event.arguments
         self.topics[event.target] = topic
+
+    def on_invite(self, connection, event):
+        # TODO: make this more plugin-like
+        import ircbot.plugin.channels
+        return ircbot.plugin.channels.on_invite(self, connection, event)
 
     def bump_topic(self):
         for channel, topic in self.topics.items():
@@ -260,7 +280,7 @@ def celery_listener(bot, celery, uri):
         request = event['request']
         bot_announce(
             bot,
-            IRC_CHANNELS,
+            IRC_CHANNELS_OPER,
             '{user} ({real_name}) needs approval: {reasons}'.format(
                 user=request['user_name'],
                 real_name=request['real_name'],
