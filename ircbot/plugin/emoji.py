@@ -44,7 +44,11 @@ def remoji(bot, msg):
     """Show names for emojis."""
     query = msg.match.group(1)
     for c in query[:5]:
-        msg.respond('{}: {}'.format(c, unicodedata.name(c)))
+        try:
+            name = unicodedata.name(c)
+        except ValueError:
+            name = '<<unknown character>>'
+        msg.respond('{}: {}'.format(c, name))
     rest = query[5:]
     if rest:
         msg.respond('{} characters remaining: {}'.format(len(rest), rest))
