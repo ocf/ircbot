@@ -16,11 +16,12 @@ def register(bot):
 
 
 def join_channel(bot, channel):
-    with db.cursor(password=bot.mysql_password) as c:
-        c.execute(
-            'INSERT IGNORE INTO channels (channel) VALUES (%s)',
-            (channel,)
-        )
+    if IRC_CHANNELS_JOIN_MYSQL:
+        with db.cursor(password=bot.mysql_password) as c:
+            c.execute(
+                'INSERT IGNORE INTO channels (channel) VALUES (%s)',
+                (channel,)
+            )
     bot.connection.join(channel)
 
 
