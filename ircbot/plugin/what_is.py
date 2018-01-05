@@ -15,6 +15,10 @@ def what_is(bot, msg):
     if thing.startswith('in the lab'):
         return
 
+    # Special case: DNS haiku
+    if thing.startswith('it not'):
+        return
+
     with db.cursor(password=bot.mysql_password) as c:
         c.execute(
             'SELECT * FROM what_is WHERE thing = %s',
