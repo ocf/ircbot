@@ -12,7 +12,7 @@ BAD_THINGS = (
     '{0} sucks',
     '{0} took down NFS',
     '{0} voted for trump',
-    '{0} went to stanford',
+    '{0} went to stanfurd',
 )
 
 
