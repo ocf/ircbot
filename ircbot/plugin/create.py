@@ -46,7 +46,7 @@ def list_pending(bot, msg):
 
 
 def flip(bot, msg):
-    """Provide an authoritative opinion on whether to approva an account."""
+    """Provide an authoritative opinion on whether to approve an account."""
     msg.respond('my quantum randomness says: {}'.format(
         random.choice(('approve', 'reject')),
     ))

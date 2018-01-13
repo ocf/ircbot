@@ -33,8 +33,7 @@ def on_invite(bot, conn, event):
 def join(bot, msg):
     """Join a new channel.
 
-    Alternatively, you can /invite the bot. (This is mostly for people on
-    Slack.)
+    This is mostly for people on Slack. People on IRC can just /invite the bot.
     """
     join_channel(bot, msg.match.group(1))
 
