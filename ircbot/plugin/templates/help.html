@@ -10,6 +10,7 @@
         <h1>create: <em>an IRC bot for doing stupid stuff and sometimes handling commands for account creation</em></h1>
         <hr />
 
+        <p>Available commands are:</p>
         {% for plugin, listeners in plugins %}
             <h2>{{plugin.__name__}}</h2>
             <p>{{plugin.__doc__}}</p>
