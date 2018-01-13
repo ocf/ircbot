@@ -8,6 +8,7 @@ def register(bot):
 
 
 def pong(bot, msg):
+    """Respond to a ping."""
     pleased = random.randint(0, 99)
     if pleased:
         msg.respond(

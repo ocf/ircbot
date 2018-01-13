@@ -2,6 +2,7 @@ celery[redis]
 ckuehl-upsidedown
 github3.py
 irc
+jinja2
 ocflib
 pymysql
 requests

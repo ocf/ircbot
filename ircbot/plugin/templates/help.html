@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+    <head>
+        <title>ocf ircbot help</title>
+        <style>
+            tt { background-color: #eee; padding: 3px; }
+        </style>
+    </head>
+    <body>
+        <h1>create: <em>an IRC bot for doing stupid stuff and sometimes handling commands for account creation</em></h1>
+        <hr />
+
+        {% for plugin, listeners in plugins %}
+            <h2>{{plugin.__name__}}</h2>
+            <p>{{plugin.__doc__}}</p>
+
+            <ul>
+                {% for listener in listeners %}
+                    <li>
+                        <tt>{{listener.pattern.pattern}}</tt>: {{listener.fn.__doc__}}
+                        {% if listener.require_mention %}
+                            <strong>(requires mention)</strong>
+                        {% endif %}
+                        {% if listener.requires_privileged_oper %}
+                            <strong>(only privileged opers)</strong>
+                        {% elif listener.requires_oper %}
+                            <strong>(only oper)</strong>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endfor %}
+
+
+    </body>
+</html>
+{# vim: ft=jinja
+#}
