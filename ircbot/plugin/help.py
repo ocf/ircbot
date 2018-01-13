@@ -7,7 +7,7 @@ import jinja2
 
 
 def register(bot):
-    threading.Thread(target=help_server, args=(bot,)).start()
+    threading.Thread(target=help_server, args=(bot,), daemon=True).start()
     bot.listen(r'^help$', help, require_mention=True)
 
 

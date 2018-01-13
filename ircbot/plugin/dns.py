@@ -40,7 +40,7 @@ def host(bot, msg):
             ldap, = hosts_from_ldap
             ocf_host_info += ' ({}, puppet env: {})'.format(
                 ldap['type'],
-                ldap['environment'][0],
+                ldap['environment'][0] if 'environment' in ldap else None,
             )
         else:
             ocf_host_info += ' (not in LDAP?)'
