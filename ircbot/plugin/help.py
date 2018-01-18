@@ -11,7 +11,7 @@ def register(bot):
     bot.listen(r'^help$', help, require_mention=True)
 
 
-def help(msg, bot):
+def help(bot, msg):
     """Provide a link to this help page."""
     msg.respond('https://ircbot.ocf.berkeley.edu/')
 
