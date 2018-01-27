@@ -73,18 +73,18 @@ def celery_listener(bot, celery, uri):
         request = event['request']
 
         if request['calnet_uid']:
-            calnet_id = 'Calnet UID: {}'.format(request['calnet_uid'])
-        elif request['calnet_oid']:
-            calnet_id = 'Calnet OID: {}'.format(request['calnet_oid'])
+            uid_or_gid = 'Calnet UID: {}'.format(request['calnet_uid'])
+        elif request['callink_oid']:
+            uid_or_gid = 'Callink OID: {}'.format(request['callink_oid'])
         else:
-            calnet_id = 'No Calnet UID or OID set'
+            uid_or_gid = 'No Calnet UID or OID set'
 
         bot_announce(
             IRC_CHANNELS_ANNOUNCE,
-            '{user} created ({real_name}, {calnet_id})'.format(
+            '{user} created ({real_name}, {uid_or_gid})'.format(
                 user=request['user_name'],
                 real_name=request['real_name'],
-                calnet_id=calnet_id,
+                uid_or_gid=uid_or_gid,
             ),
         )
 
