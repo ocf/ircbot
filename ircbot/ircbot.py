@@ -14,12 +14,11 @@ from datetime import date
 import irc.bot
 import irc.connection
 from celery import Celery
-from celery.events import EventReceiver
 from irc.client import NickMask
-from kombu import Connection
 from ocflib.account.submission import AccountCreationCredentials
 from ocflib.account.submission import get_tasks
 
+from ircbot.plugin import create
 from ircbot.plugin import debian_security
 from ircbot.plugin import rackspace_monitoring
 
@@ -252,77 +251,6 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             self.connection.privmsg(channel, message)
 
 
-def bot_announce(bot, targets, message):
-    for target in targets:
-        bot.say(target, message)
-
-
-def celery_listener(bot, celery, uri):
-    """Listen for events from Celery, relay to IRC."""
-    # TODO: this stuff should be moved to ircbot.plugin.create.
-    connection = Connection(uri, ssl={
-        'ssl_ca_certs': '/etc/ssl/certs/ca-certificates.crt',
-        'ssl_cert_reqs': ssl.CERT_REQUIRED,
-    })
-
-    def on_account_created(event):
-        request = event['request']
-        bot_announce(
-            bot,
-            IRC_CHANNELS_ANNOUNCE,
-            '{user} created ({real_name})'.format(
-                user=request['user_name'],
-                real_name=request['real_name'],
-            ),
-        )
-
-    def on_account_submitted(event):
-        request = event['request']
-        bot_announce(
-            bot,
-            IRC_CHANNELS_OPER,
-            '{user} ({real_name}) needs approval: {reasons}'.format(
-                user=request['user_name'],
-                real_name=request['real_name'],
-                reasons=', '.join(request['reasons']),
-            ),
-        )
-
-    def on_account_approved(event):
-        request = event['request']
-        bot_announce(
-            bot,
-            IRC_CHANNELS_ANNOUNCE,
-            '{user} was approved, now pending creation.'.format(
-                user=request['user_name'],
-            ),
-        )
-
-    def on_account_rejected(event):
-        request = event['request']
-        bot_announce(
-            bot,
-            IRC_CHANNELS_ANNOUNCE,
-            '{user} was rejected.'.format(
-                user=request['user_name'],
-            ),
-        )
-
-    while True:
-        with connection as conn:
-            recv = EventReceiver(
-                conn,
-                app=celery,
-                handlers={
-                    'ocflib.account_created': on_account_created,
-                    'ocflib.account_submitted': on_account_submitted,
-                    'ocflib.account_approved': on_account_approved,
-                    'ocflib.account_rejected': on_account_rejected,
-                },
-            )
-            recv.capture(limit=None, timeout=None)
-
-
 def timer(bot):
     last_date = None
     last_dsa_check = None
@@ -413,7 +341,7 @@ def main():
 
     # celery thread
     celery_thread = threading.Thread(
-        target=celery_listener,
+        target=create.celery_listener,
         args=(bot, celery, conf.get('celery', 'broker')),
         daemon=True,
     )
