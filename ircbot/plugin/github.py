@@ -3,7 +3,7 @@ import github3
 
 
 def register(bot):
-    bot.listen(r'https?://github.com/([^/]+)/([^/]+?)/?(?: |$)', project_info)
+    bot.listen(r'https?://github.com/([^/]+)/([^/]+?)/?(?:[ #]|$)', project_info)
     bot.listen(r'https?://github.com/([^/]+)/([^/]+)/issues/([0-9]+)/?\b', issue_info)
     bot.listen(r'https?://github.com/([^/]+)/([^/]+)/pull/([0-9]+)/?\b', pr_info)
 
