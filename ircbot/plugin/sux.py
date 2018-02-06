@@ -3,6 +3,7 @@ import random
 
 
 BAD_THINGS = (
+    '{0} burnt popcorn in the server room',
     '{0} called ABC news',
     '{0} caused a kernel panic',
     '{0} is dead to me',
