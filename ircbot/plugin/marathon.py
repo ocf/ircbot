@@ -8,7 +8,7 @@ def _client(bot):
 
 def register(bot):
     bot.listen(
-        r'restart ([^ ]+)$',
+        r'^restart ([^ ]+)$',
         restart, require_mention=True, require_privileged_oper=True,
     )
 
