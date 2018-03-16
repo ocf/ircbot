@@ -96,6 +96,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             rackspace_apikey,
             weather_apikey,
             mysql_password,
+            marathon_creds,
     ):
         self.recent_messages = collections.deque(maxlen=NUM_RECENT_MESSAGES)
         self.topics = {}
@@ -105,6 +106,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         self.rackspace_apikey = rackspace_apikey
         self.weather_apikey = weather_apikey
         self.mysql_password = mysql_password
+        self.marathon_creds = marathon_creds
         self.listeners = set()
         self.plugins = {}
         self.extra_channels = set()  # plugins can add stuff here
@@ -332,10 +334,16 @@ def main():
     rackspace_apikey = conf.get('rackspace', 'apikey')
     weather_apikey = conf.get('weather_underground', 'apikey')
     mysql_password = conf.get('mysql', 'password')
+    marathon_creds = (
+        conf.get('marathon', 'user'),
+        conf.get('marathon', 'password'),
+    )
 
     # irc bot thread
-    bot = CreateBot(tasks, nickserv_password, rt_password,
-                    rackspace_apikey, weather_apikey, mysql_password)
+    bot = CreateBot(
+        tasks, nickserv_password, rt_password, rackspace_apikey,
+        weather_apikey, mysql_password, marathon_creds,
+    )
     bot_thread = threading.Thread(target=bot.start, daemon=True)
     bot_thread.start()
 
