@@ -45,6 +45,7 @@ def _get_overview(api_key):
 
     ok_entities = set()
     bad_entities = {}
+    suppressed_entities = set()
 
     for entity in j['values']:
         entity_name = entity['entity']['label']
@@ -70,8 +71,13 @@ def _get_overview(api_key):
             bad_alarms = [
                 (alarm['label'], state['state'])
                 for alarm, state in alarms_with_state
-                if state['state'] != 'OK'
+                if state['state'] != 'OK' and len(alarm['active_suppressions']) == 0
             ]
+            suppressed_entities |= {
+                entity_name
+                for alarm, state in alarms_with_state
+                if len(alarm['active_suppressions']) != 0
+            }
 
             if bad_alarms:
                 bad_checks[check_name] = bad_alarms
@@ -81,11 +87,11 @@ def _get_overview(api_key):
         else:
             ok_entities.add(entity_name)
 
-    return ok_entities, bad_entities
+    return ok_entities, bad_entities, suppressed_entities
 
 
 def get_summary(api_key):
-    ok_entities, bad_entities = _get_overview(api_key)
+    ok_entities, bad_entities, suppressed_entities = _get_overview(api_key)
     color = '\x02\x03'
     if bad_entities:
         color += '04'
@@ -110,5 +116,7 @@ def get_summary(api_key):
             )
             for entity_name, alarms in bad_entities.items()
         )
+    if suppressed_entities:
+        text += '; \x0314suppressed: ' + ', '.join(sorted(suppressed_entities))
 
     return text
