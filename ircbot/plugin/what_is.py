@@ -4,7 +4,7 @@ from ircbot import db
 
 def register(bot):
     bot.listen(r'^(what|who) (?:is|are) (.+)$', what_is, require_mention=True)
-    bot.listen(r'^know that (.+) (?:is|are) (.+)$', know_that, require_mention=True)
+    bot.listen(r'^know that (.+?) (?:is|are) (.+)$', know_that, require_mention=True)
 
 
 def what_is(bot, msg):
