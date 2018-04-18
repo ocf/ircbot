@@ -3,7 +3,7 @@
 
 def register(bot):
     bot.listen(r'^magic ?(.*)$', magic, require_mention=True)
-    bot.listen(r'\bmystery\b', mystery)
+    bot.listen(r"\bmystery\b|^why (doesn't it work|isn't it working)$|^how does it work$", mystery)
 
 
 def _magic(thing):
