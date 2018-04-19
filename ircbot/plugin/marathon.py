@@ -1,4 +1,4 @@
-"""Get information about the lab."""
+"""Manage Marathon apps."""
 from ocflib.infra.mesos import marathon
 
 
