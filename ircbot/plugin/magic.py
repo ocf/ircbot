@@ -6,6 +6,8 @@ def register(bot):
     bot.listen(r'\bmystery\b|'
                r"\bwhy (doesn't it work|isn't it working)\b|"
                r'\bhow does (it|anything) (even )?work\b', mystery)
+    bot.listen(r"^why (do(es)?n't .+ work|(is|are)n't .+ working)$|"
+               r'^how do(es)? .+ work$', mystery, require_mention=True)
 
 
 def _magic(thing):
