@@ -7,7 +7,9 @@ def register(bot):
 
 
 def theory_practice(bot, msg):
-    """https://www.ocf.berkeley.edu/~daradib/dl/ocf/publicity/signs/theory-practice.odt"""
+    """https://www.ocf.berkeley.edu/~daradib/dl/ocf/publicity/signs/theory-practice.odt
+
+    A sign in the lab"""
     msg.respond('\x1fTheory\x1f is when you know everything but nothing works.',
                 ping=False)
     msg.respond('\x1fPractice\x1f is when everything works but nobody knows why.',
