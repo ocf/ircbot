@@ -19,10 +19,12 @@ def dsa_list():
     for item in root.iter('{http://purl.org/rss/1.0/}item'):
         # title is of the form "DSA-3804 linux - security update"
         title = item.find('{http://purl.org/rss/1.0/}title').text
-        m = re.match('DSA-(\d+) (.+?) - security update$', title)
+
+        # group 1: dsa num, group 2: package or None, group 3: inline description
+        m = re.match('DSA-(\d+)(.+)? - (.+?)$', title)
         assert m, title
         dsa_num = int(m.group(1))
-        package = m.group(2)
+        package = m.group(2).strip() if m.group(2) else ''
 
         link = item.find('{http://purl.org/rss/1.0/}link').text
 
