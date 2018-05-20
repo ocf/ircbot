@@ -19,7 +19,10 @@ def dsa_list():
     for item in root.iter('{http://purl.org/rss/1.0/}item'):
         # title is of the form "DSA-3804 linux - security update"
         title = item.find('{http://purl.org/rss/1.0/}title').text
-        m = re.match('DSA-(\d+) (.+?) - security update$', title)
+
+        # group 1: dsa number, group 2: optional package name
+        # line ends with the type of notice, see DSA-4204, DSA-4205 for examples
+        m = re.match('DSA-(\d+) ?(.+)? - ', title)
         assert m, title
         dsa_num = int(m.group(1))
         package = m.group(2)
