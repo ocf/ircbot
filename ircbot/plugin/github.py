@@ -20,7 +20,7 @@ def project_info(bot, msg):
             '\x0303{user}/{repo}\x03 | \x0308{stars} stars\x03 | \x0314{description}\x03'.format(
                 user=user,
                 repo=repo_name,
-                stars=repo.stargazers,
+                stars=repo.stargazers_count,
                 description=repo.description,
             ),
             ping=False,
