@@ -4,6 +4,7 @@ import random
 
 def register(bot):
     bot.listen(r'^thanks', thanks, require_mention=True)
+    bot.listen(r'thanks,? create', thanks)
     bot.listen(r'^thank (.*)$', thank_someone, require_mention=True)
 
 
