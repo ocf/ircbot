@@ -3,7 +3,7 @@ import re
 
 
 def register(bot):
-    bot.listen(r'(?:^| )s([!@"#$%&\'*./:;=?\\^_`|~])(.+)\1(.*)\1?g?$', replace)
+    bot.listen(r'(?:^| )s([!@"#$%&\'*./:;=?\\^_`|~])(.+)\1(.*)\1g?$', replace)
 
 
 def replace(bot, msg):
