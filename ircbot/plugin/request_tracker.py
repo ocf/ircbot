@@ -18,6 +18,8 @@ def show_ticket(bot, msg):
     for ticket in REGEX.findall(msg.text):
         try:
             t = RtTicket.from_number(rt, int(ticket))
+            if t.queue == 'security':
+                t = t._replace(subject='(security ticket)')
             msg.respond(str(t))
         except AssertionError:
             pass
