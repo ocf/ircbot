@@ -23,7 +23,7 @@ def rand(bot, msg):
         c.execute(
             'SELECT * FROM quotes WHERE is_deleted = 0 ' +
             ' '.join(
-                'AND quote LIKE %s'
+                'AND quote LIKE %s COLLATE utf8mb4_unicode_ci'
                 for _ in arg
             ) +
             ' ORDER BY RAND() LIMIT 1',
