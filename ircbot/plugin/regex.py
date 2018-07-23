@@ -3,12 +3,13 @@ import re
 
 
 def register(bot):
-    bot.listen(r'(?:^| )s([!@"#$%&\'*./:;=?\\^_`|~])(.+?)\1(.*?)\1?g?$', replace)
+    bot.listen(r'(?:^| )s([!@"#$%&\'*./:;=?\\^_`|~])(.+?)\1(.*?)(?:$|\1(g?))$', replace)
 
 
 def replace(bot, msg):
     """Regex-replace some text."""
     old = msg.match.group(2)
+    is_global = (msg.match.group(4) == 'g')
 
     # By default, re.sub processes strings like r'\n' for escapes,
     # turning it into an actual newline. By using a function for
@@ -19,7 +20,7 @@ def replace(bot, msg):
 
     for user, recent_msg in bot.recent_messages:
         try:
-            new_msg = re.sub(old, new, recent_msg)
+            new_msg = re.sub(old, new, recent_msg, count=(0 if is_global else 1))
             if new_msg != recent_msg:
                 msg.respond('<{}> {}'.format(user, new_msg), ping=False)
                 break
