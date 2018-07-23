@@ -18,7 +18,7 @@ BAD_THINGS = (
 
 
 def register(bot):
-    bot.listen(r'^!sux (.+)*', sux)
+    bot.listen(r'^!sux (.+)', sux)
 
 
 def sux(bot, msg):
