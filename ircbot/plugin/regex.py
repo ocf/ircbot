@@ -2,8 +2,11 @@
 import re
 
 
+REGEX = re.compile(r'(?:^| )s([!@"#$%&\'*./:;=?\\^_`|~])(.+?)\1(.*?)\1?g?$')
+
+
 def register(bot):
-    bot.listen(r'(?:^| )s([!@"#$%&\'*./:;=?\\^_`|~])(.+?)\1(.*?)\1?g?$', replace)
+    bot.listen(REGEX, replace)
 
 
 def replace(bot, msg):
@@ -18,10 +21,11 @@ def replace(bot, msg):
         return '\x02{}\x02'.format(msg.match.group(3))
 
     for user, recent_msg in bot.recent_messages:
-        try:
-            new_msg = re.sub(old, new, recent_msg)
-            if new_msg != recent_msg:
-                msg.respond('<{}> {}'.format(user, new_msg), ping=False)
-                break
-        except re.error:
-            continue
+        if not REGEX.search(recent_msg):
+            try:
+                new_msg = re.sub(old, new, recent_msg)
+                if new_msg != recent_msg:
+                    msg.respond('<{}> {}'.format(user, new_msg), ping=False)
+                    break
+            except re.error:
+                continue
