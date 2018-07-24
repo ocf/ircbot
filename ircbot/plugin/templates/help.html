@@ -18,7 +18,7 @@
             <ul>
                 {% for listener in listeners %}
                     <li>
-                        <tt>{{listener.pattern.pattern}}</tt>: {{listener.fn.__doc__}}
+                        <tt>{{listener.pattern.pattern}}</tt>: {{listener.fn.__doc__.split('\n\n')[0]}}
                         {% if listener.require_mention %}
                             <strong>(requires mention)</strong>
                         {% endif %}
