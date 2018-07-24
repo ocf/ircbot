@@ -22,9 +22,9 @@
                         {% if listener.require_mention %}
                             <strong>(requires mention)</strong>
                         {% endif %}
-                        {% if listener.requires_privileged_oper %}
+                        {% if listener.require_privileged_oper %}
                             <strong>(only privileged opers)</strong>
-                        {% elif listener.requires_oper %}
+                        {% elif listener.require_oper %}
                             <strong>(only oper)</strong>
                         {% endif %}
                     </li>
