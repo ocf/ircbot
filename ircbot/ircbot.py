@@ -98,6 +98,8 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             weather_apikey,
             mysql_password,
             marathon_creds,
+            googlesearch_key,
+            googlesearch_cx,
     ):
         self.recent_messages = collections.defaultdict(
             functools.partial(collections.deque, maxlen=NUM_RECENT_MESSAGES),
@@ -110,6 +112,8 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         self.weather_apikey = weather_apikey
         self.mysql_password = mysql_password
         self.marathon_creds = marathon_creds
+        self.googlesearch_key = googlesearch_key
+        self.googlesearch_cx = googlesearch_cx
         self.listeners = set()
         self.plugins = {}
         self.extra_channels = set()  # plugins can add stuff here
@@ -341,11 +345,14 @@ def main():
         conf.get('marathon', 'user'),
         conf.get('marathon', 'password'),
     )
+    googlesearch_key = conf.get('googlesearch', 'key')
+    googlesearch_cx = conf.get('googlesearch', 'cx')
 
     # irc bot thread
     bot = CreateBot(
         tasks, nickserv_password, rt_password, rackspace_apikey,
         weather_apikey, mysql_password, marathon_creds,
+        googlesearch_key, googlesearch_cx,
     )
     bot_thread = threading.Thread(target=bot.start, daemon=True)
     bot_thread.start()
