@@ -20,7 +20,7 @@ def replace(bot, msg):
     def new(_):
         return '\x02{}\x02'.format(msg.match.group(3))
 
-    for user, recent_msg in bot.recent_messages:
+    for user, recent_msg in bot.recent_messages[msg.channel]:
         if not REGEX.search(recent_msg):
             try:
                 new_msg = re.sub(old, new, recent_msg)

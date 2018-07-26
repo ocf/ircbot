@@ -2,6 +2,7 @@
 """IRC bot for doing stupid stuff and sometimes handling commands for account creation."""
 import argparse
 import collections
+import functools
 import getpass
 import pkgutil
 import re
@@ -98,7 +99,9 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             mysql_password,
             marathon_creds,
     ):
-        self.recent_messages = collections.deque(maxlen=NUM_RECENT_MESSAGES)
+        self.recent_messages = collections.defaultdict(
+            functools.partial(collections.deque, maxlen=NUM_RECENT_MESSAGES),
+        )
         self.topics = {}
         self.tasks = tasks
         self.rt_password = rt_password
@@ -213,7 +216,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                     listener.fn(self, msg)
 
             # everything gets logged
-            self.recent_messages.appendleft((user, raw_text))
+            self.recent_messages[event.target].appendleft((user, raw_text))
 
     def on_currenttopic(self, connection, event):
         channel, topic = event.arguments
