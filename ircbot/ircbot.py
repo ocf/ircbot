@@ -283,7 +283,10 @@ def timer(bot):
 
         if last_monitor_check is None or time.time() - last_monitor_check > 60 * MONITOR_FREQ:
             last_monitor_check = time.time()
-            new_monitor_status = rackspace_monitoring.get_summary(bot.rackspace_apikey)
+            try:
+                new_monitor_status = rackspace_monitoring.get_summary(bot.rackspace_apikey)
+            except Exception as ex:
+                new_monitor_status = 'Error getting status: {}'.format(ex)
 
             # Only print out Rackspace status if it has changed since the last check
             if last_monitor_status and last_monitor_status != new_monitor_status:
