@@ -3,9 +3,9 @@ from ircbot import db
 
 
 def register(bot):
-    bot.listen(r'^#m (\w+)$', show)
-    bot.listen(r'#m add (\w+) (.+)$', add)
-    bot.listen(r'#m delete (\w+)$', delete)
+    bot.listen(r'#m (\w+)', show)
+    bot.listen(r'^#m add (\w+) (.+)$', add)
+    bot.listen(r'^#m delete (\w+)$', delete)
 
 
 def show(bot, msg):
@@ -29,6 +29,10 @@ def add(bot, msg):
 
     slug = msg.match.group(1)
     link = msg.match.group(2)
+
+    if len(slug) > 50 or len(link) > 100:
+        msg.respond('macro slugs must be < 50 and links < 100 characters')
+        return
 
     if len(link) > 80:
         msg.respond('please try to keep macro links below 80 characters')
