@@ -100,6 +100,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             marathon_creds,
             googlesearch_key,
             googlesearch_cx,
+            discourse_apikey,
     ):
         self.recent_messages = collections.defaultdict(
             functools.partial(collections.deque, maxlen=NUM_RECENT_MESSAGES),
@@ -114,6 +115,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         self.marathon_creds = marathon_creds
         self.googlesearch_key = googlesearch_key
         self.googlesearch_cx = googlesearch_cx
+        self.discourse_apikey = discourse_apikey
         self.listeners = set()
         self.plugins = {}
         self.extra_channels = set()  # plugins can add stuff here
@@ -350,12 +352,13 @@ def main():
     )
     googlesearch_key = conf.get('googlesearch', 'key')
     googlesearch_cx = conf.get('googlesearch', 'cx')
+    discourse_apikey = conf.get('discourse', 'apikey')
 
     # irc bot thread
     bot = CreateBot(
         tasks, nickserv_password, rt_password, rackspace_apikey,
         weather_apikey, mysql_password, marathon_creds,
-        googlesearch_key, googlesearch_cx,
+        googlesearch_key, googlesearch_cx, discourse_apikey,
     )
     bot_thread = threading.Thread(target=bot.start, daemon=True)
     bot_thread.start()
