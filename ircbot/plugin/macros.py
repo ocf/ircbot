@@ -12,6 +12,11 @@ def show(bot, msg):
     """Return a macro by slug."""
     slug = msg.match.group(1)
 
+    # special case these so show doesn't trigger on add/delete
+    # while still letting the trigger appear anywhere in the msg
+    if slug in ('add', 'delete'):
+        return
+
     with db.cursor(password=bot.mysql_password) as c:
         c.execute(
             'SELECT link FROM macros WHERE slug = %s',
