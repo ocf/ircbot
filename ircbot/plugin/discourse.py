@@ -1,6 +1,7 @@
 """Print Discourse topic information."""
 import re
 
+from ocflib.infra.discourse import DiscourseError
 from ocflib.infra.discourse import DiscourseTopic
 
 
@@ -17,5 +18,5 @@ def show_topic(bot, msg):
         try:
             d = DiscourseTopic.from_number(bot.discourse_apikey, int(topic))
             msg.respond(str(d))
-        except AssertionError:
+        except DiscourseError:
             pass
