@@ -31,7 +31,7 @@ def add(bot, msg):
     link = msg.match.group(2)
 
     if len(slug) > 50 or len(link) > 100:
-        msg.respond('macro slugs must be < 50 and links < 100 characters')
+        msg.respond('macro slugs must be <= 50 and links <= 100 characters')
         return
 
     if len(link) > 80:
