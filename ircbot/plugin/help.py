@@ -45,12 +45,12 @@ def build_request_handler(bot):
                     plugins[bot.plugins[listener.fn.__module__]].add(listener)
                 self.render_response(
                     'plugin/templates/help.html',
-                    plugins=sorted(plugins.items(), key=lambda p: p[0].__name__)
+                    plugins=sorted(plugins.items(), key=lambda p: p[0].__name__),
                 )
             elif self.path == '/macros':
                 self.render_response(
                     'plugin/templates/macros.html',
-                    macros=bot.plugins['macros'].list(bot)
+                    macros=bot.plugins['macros'].list(bot),
                 )
             else:
                 self.send_response(404, 'File not found')
