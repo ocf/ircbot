@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+    <head>
+        <title>ocf ircbot macros</title>
+        <style>
+          .wrapper {
+            width: 80%;
+            margin-left: 10%;
+          }
+          .box {
+            display: flex;
+            flex-wrap: wrap;
+            margin:-10px;
+          }
+          .box>* {
+            flex: 1 1 200px;
+            margin: 2px;
+          }
+          .macrobox {
+            border: 2px solid black;
+            text-align: center;
+            padding: 5px;
+          }
+          .macrobox img {
+            max-height: 200px;
+            width: auto;
+          }
+        </style>
+    </head>
+    <body>
+        <h1>ircbot macros: <em>macros available on ocf ircbot</em></h1>
+        <hr />
+        <br />
+        <div class="wrapper">
+          <div class="box">
+            {% for slug, link in macros %}
+            <div class="macrobox">
+              <h2>{{ slug }}</h2>
+              <hr />
+              <p><a href="{{ link }}"><img src="{{ link }}" alt="{{ slug }}"></a></p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+    </body>
+</html>
+{# vim: ft=jinja
+#}

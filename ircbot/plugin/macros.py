@@ -71,3 +71,12 @@ def delete(bot, msg):
             (slug,)
         )
         msg.respond('macro `{}` has been deleted.'.format(slug))
+
+
+def list(bot):
+    """list all macros for help page"""
+
+    with db.cursor(password=bot.mysql_password) as c:
+        c.execute('SELECT slug, link FROM macros ORDER BY slug DESC')
+        for entry in c.fetchall():
+            yield entry['slug'], entry['link']
