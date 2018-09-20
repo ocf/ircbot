@@ -34,11 +34,15 @@
         <div class="wrapper">
           <div class="box">
             {% for slug, link in macros %}
-            <div class="macrobox">
-              <h2>{{ slug }}</h2>
-              <hr />
-              <p><a href="{{ link }}"><img src="{{ link }}" alt="{{ slug }}"></a></p>
-            </div>
+              <div class="macrobox">
+                <h2>{{ slug }}</h2>
+                <hr />
+                <p>
+                  <a href="{{ link }}">
+                    <img src="{{ link }}" alt="{{ slug }}" />
+                  </a>
+                </p>
+              </div>
             {% endfor %}
           </div>
         </div>
