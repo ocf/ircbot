@@ -74,9 +74,10 @@ def delete(bot, msg):
 
 
 def list(bot):
-    """list all macros for help page"""
+    """List all macros for macros help page."""
 
     with db.cursor(password=bot.mysql_password) as c:
-        c.execute('SELECT slug, link FROM macros ORDER BY slug DESC')
-        for entry in c.fetchall():
-            yield entry['slug'], entry['link']
+        c.execute('SELECT slug, link FROM macros ORDER BY slug')
+
+    for entry in c.fetchall():
+        yield entry['slug'], entry['link']
