@@ -20,8 +20,8 @@ def in_lab(bot, msg):
 
 
 def _prevent_ping(staffer):
-    """Hack to prevent pinging the person by inserting a zero-width space in their name."""
-    return staffer[0] + '\u200b' + staffer[1:]
+    """Hack to prevent pinging the person by inserting a zero-width no-break space in their name."""
+    return staffer[0] + '\u2060' + staffer[1:]
 
 
 def who_is_in_lab(bot, msg):
