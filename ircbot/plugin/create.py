@@ -1,5 +1,4 @@
 """Approve accounts."""
-import random
 import ssl
 
 from celery import exceptions
@@ -20,7 +19,6 @@ def register(bot):
         require_mention=True, require_privileged_oper=True,
     )
     bot.listen(r'^list$', list_pending, require_mention=True)
-    bot.listen(r'^!flip$', flip)
 
 
 def approve(bot, msg):
@@ -49,13 +47,6 @@ def list_pending(bot, msg):
             msg.respond('no pending requests')
     except exceptions.TimeoutError:
         msg.respond('timed out loading list of requests, sorry!')
-
-
-def flip(bot, msg):
-    """Provide an authoritative opinion on whether to approve an account."""
-    msg.respond('my quantum randomness says: {}'.format(
-        random.choice(('approve', 'reject')),
-    ))
 
 
 def celery_listener(bot, celery, uri):
