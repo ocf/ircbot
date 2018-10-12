@@ -1,16 +1,16 @@
 """Post the contents of linked tweets."""
 import requests
+from functools import lru_cache
 
 API = 'https://api.twitter.com'
-bearer_token = None
 
 
 def register(bot):
     bot.listen(r'https?://(?:mobile\.|www\.|m\.)?twitter\.com/[^/]+/status/([0-9]+)', show_tweet)
 
 
-def _refresh_token(apikeys):
-    global bearer_token
+@lru_cache(maxsize=1)
+def _get_token(apikeys):
     resp = requests.post(
         '{}/oauth2/token'.format(API),
         data={'grant_type': 'client_credentials'},
@@ -20,12 +20,11 @@ def _refresh_token(apikeys):
 
     authorization = resp.json()
     assert authorization['token_type'] == 'bearer'
-    bearer_token = authorization['access_token']
+    return authorization['access_token']
 
 
-def _get_tweet(apikeys, status_id):
-    if bearer_token is None:
-        _refresh_token(apikeys)
+def _get_tweet(apikeys, status_id, retry=True):
+    bearer_token = _get_token(apikeys)
 
     resp = requests.get('{}/1.1/statuses/show.json?id={}&tweet_mode=extended'.format(
         API,
@@ -35,6 +34,10 @@ def _get_tweet(apikeys, status_id):
     })
     if resp.status_code == 404:
         return None
+    if resp.status_code == 401 and retry:
+        _get_token.cache_clear()
+        # make sure not to get stuck in an infinite loop of 401s
+        return _get_tweet(apikeys, status_id, False)
     resp.raise_for_status()
 
     return resp.json()
