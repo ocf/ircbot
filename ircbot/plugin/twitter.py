@@ -1,8 +1,9 @@
-"""Post the contents of linked tweets."""
-import requests
+"""Post the contents of tweets."""
 from functools import lru_cache
 
-API = 'https://api.twitter.com'
+import requests
+
+TWITTER_API = 'https://api.twitter.com'
 
 
 def register(bot):
@@ -12,7 +13,7 @@ def register(bot):
 @lru_cache(maxsize=1)
 def _get_token(apikeys):
     resp = requests.post(
-        '{}/oauth2/token'.format(API),
+        '{}/oauth2/token'.format(TWITTER_API),
         data={'grant_type': 'client_credentials'},
         auth=apikeys,
     )
@@ -27,7 +28,7 @@ def _get_tweet(apikeys, status_id, retry=True):
     bearer_token = _get_token(apikeys)
 
     resp = requests.get('{}/1.1/statuses/show.json?id={}&tweet_mode=extended'.format(
-        API,
+        TWITTER_API,
         status_id,
     ), headers={
         'Authorization': 'Bearer {}'.format(bearer_token),
@@ -62,7 +63,7 @@ def _format_tweet(tweet):
             _format_media(media, url),
         )
     contents = contents.replace('\n', ' ')
-    return '@{handle} ({realname}): {contents}'.format(
+    return '@\x02{handle}\x02 ({realname}): {contents}'.format(
         handle=tweet['user']['screen_name'],
         realname=tweet['user']['name'],
         contents=contents,
@@ -70,8 +71,7 @@ def _format_tweet(tweet):
 
 
 def show_tweet(bot, msg):
-    """Show tweet content."""
+    """Show the user and content of a linked tweet."""
     tweet = _get_tweet(bot.twitter_apikeys, msg.match.group(1))
     if tweet:
-        print(_format_tweet(tweet))
         msg.respond(_format_tweet(tweet), ping=False)
