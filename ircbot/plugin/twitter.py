@@ -33,7 +33,8 @@ def _get_tweet(apikeys, status_id, retry=True):
     ), headers={
         'Authorization': 'Bearer {}'.format(bearer_token),
     })
-    if resp.status_code == 404:
+    if resp.status_code == 404 or resp.status_code == 403:
+        # 403 indicates protected account, so just give up
         return None
     if resp.status_code == 401 and retry:
         _get_token.cache_clear()
