@@ -219,7 +219,14 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                         nick=user,
                         respond=respond,
                     )
-                    listener.fn(self, msg)
+                    try:
+                        listener.fn(self, msg)
+                    except Exception as ex:
+                        msg.respond('Exception in {module}/{function}: {exception}'.format(
+                            module=listener.fn.__module__,
+                            function=listener.fn.__name__,
+                            exception=ex
+                        ))
 
             # everything gets logged
             self.recent_messages[event.target].appendleft((user, raw_text))
