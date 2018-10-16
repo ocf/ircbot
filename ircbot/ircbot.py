@@ -11,6 +11,8 @@ import threading
 import time
 from configparser import ConfigParser
 from datetime import date
+from textwrap import dedent
+from traceback import format_exc
 
 import irc.bot
 import irc.connection
@@ -18,6 +20,7 @@ from celery import Celery
 from irc.client import NickMask
 from ocflib.account.submission import AccountCreationCredentials
 from ocflib.account.submission import get_tasks
+from ocflib.misc.mail import send_problem_report
 
 from ircbot.plugin import create
 from ircbot.plugin import debian_security
@@ -222,11 +225,38 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                     try:
                         listener.fn(self, msg)
                     except Exception as ex:
-                        msg.respond('Exception in {module}/{function}: {exception}'.format(
+                        error_msg = 'ircbot exception in {module}/{function}: {exception}'.format(
                             module=listener.fn.__module__,
                             function=listener.fn.__name__,
                             exception=ex
-                        ))
+                        )
+                        msg.respond(error_msg, ping=False)
+                        # don't send emails when running as dev
+                        if user == 'nobody':
+                            send_problem_report(dedent(
+                                """
+                                {error}
+
+                                {traceback}
+
+                                Message:
+                                  * Channel: {channel}
+                                  * Nick: {nick}
+                                  * Oper?: {oper}
+                                  * Text: {text}
+                                  * Raw text: {raw_text}
+                                  * Match groups: {groups}
+                                """
+                            ).format(
+                                error=error_msg,
+                                traceback=format_exc(),
+                                channel=msg.channel,
+                                nick=msg.nick,
+                                oper=msg.is_oper,
+                                text=msg.text,
+                                raw_text=msg.raw_text,
+                                groups=msg.match.groups(),
+                            ))
 
             # everything gets logged
             self.recent_messages[event.target].appendleft((user, raw_text))
