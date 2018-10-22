@@ -14,11 +14,14 @@ def bless(bot, msg):
         'We are all SysAdmins on this blessed day.',
         'Thou hast made us for thyself, O Server, and our heart is restless until it finds the bug in thee.',
         'The function of prayer is not to influence the printer, but rather to change the nature of the one '
-        'who prints.'
+        'who prints.',
     )))
 
 
 def bless_someone(bot, msg):
     """Have create thank somebody on your behalf."""
-    msg.respond('Blessed be {}, in the name of the compiler, the linker, and the holy runtime!'.format(
-        msg.match.group(1)), ping=False)
+    msg.respond(
+        'Blessed be {}, in the name of the compiler, the linker, and the holy runtime!'.format(
+            msg.match.group(1),
+        ), ping=False,
+    )

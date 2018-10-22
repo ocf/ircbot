@@ -236,7 +236,7 @@ print(
         os.path.join(os.path.dirname(site.__file__), 'no-global-site-packages.txt')
     ) else
     1
-)"""
+)""",
     ))
     system_site_packages = int(system_site_packages)
     assert system_site_packages in (0, 1)

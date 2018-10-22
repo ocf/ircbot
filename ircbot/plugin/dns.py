@@ -47,12 +47,14 @@ def host(bot, msg):
     else:
         ocf_host_info = 'not an OCF host'
 
-    msg.respond('{host}: {ip} ({reverse_dns}) | {ocf_host_info}'.format(
-        host=host,
-        ip=ip,
-        reverse_dns=reverse_dns if reverse_dns else 'no reverse dns',
-        ocf_host_info=ocf_host_info,
-    ), ping=False)
+    msg.respond(
+        '{host}: {ip} ({reverse_dns}) | {ocf_host_info}'.format(
+            host=host,
+            ip=ip,
+            reverse_dns=reverse_dns if reverse_dns else 'no reverse dns',
+            ocf_host_info=ocf_host_info,
+        ), ping=False,
+    )
 
 
 def haiku(bot, msg):

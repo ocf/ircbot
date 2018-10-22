@@ -27,12 +27,14 @@ def _get_token(apikeys):
 def _get_tweet(apikeys, status_id, retry=True):
     bearer_token = _get_token(apikeys)
 
-    resp = requests.get('{}/1.1/statuses/show.json?id={}&tweet_mode=extended'.format(
-        TWITTER_API,
-        status_id,
-    ), headers={
-        'Authorization': 'Bearer {}'.format(bearer_token),
-    })
+    resp = requests.get(
+        '{}/1.1/statuses/show.json?id={}&tweet_mode=extended'.format(
+            TWITTER_API,
+            status_id,
+        ), headers={
+            'Authorization': 'Bearer {}'.format(bearer_token),
+        },
+    )
     if resp.status_code == 404 or resp.status_code == 403:
         # 403 indicates protected account, so just give up
         return None
@@ -46,8 +48,10 @@ def _get_tweet(apikeys, status_id, retry=True):
 
 
 def _format_media(media, url):
-    media_urls = [medium['media_url_https']
-                  for medium in media if medium['type'] == 'photo']
+    media_urls = [
+        medium['media_url_https']
+        for medium in media if medium['type'] == 'photo'
+    ]
     if any([medium['type'] != 'photo' for medium in media]):
         media_urls += [url]
     return ' '.join(media_urls)
