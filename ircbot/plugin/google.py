@@ -17,7 +17,7 @@ def google(bot, msg):
             # The "cx" parameter is the ID of the custom search engine.
             'cx': bot.googlesearch_cx,
             'q': query,
-        }
+        },
     )
     if resp.status_code != 200:
         msg.respond('error searching google: {.status_code}'.format(resp), ping=False)

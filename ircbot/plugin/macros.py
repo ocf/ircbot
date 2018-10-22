@@ -20,7 +20,7 @@ def show(bot, msg):
     with db.cursor(password=bot.mysql_password) as c:
         c.execute(
             'SELECT link FROM macros WHERE slug = %s',
-            (slug,)
+            (slug,),
         )
         macro = c.fetchone()
         if macro is not None:
@@ -51,12 +51,12 @@ def add(bot, msg):
                 'macro `{}` already exists as {}'.format(
                     result['slug'],
                     result['link'],
-                )
+                ),
             )
         else:
             c.execute(
                 'INSERT INTO macros (slug, link) VALUES (%s, %s)',
-                (slug, link)
+                (slug, link),
             )
             msg.respond('macro added as `{}`'.format(slug))
 
@@ -68,7 +68,7 @@ def delete(bot, msg):
     with db.cursor(password=bot.mysql_password) as c:
         c.execute(
             'DELETE FROM macros WHERE slug = %s',
-            (slug,)
+            (slug,),
         )
         msg.respond('macro `{}` has been deleted.'.format(slug))
 

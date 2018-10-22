@@ -21,7 +21,7 @@ def _get_overview(api_key):
                     'apiKey': api_key,
                 },
             },
-        }
+        },
     )
     assert req.status_code == 200, req.status_code
     j = req.json()
@@ -112,7 +112,7 @@ def get_summary(api_key):
                 ', '.join(
                     '{} is {}'.format(alarm, status)
                     for alarm, status in alarms.items()
-                )
+                ),
             )
             for entity_name, alarms in bad_entities.items()
         )

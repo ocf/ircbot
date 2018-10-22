@@ -20,7 +20,7 @@ def join_channel(bot, channel):
         with db.cursor(password=bot.mysql_password) as c:
             c.execute(
                 'INSERT IGNORE INTO channels (channel) VALUES (%s)',
-                (channel,)
+                (channel,),
             )
     bot.connection.join(channel)
 
@@ -46,6 +46,6 @@ def leave(bot, msg):
         with db.cursor(password=bot.mysql_password) as c:
             c.execute(
                 'DELETE FROM channels WHERE channel = %s',
-                (msg.channel,)
+                (msg.channel,),
             )
         bot.connection.part(msg.channel)

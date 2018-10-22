@@ -93,7 +93,7 @@ def checkacct(bot, msg):
                             entry['attributes']['cn'][0],
                         )
                         for entry in c.response
-                    ))
+                    )),
                 )
             else:
                 msg.respond('no results found')

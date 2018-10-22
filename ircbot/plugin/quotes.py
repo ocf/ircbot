@@ -56,7 +56,7 @@ def show(bot, msg):
             for quote_id in quote_ids:
                 c.execute(
                     'SELECT * FROM quotes WHERE id = %s and is_deleted = 0',
-                    (quote_id,)
+                    (quote_id,),
                 )
                 quote = c.fetchone()
                 if quote is not None:
@@ -70,7 +70,7 @@ def add(bot, msg):
     with db.cursor(password=bot.mysql_password) as c:
         c.execute(
             'INSERT INTO quotes (quote) VALUES (%s)',
-            (msg.match.group(1),)
+            (msg.match.group(1),),
         )
 
     msg.respond('Your quote was added as #{}'.format(c.lastrowid))
@@ -87,6 +87,6 @@ def delete(bot, msg):
         with db.cursor(password=bot.mysql_password) as c:
             c.execute(
                 'UPDATE quotes SET is_deleted = 1 WHERE id = %s',
-                (quote_id,)
+                (quote_id,),
             )
         msg.respond('Quote #{} has been deleted.'.format(quote_id))

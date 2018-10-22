@@ -130,7 +130,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             [(IRC_HOST, IRC_PORT)],
             IRC_NICKNAME,
             IRC_NICKNAME,
-            connect_factory=factory
+            connect_factory=factory,
         )
 
     def register_plugins(self):

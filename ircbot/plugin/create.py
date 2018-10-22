@@ -51,10 +51,12 @@ def list_pending(bot, msg):
 
 def celery_listener(bot, celery, uri):
     """Listen for events from Celery, relay to IRC."""
-    connection = Connection(uri, ssl={
-        'ssl_ca_certs': '/etc/ssl/certs/ca-certificates.crt',
-        'ssl_cert_reqs': ssl.CERT_REQUIRED,
-    })
+    connection = Connection(
+        uri, ssl={
+            'ssl_ca_certs': '/etc/ssl/certs/ca-certificates.crt',
+            'ssl_cert_reqs': ssl.CERT_REQUIRED,
+        },
+    )
 
     def bot_announce(targets, message):
         for target in targets:
