@@ -14,7 +14,7 @@ def bless(bot, msg):
         'We are all SysAdmins on this blessed day.',
         'Thou hast made us for thyself, O Server, and our heart is restless until it finds the bug in thee.',
         'The function of prayer is not to influence the printer, but rather to change the nature of the one who prints.'
-    ))
+    )))
 
 def bless_someone(bot, msg):
     """Have create thank somebody on your behalf."""
