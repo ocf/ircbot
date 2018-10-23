@@ -8,6 +8,7 @@ def register(bot):
 
 
 def bless(bot, msg):
+    """Consecrate the occasion."""
     msg.respond(random.choice((
         'In the name of the compiler, the linker, and the holy runtime, I bless thee.',
         'Not today, Windows.',
