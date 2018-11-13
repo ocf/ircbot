@@ -1,9 +1,9 @@
-"""tHiS is A UsEFul PlUGiN"""
+"""Create a sentence with random capitalization"""
 import random
 
 
 def register(bot):
-    bot.listen(r'!spongebob (.+)', spongemock)
+    bot.listen(r'^!spongebob (.+)', spongemock)
 
 
 def spongemock(bot, msg):
