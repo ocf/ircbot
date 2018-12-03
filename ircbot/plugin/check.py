@@ -12,6 +12,9 @@ GROUP_COLOR_MAPPING = {
     'opstaff': '\x0303',  # green
     'ocfstaff': '\x0302',  # blue
     'ocfroot': '\x0307',  # orange
+    'ocfapphost': '\x0310',  # cyan
+    'ocfofficers': '\x0306',  # purple
+    'ocfalumni': '\x0313',  # pink
 }
 
 
