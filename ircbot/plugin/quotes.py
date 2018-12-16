@@ -3,6 +3,7 @@ from ircbot import db
 
 
 def register(bot):
+    bot.listen(r'^!quote$', rand)
     bot.listen(r'^!quote rand ?(.*)$', rand)
     bot.listen(r'^!quote show (.+)$', show)
     bot.listen(r'^!quote add (.+)$', add)
@@ -18,7 +19,10 @@ def _print_quote(respond, quote):
 
 def rand(bot, msg):
     """Show a random quote, optionally filtered by a search term."""
-    arg = msg.match.group(1).split()
+    if msg.match.groups():
+        arg = msg.match.group(1).split()
+    else:
+        arg = []
     with db.cursor(password=bot.mysql_password) as c:
         c.execute(
             'SELECT * FROM quotes WHERE is_deleted = 0 ' +
