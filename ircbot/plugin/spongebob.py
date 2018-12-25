@@ -12,7 +12,9 @@ def spongemock(bot, msg):
     text = msg.match.group(1)
     if len(text) < 2:
         msg.respond(text, ping=False)
+        return
 
+    alpha = 0.25 if len(text) < 10 else 0.45
     fn_set = sorted([str.upper, str.lower], key=lambda _: random())
     fn_cycle = cycle(fn_set)
 
@@ -22,8 +24,11 @@ def spongemock(bot, msg):
     for c in text:
         spongebob += transform_fn(c)
 
+        if not c.isalpha():
+            continue
+
         # Exponentially decrease the chance of getting same case
-        if random() > 0.45 ** (case_dup - 0.5):
+        if random() > alpha ** case_dup:
             transform_fn = next(fn_cycle)
             case_dup = 1
         else:
