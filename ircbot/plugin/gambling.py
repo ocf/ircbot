@@ -1,10 +1,12 @@
 """Outsource all your decision making to create."""
 import random
+import re
 
 
 def register(bot):
     bot.listen(r'^!flip$', flip)
     bot.listen(r'^!8ball( |$)', eightball)
+    bot.listen(r'^!choose (.+)$', choose)
     bot.listen(r'roll (\d+)d(\d+)', roll, require_mention=True)
 
 
@@ -13,6 +15,16 @@ def flip(bot, msg):
     msg.respond('my quantum randomness says: {}'.format(
         random.choice(('approve', 'reject')),
     ))
+
+
+def choose(bot, msg):
+    """Make your important life choices, separated with ';', with create.
+    (e.g. !choice study for cs61a; don't study for cs61a)"""
+    choices = re.findall(r'\b([^;]+);?', msg.match.group(1))
+    if not choices:
+        msg.respond("Usage: !choice study for cs61a; don't study for cs61a")
+    else:
+        msg.respond(random.choice(choices))
 
 
 def eightball(bot, msg):
