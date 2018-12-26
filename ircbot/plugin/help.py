@@ -1,6 +1,7 @@
 """Provide help information."""
 import collections
 import http.server
+import pkgutil
 import threading
 
 import jinja2
@@ -27,6 +28,11 @@ def build_request_handler(bot):
         loader=jinja2.PackageLoader('ircbot', ''),
         autoescape=True,
     )
+
+    webhook_receivers = {}
+    for importer, mod_name, _ in pkgutil.iter_modules(['ircbot/plugin/webhook']):
+        mod = importer.find_module(mod_name).load_module(mod_name)
+        webhook_receivers[mod.PATH] = mod
 
     class RequestHandler(http.server.BaseHTTPRequestHandler):
 
@@ -56,6 +62,20 @@ def build_request_handler(bot):
                 self.send_response(404, 'File not found')
                 self.end_headers()
                 self.wfile.write(b'404 File not found')
+
+        def do_POST(self):
+            before, _, hookname = self.path.partition('/hook/')
+            print(webhook_receivers, before, hookname)
+            if not before and hookname in webhook_receivers:
+                content_length = int(self.headers['Content-Length'])
+                body = self.rfile.read(content_length)
+
+                webhook_receivers[hookname].handle_hook(bot, body)
+
+                self.send_response(200)
+            else:
+                self.send_response(404)
+            self.end_headers()
 
     return RequestHandler
 
