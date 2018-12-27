@@ -10,7 +10,7 @@ memes = frozenset([
 
 
 def register(bot):
-    bot.listen(r'^!spongebob (.+)', spongemock)
+    bot.listen(r'^!spongebob(?: (.*))?', spongemock)
     bot.listen(r'(.*(?:{}).*)'.format('|'.join(memes)), spongemock, flags=re.IGNORECASE)
 
 
@@ -44,5 +44,8 @@ def spongebobify(text):
 def spongemock(bot, msg):
     """HaVe CReaTE mOCk A SEnTeNCe."""
     text = msg.match.group(1)
-
+    if text is None:
+        if len(bot.recent_messages[msg.channel]) == 0:
+            return
+        _, text = bot.recent_messages[msg.channel][0]
     msg.respond(spongebobify(text), ping=False)
