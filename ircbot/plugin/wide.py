@@ -54,5 +54,5 @@ def get_text(bot, msg=None):
     history = bot.recent_messages[msg.channel]
     return (
         msg.match.group(1)
-        or history.popleft()[1] if history else None
+        or history[0][1] if history else None
     )
