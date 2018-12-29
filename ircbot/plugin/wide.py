@@ -1,9 +1,11 @@
 """ Convert characters into full-width text characters"""
+import functools
 from string import ascii_lowercase
 from string import ascii_uppercase
 
 widetext_map = {i: i + 0xFEE0 for i in range(0x21, 0x7F)}
-space = chr(0x3000)  # space character has unique mapping
+widetext_map[ord(' ')] = 0x3000  # the space character has unique mapping to become a unicode ideographic space
+space = chr(0x3000)
 
 # As seen in Samuari Jack
 thicc = '卂乃匚刀乇下厶卄工丁长乚从几口尸㔿尺丂丅凵リ山乂丫乙'
@@ -23,47 +25,34 @@ def register(bot):
     bot.listen(r'^!extrathicc(?: (.*))?', extrathicc)
 
 
-def widetext(bot, msg):
+def widetextify(bot, msg, width=1):
     """ｗｅｌｃｏｍｅ　ｔｏ　ｔｈｅ　ｏｃｆ"""
     text = get_text(bot, msg)
-    if text != '':
-        msg.respond(widetextify(text), ping=False)
+    if text:
+        response = ''.join(
+            [
+                char.translate(widetext_map) +
+                space * (width - 1) for char in text
+            ],
+        )
+        msg.respond(response, ping=False)
 
 
-def evenwidertext(bot, msg):
-    """ｅ　ｖ　ｅ　ｎ　　　ｗ　ｉ　ｄ　ｅ　ｒ"""
-    text = get_text(bot, msg)
-    if text != '':
-        msg.respond(widetextify(text, width=2), ping=False)
-
-
-def superwidetext(bot, msg):
-    """ｏ　　ｍ　　ｇ"""
-    text = get_text(bot, msg)
-    if text != '':
-        msg.respond(widetextify(text, width=3), ping=False)
+widetext = widetextify
+evenwidertext = functools.partial(widetextify, width=2)
+superwidetext = functools.partial(widetextify, width=3)
 
 
 def extrathicc(bot, msg):
     """乇乂丅尺卂 丅卄工匚匚"""
     text = get_text(bot, msg)
-    if text != '':
+    if text:
         msg.respond(text.translate(thicc_map), ping=False)
 
 
-def widetextify(text, width=1):
-    translated_words = [''.join(
-        [c.translate(widetext_map) + space * (width - 1) for c in word],
-    )
-        for word in text.split()]
-    seperator = space * width
-    return seperator.join(translated_words)
-
-
 def get_text(bot, msg=None):
-    text = msg.match.group(1)
-    if text is None:
-        if len(bot.recent_messages[msg.channel]) == 0:
-            return ''
-        _, text = bot.recent_messages[msg.channel][0]
-    return text
+    history = bot.recent_messages[msg.channel]
+    return (
+        msg.match.group(1)
+        or history.popleft()[1] if history else None
+    )
