@@ -2,6 +2,7 @@
 import collections
 import functools
 import http.server
+import os
 import threading
 
 import jinja2
@@ -44,9 +45,11 @@ def build_request_handler(bot):
                 plugins = collections.defaultdict(set)
                 for listener in bot.listeners:
                     if isinstance(listener.fn, functools.partial):
-                        plugins[bot.plugins[listener.fn.func.__module__]].add(listener)
+                        module = listener.fn.func.__module__
                     else:
-                        plugins[bot.plugins[listener.fn.__module__]].add(listener)
+                        module = listener.fn.__module__
+                    plugins[bot.plugins[module]].add(listener)
+
                 self.render_response(
                     'plugin/templates/help.html',
                     plugins=sorted(plugins.items(), key=lambda p: p[0].__name__),
@@ -65,5 +68,6 @@ def build_request_handler(bot):
 
 
 def help_server(bot):
-    server = http.server.HTTPServer(('0.0.0.0', 8888), build_request_handler(bot))
+    port = os.getenv('HTTP_PORT', 8888)
+    server = http.server.HTTPServer(('0.0.0.0', int(port)), build_request_handler(bot))
     server.serve_forever()
