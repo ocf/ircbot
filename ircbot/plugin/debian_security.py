@@ -22,7 +22,7 @@ def dsa_list():
 
         # group 1: dsa number, group 2: optional package name
         # line ends with the type of notice, see DSA-4204, DSA-4205 for examples
-        m = re.match('DSA-(\d+) ?(.+)? - ', title)
+        m = re.match(r'DSA-(\d+) ?(.+)? - ', title)
         assert m, title
         dsa_num = int(m.group(1))
         package = m.group(2)
