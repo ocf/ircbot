@@ -1,5 +1,6 @@
 """Provide help information."""
 import collections
+import functools
 import http.server
 import threading
 
@@ -42,7 +43,10 @@ def build_request_handler(bot):
             if self.path == '/':
                 plugins = collections.defaultdict(set)
                 for listener in bot.listeners:
-                    plugins[bot.plugins[listener.fn.__module__]].add(listener)
+                    if isinstance(listener.fn, functools.partial):
+                        plugins[bot.plugins[listener.fn.func.__module__]].add(listener)
+                    else:
+                        plugins[bot.plugins[listener.fn.__module__]].add(listener)
                 self.render_response(
                     'plugin/templates/help.html',
                     plugins=sorted(plugins.items(), key=lambda p: p[0].__name__),
