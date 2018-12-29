@@ -3,7 +3,7 @@
     <head>
         <title>ocf ircbot help</title>
         <style>
-            tt { background-color: #eee; padding: 3px; }
+            .command { font-family: monospace; background-color: #eee; padding: 3px; }
         </style>
     </head>
     <body>
@@ -18,7 +18,7 @@
             <ul>
                 {% for listener in listeners %}
                     <li>
-                        <tt>{{listener.pattern.pattern}}</tt>: {{listener.fn.__doc__.split('\n\n')[0]}}
+                        <span class="command">{{listener.pattern.pattern}}</span>: {{listener.fn.__doc__.split('\n\n')[0]}}
                         {% if listener.require_mention %}
                             <strong>(requires mention)</strong>
                         {% endif %}
