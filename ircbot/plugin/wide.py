@@ -18,9 +18,9 @@ thicc_map = {
 
 
 def register(bot):
-    bot.listen(r'^!widetext(?: (.*))?', widetext)
-    bot.listen(r'^!evenwidertext(?: (.*))?', evenwidertext)
-    bot.listen(r'^!superwidetext(?: (.*))?', superwidetext)
+    bot.listen(r'^!w(?: (.*))?', widetext)
+    bot.listen(r'^!w2(?: (.*))?', evenwidertext)
+    bot.listen(r'^!w3(?: (.*))?', superwidetext)
 
     bot.listen(r'^!extrathicc(?: (.*))?', extrathicc)
 
