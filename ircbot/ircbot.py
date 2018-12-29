@@ -244,7 +244,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             def plusone(m):
                 return '{}: {}'.format(m.group(1), int(m.group(2)) + 1)
 
-            new_topic = re.sub('(days since.*?): (\d+)', plusone, topic)
+            new_topic = re.sub(r'(days since.*?): (\d+)', plusone, topic)
             if topic != new_topic:
                 self.connection.topic(channel, new_topic=new_topic)
 

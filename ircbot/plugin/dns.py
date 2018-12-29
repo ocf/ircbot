@@ -29,7 +29,7 @@ def host(bot, msg):
 
     try:
         reverse_dns, _, _ = socket.gethostbyaddr(ip)
-    except socket.error as ex:
+    except socket.error:
         reverse_dns = None
 
     if net.is_ocf_ip(ipaddress.ip_address(ip)):
