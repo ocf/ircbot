@@ -64,7 +64,10 @@ class Listener(collections.namedtuple(
 
     @property
     def plugin_name(self):
-        return self.fn.__module__
+        if isinstance(self.fn, functools.partial):
+            return self.fn.func.__module__
+        else:
+            return self.fn.__module__
 
 
 class MatchedMessage(collections.namedtuple(

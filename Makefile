@@ -1,5 +1,6 @@
 DOCKER_REVISION ?= testing-$(USER)
 DOCKER_TAG = docker-push.ocf.berkeley.edu/ircbot:$(DOCKER_REVISION)
+RANDOM_PORT ?= $(shell expr $$(( 8000 + (`id -u` % 1000) )))
 
 .PHONY: test
 test: venv install-hooks
@@ -15,7 +16,9 @@ venv: vendor/venv-update requirements.txt requirements-dev.txt
 		install= -r requirements.txt -r requirements-dev.txt
 
 .PHONY: dev
+dev: export HTTP_PORT ?= $(RANDOM_PORT)
 dev: venv
+	@echo "\e[1m\e[93mRunning help on http://$(shell hostname -f ):$(RANDOM_PORT)/\e[0m"
 	venv/bin/python -m ircbot.ircbot
 
 .PHONY: clean
