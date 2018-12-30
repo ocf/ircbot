@@ -228,8 +228,9 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                     )
                     listener.fn(self, msg)
 
-            # everything gets logged
-            self.recent_messages[event.target].appendleft((user, raw_text))
+            # everything gets logged except commands
+            if raw_text[0] != '!':
+                self.recent_messages[event.target].appendleft((user, raw_text))
 
     def on_currenttopic(self, connection, event):
         channel, topic = event.arguments
