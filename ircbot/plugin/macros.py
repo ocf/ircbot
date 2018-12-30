@@ -40,7 +40,7 @@ def add(bot, msg):
     link = msg.match.group(2)
 
     if slug in KEYWORDS:
-        msg.respond('`{}` is a reserved keyword')
+        msg.respond('`{}` is a reserved keyword.'.format(slug))
         return
 
     if len(slug) > 50 or len(link) > 100:
@@ -86,6 +86,10 @@ def rename(bot, msg):
 
     old_slug = msg.match.group(1)
     new_slug = msg.match.group(2)
+
+    if new_slug in KEYWORDS:
+        msg.respond('`{}` is a reserved keyword.'.format(new_slug))
+        return
 
     with db.cursor(password=bot.mysql_password) as c:
         c.execute(
