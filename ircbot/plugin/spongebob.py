@@ -4,7 +4,7 @@ from itertools import cycle
 from random import random
 
 memes = frozenset([
-    'blockchain', 'coinbase', 'cloud', r'machine\s+learning', r'donald\s+(?:j\.?\s+)?trump',
+    'blockchain', 'coinbase', r'cloud\s+comput(e|ing)', r'machine\s+learning', r'donald\s+(?:j\.?\s+)?trump',
     r'hacker\s*news', r'web\s*scale',
 ])
 
