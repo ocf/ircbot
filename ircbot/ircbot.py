@@ -53,14 +53,17 @@ MAX_CLIENT_MSG = 435
 
 class Listener(collections.namedtuple(
     'Listener',
-    ('pattern', 'fn', 'require_mention', 'require_oper', 'require_privileged_oper'),
+    ('pattern', 'fn', 'help_text', 'require_mention', 'require_oper', 'require_privileged_oper'),
 )):
 
     __slots__ = ()
 
     @property
     def help(self):
-        return self.fn.__doc__
+        if self.help_text:
+            return self.help_text
+        else:
+            return self.fn.__doc__
 
     @property
     def plugin_name(self):
@@ -149,6 +152,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             pattern,
             fn,
             flags=0,
+            help_text=None,
             require_mention=False,
             require_oper=False,
             require_privileged_oper=False,
@@ -156,6 +160,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         self.listeners.add(Listener(
             pattern=re.compile(pattern, flags),
             fn=fn,
+            help_text=help_text,
             require_mention=require_mention,
             require_oper=require_oper,
             require_privileged_oper=require_privileged_oper,
@@ -226,8 +231,9 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                     )
                     listener.fn(self, msg)
 
-            # everything gets logged
-            self.recent_messages[event.target].appendleft((user, raw_text))
+            # everything gets logged except commands
+            if raw_text[0] != '!':
+                self.recent_messages[event.target].appendleft((user, raw_text))
 
     def on_currenttopic(self, connection, event):
         channel, topic = event.arguments
