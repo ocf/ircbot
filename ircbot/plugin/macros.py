@@ -1,11 +1,15 @@
 """Provide OCF image macros, inspired by Phabricator Macros"""
 from ircbot import db
 
+KEYWORDS = {'add', 'delete', 'rename', 'replace'}
+
 
 def register(bot):
     bot.listen(r'#m (\w+)', show)
     bot.listen(r'^#m add (\w+) (.+)$', add)
     bot.listen(r'^#m delete (\w+)$', delete)
+    bot.listen(r'^#m rename (\w+) (\w+)$', rename)
+    bot.listen(r'^#m replace (\w+) (.+)$', replace)
 
 
 def show(bot, msg):
@@ -14,7 +18,7 @@ def show(bot, msg):
 
     # special case these so show doesn't trigger on add/delete
     # while still letting the trigger appear anywhere in the msg
-    if slug in ('add', 'delete'):
+    if slug in KEYWORDS:
         return
 
     with db.cursor(password=bot.mysql_password) as c:
@@ -34,6 +38,10 @@ def add(bot, msg):
 
     slug = msg.match.group(1)
     link = msg.match.group(2)
+
+    if slug in KEYWORDS:
+        msg.respond('`{}` is a reserved keyword.'.format(slug))
+        return
 
     if len(slug) > 50 or len(link) > 100:
         msg.respond('macro slugs must be <= 50 and links <= 100 characters')
@@ -71,6 +79,38 @@ def delete(bot, msg):
             (slug,),
         )
         msg.respond('macro `{}` has been deleted.'.format(slug))
+
+
+def rename(bot, msg):
+    """Rename a macro."""
+
+    old_slug = msg.match.group(1)
+    new_slug = msg.match.group(2)
+
+    if new_slug in KEYWORDS:
+        msg.respond('`{}` is a reserved keyword.'.format(new_slug))
+        return
+
+    with db.cursor(password=bot.mysql_password) as c:
+        c.execute(
+            'UPDATE macros SET slug = %s WHERE slug = %s',
+            (new_slug, old_slug),
+        )
+        msg.respond('macro `{}` has been renamed to `{}`'.format(old_slug, new_slug))
+
+
+def replace(bot, msg):
+    """Replace the target of a macro slug."""
+
+    slug = msg.match.group(1)
+    new_link = msg.match.group(2)
+
+    with db.cursor(password=bot.mysql_password) as c:
+        c.execute(
+            'UPDATE macros SET link = %s WHERE slug = %s',
+            (new_link, slug),
+        )
+        msg.respond('macro `{}` updated'.format(slug))
 
 
 def list(bot):
