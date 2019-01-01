@@ -5,4 +5,12 @@ ircbot
 
 IRC bot for account creation and other things.
 
-Running `make dev` will have your bot join `#{username}` on IRC.
+Running
+-------
+
+Running `make dev` will have your bot join the `#test` channel on Slack/IRC
+with the username `create-${username}`.
+
+An empty configuration is provided in `ocf-ircbot.conf.example`. The production
+configuration is located at `/opt/puppetlabs/shares/private/docker/ircbot`
+on the Puppet master.
