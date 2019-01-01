@@ -20,7 +20,6 @@ def flip(bot, msg):
 def choose(bot, msg):
     """Make your important life choices, separated with ';', with create.
     (e.g. !choice study for cs61a; don't study for cs61a)"""
-    print('choices getting called')
     choices = re.findall(r'\b([^;]+);?', msg.match.group(1))
     if not choices:
         msg.respond("Usage: !choice study for cs61a; don't study for cs61a")
