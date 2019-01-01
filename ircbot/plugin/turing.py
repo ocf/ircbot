@@ -13,22 +13,21 @@ final_model = None
 
 def register(bot):
     bot.listen(r'turing', markov, flags=re.IGNORECASE, require_mention=True)
-    bot.listen(r'^!genmodels', initialize_markov_dataset)
+    bot.listen(r'^!genmodels', build_models)
 
-    initialize_markov_dataset(bot)
+    build_models(bot)
 
 
 def markov(bot, msg):
     """Return the best quote ever"""
-    if not final_model:
-        return
-    msg.respond(
-        final_model.make_sentence(tries=100),
-        ping=False,
-    )
+    if final_model:
+        msg.respond(
+            final_model.make_sentence(tries=100),
+            ping=False,
+        )
 
 
-def initialize_markov_dataset(bot, msg=None):
+def build_models(bot, msg=None):
     """Rebuild the markov models"""
     with db.cursor(password=bot.mysql_password) as c:
         # Fetch quote data
@@ -39,6 +38,10 @@ def initialize_markov_dataset(bot, msg=None):
         c.execute('SELECT text from inspire')
         inspirations = c.fetchall()
 
+        # Fetch iconic FOSS rants
+        c.execute('SELECT text from rants')
+        rants = c.fetchall()
+
     # Normalize the quote data... Get rid of IRC junk
     normalized_quotes_2d = [normalize_quote(d['quote']) for d in quotes]
     flat_quotes = list(itertools.chain(*normalized_quotes_2d))
@@ -46,11 +49,16 @@ def initialize_markov_dataset(bot, msg=None):
     # Normalize the inspire data... Just lightly prune authors
     clean_inspirations = [normalize_inspiration(d['text']) for d in inspirations]
 
-    # Create the two models, and combine them, but give OCF quotes more weight
+    # Normalize the rant data... just remove ending punctuation
+    clean_rants = [normalize_rant(d['text']) for d in rants]
+
+    # Create the three models, and combine them.
+    # More heavily weight our quotes and rants
     global final_model
+    rants_model = markovify.NewlineText('\n'.join(clean_rants))
     quotes_model = markovify.NewlineText('\n'.join(flat_quotes))
     inspire_model = markovify.NewlineText('\n'.join(clean_inspirations))
-    final_model = markovify.combine([quotes_model, inspire_model], [1.7, 1])
+    final_model = markovify.combine([quotes_model, rants_model, inspire_model], [2, 1.5, 1])
 
 
 def normalize_quote(q):
@@ -74,4 +82,11 @@ def normalize_inspiration(q):
     cleaned = re.sub('--.*$', '', cleaned)
     # Remove "\\" newline separators
     cleaned = re.sub(r'\\\s', '', cleaned)
+    return cleaned.strip()
+
+
+def normalize_rant(r):
+    # Remove sentence ends because we need the newline model
+    # so this will match up with our other datasets
+    cleaned = re.sub(r'(\.|\?|!)$', '', r)
     return cleaned.strip()
