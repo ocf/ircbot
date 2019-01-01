@@ -1,5 +1,4 @@
 """Is create turing complete?"""
-import itertools
 import re
 
 import markovify
@@ -22,7 +21,7 @@ def markov(bot, msg):
     """Return the best quote ever"""
     if final_model:
         msg.respond(
-            final_model.make_sentence(tries=100),
+            final_model.make_sentence(tries=300),
             ping=False,
         )
 
@@ -43,8 +42,7 @@ def build_models(bot, msg=None):
         rants = c.fetchall()
 
     # Normalize the quote data... Get rid of IRC junk
-    normalized_quotes_2d = [normalize_quote(d['quote']) for d in quotes]
-    flat_quotes = list(itertools.chain(*normalized_quotes_2d))
+    clean_quotes = [normalize_quote(d['quote']) for d in quotes]
 
     # Normalize the inspire data... Just lightly prune authors
     clean_inspirations = [normalize_inspiration(d['text']) for d in inspirations]
@@ -56,24 +54,19 @@ def build_models(bot, msg=None):
     # More heavily weight our quotes and rants
     global final_model
     rants_model = markovify.NewlineText('\n'.join(clean_rants))
-    quotes_model = markovify.NewlineText('\n'.join(flat_quotes))
+    quotes_model = markovify.NewlineText('\n'.join(clean_quotes))
     inspire_model = markovify.NewlineText('\n'.join(clean_inspirations))
-    final_model = markovify.combine([quotes_model, rants_model, inspire_model], [2, 1.5, 1])
+    final_model = markovify.combine([quotes_model, rants_model, inspire_model], [2, 2, 0.5])
 
 
 def normalize_quote(q):
-    # Remove "keur:" from start of text
-    cleaned = re.sub(r'^\s*{}:\s*'.format(IRC_NICK_RE), '', q)
-    # Remove "<@keur>" and "<keur>" and "< keur>"
-    cleaned = re.sub(r'<\s*@?{}\s*>:?\s*'.format(IRC_NICK_RE), '', cleaned)
-    # Remove "-keur" from the end of text
-    cleaned = re.sub(r'\s*\-\s*{}'.format(IRC_NICK_RE), '', cleaned)
     # Remove timestamps
-    cleaned = re.sub(r'\[?\d{2}:\d{2}(:?:\d{2})?\]?', '', cleaned)
+    cleaned = re.sub(r'\[?\d{2}:\d{2}(:?:\d{2})?\]?', '', q)
     # Remove "\\" newline separators
-    cleaned = re.sub(r'\\\s', '', cleaned)
-    sentences = re.split(r'\.|\?|!', cleaned)
-    return [c.strip() for c in sentences if c]
+    cleaned = re.sub(r'\\\s*', '', cleaned)
+    # Trim punctuation from end of quotes
+    cleaned = re.sub(r'(\.|\?|!)$', '', cleaned)
+    return cleaned
 
 
 def normalize_inspiration(q):
