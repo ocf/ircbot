@@ -5,8 +5,6 @@ import markovify
 
 from ircbot import db
 
-IRC_NICK_RE = r'[a-zA-Z_\-\[\]\^{}|`][a-zA-Z0-9_\-\[\]\\^{}|`]{2,15}'
-
 final_model = None
 
 
@@ -20,10 +18,22 @@ def register(bot):
 def markov(bot, msg):
     """Return the best quote ever"""
     if final_model:
-        msg.respond(
-            final_model.make_sentence(tries=300),
-            ping=False,
-        )
+        output = final_model.make_sentence(tries=200)
+        if output:
+            # Put a zero width space in every word to prevent pings
+            # This is also much simpler than using crazy IRC nick regex.
+            # Put it in the middle of the word since nicks are quoted
+            # using "<@keur>" syntax.
+            msg.respond(
+                ' '.join([w[:len(w) // 2] + '\u2060' + w[len(w) // 2:] for w in output.split()]),
+                ping=False,
+            )
+        else:
+            # This has never happened, but just in case...
+            msg.respond(
+                'Could not generate sentence. Please try again or run !genmodels',
+                ping=False,
+            )
 
 
 def build_models(bot, msg=None):
