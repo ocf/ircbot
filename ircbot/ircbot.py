@@ -29,8 +29,11 @@ from ircbot.plugin import rackspace_monitoring
 IRC_HOST = 'irc'
 IRC_PORT = 6697
 
+# TODO: set this value in the Dockerfile, instead of relying on this kludge
 user = getpass.getuser()
-if user == 'nobody':
+TESTING = user != 'nobody'
+
+if not TESTING:
     IRC_NICKNAME = 'create'
     IRC_CHANNELS_OPER = frozenset(('#rebuild', '#atool'))
     IRC_CHANNELS_ANNOUNCE = frozenset(('#atool',))
@@ -232,7 +235,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                         )
                         msg.respond(error_msg, ping=False)
                         # don't send emails when running as dev
-                        if user == 'nobody':
+                        if not TESTING:
                             send_problem_report(dedent(
                                 """
                                 {error}
