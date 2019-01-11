@@ -9,46 +9,56 @@ final_model = None
 
 
 def register(bot):
-    bot.listen(r'turing', markov, flags=re.IGNORECASE, require_mention=True)
-    bot.listen(r'^!genmodels', build_models)
+    bot.listen(r'^turing$', markov, flags=re.IGNORECASE, require_mention=True)
+    bot.listen(r'^turing regen(?:erate)?$', generate_model, flags=re.IGNORECASE, require_mention=True)
 
-    build_models(bot)
+    generate_model(bot)
 
 
 def markov(bot, msg):
     """Return the best quote ever"""
     if final_model:
-        output = final_model.make_sentence(tries=200)
-        if output:
+        # This tries to generate a sentence that doesn't "overlap", or
+        # share too much similarity with seeded text.
+        # Read more here: https://github.com/jsvine/markovify#basic-usage
+        sentence = final_model.make_sentence(tries=200)
+        if sentence:
             # Put a zero width space in every word to prevent pings
             # This is also much simpler than using crazy IRC nick regex.
             # Put it in the middle of the word since nicks are quoted
             # using "<@keur>" syntax.
+            mid = len(sentence) // 2
             msg.respond(
-                ' '.join([w[:len(w) // 2] + '\u2060' + w[len(w) // 2:] for w in output.split()]),
+                ' '.join(w[:mid] + '\u2060' + w[mid:] for w in sentence.split()),
                 ping=False,
             )
         else:
             # This has never happened, but just in case...
             msg.respond(
-                'Could not generate sentence. Please try again or run !genmodels',
-                ping=False,
+                'Could not generate sentence. Please try again.',
+                ping=True,
             )
 
 
-def build_models(bot, msg=None):
-    """Rebuild the markov models"""
-    with db.cursor(password=bot.mysql_password) as c:
+def generate_model(bot, msg=None):
+    """Set models equal to final_model global variable."""
+    global final_model
+    final_model = build_model(bot.mysql_password, model_weights=[2, 2, 0.5])
+
+
+def build_model(db_passwd, model_weights=[1, 1, 1]):
+    """Rebuild the markov model using quotes, inspire, and rants databases as seeds."""
+    with db.cursor(password=db_passwd) as c:
         # Fetch quote data
-        c.execute('SELECT quote from quotes WHERE is_deleted = 0')
+        c.execute('SELECT quote FROM quotes WHERE is_deleted = 0')
         quotes = c.fetchall()
 
         # Fetch inspire data
-        c.execute('SELECT text from inspire')
+        c.execute('SELECT text FROM inspire')
         inspirations = c.fetchall()
 
         # Fetch iconic FOSS rants
-        c.execute('SELECT text from rants')
+        c.execute('SELECT text FROM markov_rants')
         rants = c.fetchall()
 
     # Normalize the quote data... Get rid of IRC junk
@@ -62,11 +72,10 @@ def build_models(bot, msg=None):
 
     # Create the three models, and combine them.
     # More heavily weight our quotes and rants
-    global final_model
     rants_model = markovify.NewlineText('\n'.join(clean_rants))
     quotes_model = markovify.NewlineText('\n'.join(clean_quotes))
     inspire_model = markovify.NewlineText('\n'.join(clean_inspirations))
-    final_model = markovify.combine([quotes_model, rants_model, inspire_model], [2, 2, 0.5])
+    return markovify.combine([quotes_model, rants_model, inspire_model], model_weights)
 
 
 def normalize_quote(q):
