@@ -1,4 +1,5 @@
 """Post the contents of tweets."""
+import html
 from functools import lru_cache
 
 import requests
@@ -59,7 +60,7 @@ def _format_media(media, url):
 
 
 def _format_tweet(tweet):
-    contents = tweet['full_text']
+    contents = html.unescape(tweet['full_text'])
     media = tweet.get('extended_entities', {}).get('media')
     if media:
         # url is the same for all media
