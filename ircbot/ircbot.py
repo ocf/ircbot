@@ -128,6 +128,8 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         self.plugins = {}
         self.extra_channels = set()  # plugins can add stuff here
 
+        self.sendmsg_lock = threading.Lock()
+
         # Register plugins before joining the server.
         self.register_plugins()
 
@@ -249,28 +251,33 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         return ircbot.plugin.channels.on_invite(self, connection, event)
 
     def bump_topic(self):
-        for channel, topic in self.topics.items():
-            def plusone(m):
-                return '{}: {}'.format(m.group(1), int(m.group(2)) + 1)
+        with self.sendmsg_lock:
+            for channel, topic in self.topics.items():
+                def plusone(m):
+                    return '{}: {}'.format(m.group(1), int(m.group(2)) + 1)
 
-            new_topic = re.sub(r'(days since.*?): (\d+)', plusone, topic)
-            if topic != new_topic:
-                self.connection.topic(channel, new_topic=new_topic)
+                new_topic = re.sub(r'(days since.*?): (\d+)', plusone, topic)
+                if topic != new_topic:
+                    self.connection.topic(channel, new_topic=new_topic)
 
     def say(self, channel, message):
-        # Find the length of the full message
-        msg_len = len('PRIVMSG {} :{}\r\n'.format(channel, message).encode('utf-8'))
+        with self.sendmsg_lock:
+            # Find the length of the full message
+            msg_len = len('PRIVMSG {} :{}\r\n'.format(
+                channel,
+                message,
+            ).encode('utf-8'))
 
-        # The message must be split up if over the length limit
-        if msg_len > MAX_CLIENT_MSG:
-            # Split up the full message into chunks to send
-            msg_range = range(0, len(message), MAX_CLIENT_MSG)
-            messages = [message[i:i + MAX_CLIENT_MSG] for i in msg_range]
+            # The message must be split up if over the length limit
+            if msg_len > MAX_CLIENT_MSG:
+                # Split up the full message into chunks to send
+                msg_range = range(0, len(message), MAX_CLIENT_MSG)
+                messages = [message[i:i + MAX_CLIENT_MSG] for i in msg_range]
 
-            for msg in messages:
-                self.connection.privmsg(channel, msg)
-        else:
-            self.connection.privmsg(channel, message)
+                for msg in messages:
+                    self.connection.privmsg(channel, msg)
+            else:
+                self.connection.privmsg(channel, message)
 
 
 def timer(bot):

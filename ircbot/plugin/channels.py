@@ -22,7 +22,8 @@ def join_channel(bot, channel):
                 'INSERT IGNORE INTO channels (channel) VALUES (%s)',
                 (channel,),
             )
-    bot.connection.join(channel)
+    with bot.sendmsg_lock:
+        bot.connection.join(channel)
 
 
 def on_invite(bot, conn, event):
