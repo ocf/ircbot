@@ -19,7 +19,7 @@ venv: vendor/venv-update requirements.txt requirements-dev.txt
 dev: export HTTP_PORT ?= $(RANDOM_PORT)
 dev: venv
 	@echo "\e[1m\e[93mRunning help on http://$(shell hostname -f ):$(RANDOM_PORT)/\e[0m"
-	venv/bin/python -m ircbot.ircbot
+	venv/bin/python -m ircbot.ircbot -c ocf-ircbot.conf
 
 .PHONY: clean
 clean:

@@ -24,7 +24,6 @@ from ocflib.misc.mail import send_problem_report
 
 from ircbot.plugin import create
 from ircbot.plugin import debian_security
-from ircbot.plugin import rackspace_monitoring
 
 IRC_HOST = 'irc'
 IRC_PORT = 6697
@@ -40,15 +39,13 @@ if not TESTING:
     IRC_CHANNELS_JOIN_MYSQL = True
 else:
     IRC_NICKNAME = 'create-{}'.format(user)
-    IRC_CHANNELS_OPER = IRC_CHANNELS_ANNOUNCE = frozenset(('#' + user,))
+    IRC_CHANNELS_OPER = IRC_CHANNELS_ANNOUNCE = frozenset(('#test',))
     IRC_CHANNELS_JOIN_MYSQL = False
 
 NUM_RECENT_MESSAGES = 10
 
 # Check for Debian security announcements every 5 minutes
 DSA_FREQ = 5
-# Print out Rackspace monitoring status at most every minute
-MONITOR_FREQ = 1
 
 # 512 bytes is the max message length set by RFC 2812 on the max single message
 # length, so messages need to split up into at least sections of that size,
@@ -106,7 +103,6 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             tasks,
             nickserv_password,
             rt_password,
-            rackspace_apikey,
             weather_apikey,
             mysql_password,
             marathon_creds,
@@ -122,7 +118,6 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         self.tasks = tasks
         self.rt_password = rt_password
         self.nickserv_password = nickserv_password
-        self.rackspace_apikey = rackspace_apikey
         self.weather_apikey = weather_apikey
         self.mysql_password = mysql_password
         self.marathon_creds = marathon_creds
@@ -316,8 +311,6 @@ class CreateBot(irc.bot.SingleServerIRCBot):
 def timer(bot):
     last_date = None
     last_dsa_check = None
-    last_monitor_check = None
-    last_monitor_status = None
 
     while not bot.connection.connected:
         time.sleep(2)
@@ -333,19 +326,6 @@ def timer(bot):
 
             for line in debian_security.get_new_dsas():
                 bot.say('#rebuild', line)
-
-        if last_monitor_check is None or time.time() - last_monitor_check > 60 * MONITOR_FREQ:
-            last_monitor_check = time.time()
-            try:
-                new_monitor_status = rackspace_monitoring.get_summary(bot.rackspace_apikey)
-            except Exception as ex:
-                new_monitor_status = 'Error getting status: {}'.format(ex)
-
-            # Only print out Rackspace status if it has changed since the last check
-            if last_monitor_status and last_monitor_status != new_monitor_status:
-                bot.say('#rebuild', new_monitor_status)
-
-            last_monitor_status = new_monitor_status
 
         time.sleep(1)
 
@@ -394,7 +374,6 @@ def main():
 
     rt_password = conf.get('rt', 'password')
     nickserv_password = conf.get('nickserv', 'password')
-    rackspace_apikey = conf.get('rackspace', 'apikey')
     weather_apikey = conf.get('weather_underground', 'apikey')
     mysql_password = conf.get('mysql', 'password')
     marathon_creds = (
@@ -411,7 +390,7 @@ def main():
 
     # irc bot thread
     bot = CreateBot(
-        tasks, nickserv_password, rt_password, rackspace_apikey,
+        tasks, nickserv_password, rt_password,
         weather_apikey, mysql_password, marathon_creds,
         googlesearch_key, googlesearch_cx, discourse_apikey,
         twitter_apikeys,
