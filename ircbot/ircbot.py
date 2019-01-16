@@ -241,7 +241,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                         error_msg = 'ircbot exception in {module}/{function}: {exception}'.format(
                             module=listener.fn.__module__,
                             function=listener.fn.__name__,
-                            exception=ex
+                            exception=ex,
                         )
                         msg.respond(error_msg, ping=False)
                         # don't send emails when running as dev
