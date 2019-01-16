@@ -39,7 +39,7 @@ if not TESTING:
     IRC_CHANNELS_JOIN_MYSQL = True
 else:
     IRC_NICKNAME = 'create-{}'.format(user)
-    IRC_CHANNELS_OPER = IRC_CHANNELS_ANNOUNCE = frozenset(('#test',))
+    IRC_CHANNELS_OPER = IRC_CHANNELS_ANNOUNCE = frozenset(('#' + user,))
     IRC_CHANNELS_JOIN_MYSQL = False
 
 NUM_RECENT_MESSAGES = 10
