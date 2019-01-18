@@ -16,7 +16,7 @@ def register(bot):
 
 
 def markov(bot, msg):
-    """Return the best quote ever"""
+    """Return the best quote ever."""
     if final_model:
         # This tries to generate a sentence that doesn't "overlap", or
         # share too much similarity with seeded text.
@@ -27,9 +27,8 @@ def markov(bot, msg):
             # This is also much simpler than using crazy IRC nick regex.
             # Put it in the middle of the word since nicks are quoted
             # using "<@keur>" syntax.
-            mid = len(sentence) // 2
             msg.respond(
-                ' '.join(w[:mid] + '\u2060' + w[mid:] for w in sentence.split()),
+                ' '.join(w[:len(w) // 2] + '\u2060' + w[len(w) // 2:] for w in sentence.split()),
                 ping=False,
             )
         else:
