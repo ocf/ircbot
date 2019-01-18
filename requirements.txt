@@ -25,6 +25,7 @@ Jinja2==2.10
 jwcrypto==0.5.0
 kombu==4.2.1
 ldap3==2.5.1
+markovify==0.7.1
 MarkupSafe==1.0
 more-itertools==4.3.0
 ocflib
