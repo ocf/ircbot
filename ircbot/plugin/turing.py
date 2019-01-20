@@ -23,12 +23,17 @@ def markov(bot, msg):
         # Read more here: https://github.com/jsvine/markovify#basic-usage
         sentence = final_model.make_sentence(tries=200)
         if sentence:
-            # Put a zero width space in every word to prevent pings
+            # Put a zero width space in every word to prevent pings.
             # This is also much simpler than using crazy IRC nick regex.
             # Put it in the middle of the word since nicks are quoted
-            # using "<@keur>" syntax.
+            # using "<@keur>" syntax.  Additionally, remove any -slack at
+            # the end of a nick, to avoid inserting a space like
+            # abcde|-slack (thus pinging abcde).
+            def insert_space(w):
+                halfway = len(re.sub(r'-slack([^A-Za-z0-9_\-\\\[\]{}^`|]|\Z)', r'\1', w)) // 2
+                return w[:halfway] + '\u2060' + w[halfway:]
             msg.respond(
-                ' '.join(w[:len(w) // 2] + '\u2060' + w[len(w) // 2:] for w in sentence.split()),
+                ' '.join(map(insert_space, sentence.split())),
                 ping=False,
             )
         else:
