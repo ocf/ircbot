@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>ocf ircbot quotes</title>
+        <style>
+          table {
+            border-collapse: collapse;
+          }
+          th, td {
+            border: 1px solid black;
+            padding: 4px;
+          }
+        </style>
+    </head>
+    <body>
+        <h1>ircbot quotes: <em>stupid stuff the OCF says</em></h1>
+        <hr />
+        <table>
+          <tbody>
+            <tr>
+              <th>ID</th>
+              <th>Quote</th>
+            </tr>
+            {% for id, quote in quotes %}
+              <tr>
+                <td>{{ id }}</td>
+                <td>{{ quote }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+    </body>
+</html>
+{# vim: ft=jinja
+#}

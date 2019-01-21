@@ -10,17 +10,23 @@ import jinja2
 def register(bot):
     threading.Thread(target=help_server, args=(bot,), daemon=True).start()
     bot.listen(r'^help$', help, require_mention=True)
-    bot.listen(r'^macros$', help_macro, require_mention=True)
+    bot.listen(r'^macros$', help_macros, require_mention=True)
+    bot.listen(r'^quotes$', help_quotes, require_mention=True)
 
 
 def help(bot, msg):
-    """Provide a link to this help page."""
+    """Provide a link to the help page."""
     msg.respond('https://ircbot.ocf.berkeley.edu/')
 
 
-def help_macro(bot, msg):
+def help_macros(bot, msg):
     """Provide a link to the list of macros."""
     msg.respond('https://ircbot.ocf.berkeley.edu/macros')
+
+
+def help_quotes(bot, msg):
+    """Provide a link to the list of quotes."""
+    msg.respond('https://ircbot.ocf.berkeley.edu/quotes')
 
 
 def build_request_handler(bot):
@@ -53,6 +59,11 @@ def build_request_handler(bot):
                 self.render_response(
                     'plugin/templates/macros.html',
                     macros=bot.plugins['macros'].list(bot),
+                )
+            elif self.path == '/quotes':
+                self.render_response(
+                    'plugin/templates/quotes.html',
+                    quotes=bot.plugins['quotes'].list(bot),
                 )
             else:
                 self.send_response(404, 'File not found')

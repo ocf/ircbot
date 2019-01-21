@@ -23,6 +23,7 @@ def rand(bot, msg):
         arg = msg.match.group(1).split()
     else:
         arg = []
+
     with db.cursor(password=bot.mysql_password) as c:
         c.execute(
             'SELECT * FROM quotes WHERE is_deleted = 0 ' +
@@ -94,3 +95,13 @@ def delete(bot, msg):
                 (quote_id,),
             )
         msg.respond('Quote #{} has been deleted.'.format(quote_id))
+
+
+def list(bot):
+    """List all quotes for the quotes list page."""
+
+    with db.cursor(password=bot.mysql_password) as c:
+        c.execute('SELECT * FROM quotes WHERE is_deleted = 0 ORDER BY id')
+
+    for quote in c.fetchall():
+        yield quote['id'], quote['quote']
