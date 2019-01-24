@@ -264,8 +264,20 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         # The message must be split up if over the length limit
         if msg_len > MAX_CLIENT_MSG:
             # Split up the full message into chunks to send
-            msg_range = range(0, len(message), MAX_CLIENT_MSG)
-            messages = [message[i:i + MAX_CLIENT_MSG] for i in msg_range]
+            messages, msg = [], ''
+            count = 0
+
+            for char in message:
+                char_len = len(char.encode('utf-8'))
+                if count + char_len > MAX_CLIENT_MSG:
+                    messages.append(msg)
+                    count, msg = 0, ''
+
+                msg += char
+                count += char_len
+
+            if len(msg) != 0:
+                messages.append(msg)
 
             for msg in messages:
                 self.connection.privmsg(channel, msg)
