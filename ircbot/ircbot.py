@@ -268,6 +268,8 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             def split_utf8(s, n):
                 while len(s) > n:
                     k = n
+                    # All continuation bytes for utf-8 codepoints
+                    # are between 0x80 and 0xBF
                     while (s[k] & 0xc0) == 0x80:
                         k -= 1
                         if s[k] == str(s[k]):
