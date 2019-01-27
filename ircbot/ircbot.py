@@ -263,21 +263,21 @@ class CreateBot(irc.bot.SingleServerIRCBot):
 
         # The message must be split up if over the length limit
         if msg_len > MAX_CLIENT_MSG:
-            # Split up the full message into chunks to send
-            messages, msg = [], ''
-            count = 0
 
-            for char in message:
-                char_len = len(char.encode('utf-8'))
-                if count + char_len > MAX_CLIENT_MSG:
-                    messages.append(msg)
-                    count, msg = 0, ''
+            # Generator which splits the unicode message string
+            def split_utf8(s, n):
+                while len(s) > n:
+                    k = n
+                    while (s[k] & 0xc0) == 0x80:
+                        k -= 1
+                        if s[k] == str(s[k]):
+                            print('foo: ', s)
 
-                msg += char
-                count += char_len
+                    yield s[:k].decode('utf-8')
+                    s = s[k:]
+                yield s.decode('utf-8')
 
-            if len(msg) != 0:
-                messages.append(msg)
+            messages = split_utf8(message.encode('utf-8'), MAX_CLIENT_MSG)
 
             for msg in messages:
                 self.connection.privmsg(channel, msg)
