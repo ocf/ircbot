@@ -272,8 +272,6 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                     # are between 0x80 and 0xBF
                     while (s[k] & 0xc0) == 0x80:
                         k -= 1
-                        if s[k] == str(s[k]):
-                            print('foo: ', s)
 
                     yield s[:k].decode('utf-8')
                     s = s[k:]
