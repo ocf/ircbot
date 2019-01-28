@@ -23,6 +23,11 @@ def help_macro(bot, msg):
     msg.respond('https://ircbot.ocf.berkeley.edu/macros')
 
 
+def help_shorturl(bot, msg):
+    """Provide a link to the list of shorturls."""
+    msg.respond('https://ircbot.ocf.berkeley.edu/shorturls')
+
+
 def build_request_handler(bot):
     jinja_env = jinja2.Environment(
         loader=jinja2.PackageLoader('ircbot', ''),
@@ -39,6 +44,11 @@ def build_request_handler(bot):
             self.end_headers()
             self.wfile.write(rendered)
 
+        def render_404(self):
+            self.send_response(404, 'File not found')
+            self.end_headers()
+            self.wfile.write(b'404 File not found')
+
         def do_GET(self):
             if self.path == '/':
                 plugins = collections.defaultdict(set)
@@ -54,10 +64,26 @@ def build_request_handler(bot):
                     'plugin/templates/macros.html',
                     macros=bot.plugins['macros'].list(bot),
                 )
+            elif self.path.startswith('/shorturls'):
+                query_items = self.path.lstrip('/').split('/')
+
+                if not query_items[1]:
+                    self.render_response(
+                        'plugin/templates/shorturls.html',
+                        shorturls=bot.plugins['shorturls'].list(bot),
+                    )
+                else:
+                    candidate_target = bot.plugins['shorturls'].retrieve(bot, '/'.join(query_items[1:]))
+
+                    if candidate_target:
+                        self.send_response(302, 'Found')
+                        self.send_header('Content-Length', 0)
+                        self.send_header('Location', candidate_target)
+                        self.end_headers()
+                    else:
+                        self.render_404()
             else:
-                self.send_response(404, 'File not found')
-                self.end_headers()
-                self.wfile.write(b'404 File not found')
+                self.render_404()
 
     return RequestHandler
 

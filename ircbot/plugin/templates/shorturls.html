@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>ocf shorturls</title>
+        <style>
+          code { background-color: #eee; padding: 3px; }
+	  .slug { font-weight: bold }
+	  .link {}
+        </style>
+    </head>
+    <body>
+        <h1>shorturls available at ocf</h1>
+        <hr />
+
+        <p>Available shorturls are:</p>
+	<ul>
+          {% for slug, target in shorturls %}
+	  <li>
+            <p><span class="slug">{{slug}}</span>: <span class="link"><a href="{{ target }}">{{ target }}</a></span></p>
+	  </li>
+          {% endfor %}
+	</ul>
+    </body>
+</html>
+{# vim: ft=jinja
+#}
