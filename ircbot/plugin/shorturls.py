@@ -6,11 +6,11 @@ KEYWORDS = {'add', 'delete', 'rename', 'replace'}
 
 def register(bot):
     # [!-~] is all printable ascii except spaces
-    bot.listen(r'^!shorturl ([!-~]+)', show)
-    bot.listen(r'^!shorturl add ([!-~]+) (.+)$', add)
-    bot.listen(r'^!shorturl delete ([!-~]+)$', delete)
-    bot.listen(r'^!shorturl rename ([!-~]+) ([!-~]+)$', rename)
-    bot.listen(r'^!shorturl replace ([!-~]+) (.+)$', replace)
+    bot.listen(r'^!shorturl ([\w/]+)', show)
+    bot.listen(r'^!shorturl add ([\w/]+) (.+)$', add)
+    bot.listen(r'^!shorturl delete ([\w/]+)$', delete)
+    bot.listen(r'^!shorturl rename ([\w/]+) ([\w/]+)$', rename)
+    bot.listen(r'^!shorturl replace ([\w/]+) (.+)$', replace)
 
 
 def list(bot):
