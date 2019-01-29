@@ -10,7 +10,8 @@ import jinja2
 def register(bot):
     threading.Thread(target=help_server, args=(bot,), daemon=True).start()
     bot.listen(r'^help$', help, require_mention=True)
-    bot.listen(r'^macros$', help_macro, require_mention=True)
+    bot.listen(r'^macros?$', help_macro, require_mention=True)
+    bot.listen(r'^shorturls?$', help_shorturls, require_mention=True)
 
 
 def help(bot, msg):
@@ -23,7 +24,7 @@ def help_macro(bot, msg):
     msg.respond('https://ircbot.ocf.berkeley.edu/macros')
 
 
-def help_shorturl(bot, msg):
+def help_shorturls(bot, msg):
     """Provide a link to the list of shorturls."""
     msg.respond('https://ircbot.ocf.berkeley.edu/shorturls')
 
@@ -67,7 +68,7 @@ def build_request_handler(bot):
             elif self.path.startswith('/shorturls'):
                 query_items = self.path.lstrip('/').split('/')
 
-                if not query_items[1]:
+                if len(query_items) < 2 or not query_items[1]:
                     self.render_response(
                         'plugin/templates/shorturls.html',
                         shorturls=bot.plugins['shorturls'].list(bot),
