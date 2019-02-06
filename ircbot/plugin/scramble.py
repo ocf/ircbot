@@ -8,6 +8,7 @@ def register(bot):
 
 
 def scramble(bot, msg):
+    """Sblmraec yruo setenecn"""
     text = msg.match.group(1)
     if text is None:
         if len(bot.recent_messages[msg.channel]) == 0:
