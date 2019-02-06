@@ -11,12 +11,12 @@ def register(bot):
 
 def weather(bot, msg):
     """Show weather for a location (defaults to Berkeley)."""
-    celsius = 'celsius' if msg.match.group(1) else 'fahrenheit'
+    unit = 'celsius' if msg.match.group(1) else 'fahrenheit'
     where = msg.match.group(2) or 'Berkeley, CA'
     location = find_match(where)
     summary = None
     if location:
-        summary = get_summary(bot.weather_apikey, location, celsius)
+        summary = get_summary(bot.weather_apikey, location, unit)
     if summary:
         msg.respond(summary, ping=False)
     else:
@@ -76,7 +76,7 @@ def find_match(query):
         }
 
 
-def get_summary(api_key, result, celsius='fahrenheit'):
+def get_summary(api_key, result, unit='fahrenheit'):
     req = requests.get('http://api.wunderground.com/api/{api_key}/forecast{link}.json'.format(
         api_key=api_key,
         link=result['link'],
@@ -91,8 +91,8 @@ def get_summary(api_key, result, celsius='fahrenheit'):
     for day in j['forecast']['simpleforecast']['forecastday']:
         days.append('{weekday} {low}-{high}'.format(
             weekday=day['date']['weekday_short'],
-            low=color(int(day['low'][celsius])),
-            high=color(int(day['high'][celsius])),
+            low=color(int(day['low'][unit])),
+            high=color(int(day['high'][unit])),
         ))
 
     cur = j['forecast']['simpleforecast']['forecastday'][0]
