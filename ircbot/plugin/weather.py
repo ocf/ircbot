@@ -6,13 +6,13 @@ import requests
 
 
 def register(bot):
-    bot.listen(r'^(?:weather|hot|cold)(-c)? ?(.*)$', weather, require_mention=True)
+    bot.listen(r'^(?:weather|hot|cold)\s*(-c)?\s?(.*)$', weather, require_mention=True)
 
 
 def weather(bot, msg):
     """Show weather for a location (defaults to Berkeley)."""
-    unit = 'celsius' if msg.match.group(1) else 'fahrenheit'
-    where = msg.match.group(2) or 'Berkeley, CA'
+    unit = 'c' if msg.match.group(1) else 'f'
+    where = msg.match.group(2).strip() or 'Berkeley, CA'
     location = find_match(where)
     summary = None
     if location:
@@ -23,34 +23,45 @@ def weather(bot, msg):
         msg.respond('idk where {} is'.format(where))
 
 
-def icon(temp):
-    # it doesn't get cold in the bay area, anything less than 60 is a snowman
-    if temp < 60:
+def f2c(temp):
+    return int((32 * temp - 32) * 5 / 9)
+
+
+def icon(temp, unit='f'):
+    # it doesn't get cold in the bay area, anything less than 60°F is a snowman
+    if temp < (60 if unit == 'f' else f2c(60)):
         return '☃'
     # it doesn't get hot in the bay area, either
-    elif temp < 75:
+    elif temp < (75 if unit == 'f' else f2c(75)):
         return '☀'
     else:
         return '☢'
 
 
-def color(temp, text=None):
+def color(temp, text=None, unit='f'):
     if text is None:
-        text = '{}°F'.format(temp)
+        text = '{}°{}'.format(temp, unit.capitalize())
+
+    # The temperature values that will make the color different.
+    # Default is fahrenheit, and will be converted to celsius if wanted.
+    temp_cutoffs = [40, 50, 60, 70, 75, 80, 90, 999]
+    if unit == 'c':
+        temp_cutoffs = [f2c(temp) for temp in temp_cutoffs]
 
     # The keys here are the lower bound of these colors, the last key is very
     # large so that it matches anything above the second-to-last key. This
     # also means the first value matches anything under it.
-    temp_ranges = {
-        40: '\x0312',  # Light blue (< 40)
-        50: '\x0311',  # Light cyan
-        60: '\x0310',  # Teal
-        70: '\x0314',  # Grey
-        75: '\x0F',   # Reset (default text color)
-        80: '\x0307',  # Orange
-        90: '\x0305',  # Maroon
-        999: '\x0304',  # Red (> 90)
-    }
+    colors = [
+        '\x0312',  # Light blue (< 40)
+        '\x0311',  # Light cyan
+        '\x0310',  # Teal
+        '\x0314',  # Grey
+        '\x0F',    # Reset (default text color)
+        '\x0307',  # Orange
+        '\x0305',  # Maroon
+        '\x0304',  # Red (> 90)
+    ]
+    temp_ranges = {temp_cutoffs[i]: colors[i] for i in range(len(temp_cutoffs))}
     temps = sorted(temp_ranges)
 
     # Bisect returns where an element falls in an ordered list, so it can be
@@ -76,7 +87,7 @@ def find_match(query):
         }
 
 
-def get_summary(api_key, result, unit='fahrenheit'):
+def get_summary(api_key, result, unit='f'):
     req = requests.get('http://api.wunderground.com/api/{api_key}/forecast{link}.json'.format(
         api_key=api_key,
         link=result['link'],
@@ -87,12 +98,14 @@ def get_summary(api_key, result, unit='fahrenheit'):
     if 'forecast' not in j:
         return None
 
+    translation = {'c': 'celsius', 'f': 'fahrenheit'}
+
     days = []
     for day in j['forecast']['simpleforecast']['forecastday']:
         days.append('{weekday} {low}-{high}'.format(
             weekday=day['date']['weekday_short'],
-            low=color(int(day['low'][unit])),
-            high=color(int(day['high'][unit])),
+            low=color(int(day['low'][translation[unit]]), unit=unit),
+            high=color(int(day['high'][translation[unit]]), unit=unit),
         ))
 
     cur = j['forecast']['simpleforecast']['forecastday'][0]
@@ -102,7 +115,7 @@ def get_summary(api_key, result, unit='fahrenheit'):
 
     return '{name}: {current} {icon}; {days}'.format(
         current=current,
-        icon=icon(int(cur['high']['fahrenheit'])),
+        icon=icon(int(cur['high'][translation[unit]]), unit),
         name=result['name'],
         days=', '.join(days),
     )
