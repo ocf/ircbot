@@ -1,4 +1,4 @@
-"""Sblmraec yruo setenecn"""
+"""Scramble the words in your sentence in a readable way."""
 import random
 import string
 
@@ -8,7 +8,7 @@ def register(bot):
 
 
 def scramble(bot, msg):
-    """Sblmraec yruo setenecn"""
+    """Srclabme the wdros in yuor senncete in a raadeble way."""
     text = msg.match.group(1)
     if text is None:
         if len(bot.recent_messages[msg.channel]) == 0:
@@ -29,8 +29,8 @@ def scramble_sentence(text):
 
 
 def scramble_word(word):
-    if len(word) > 0:
-        tmp = list(word[1:])
+    if len(word) > 3:
+        tmp = list(word[1:-1])
         random.shuffle(tmp)
-        return word[0] + ''.join(tmp)
-    return ''
+        return word[0] + ''.join(tmp) + word[-1]
+    return word
