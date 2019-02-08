@@ -10,7 +10,8 @@ def register(bot):
 
 
 def weather(bot, msg):
-    """Show weather for a location (defaults to Berkeley)."""
+    """Show weather for a location (defaults to Berkeley).
+    Add the -c flag for celsius output."""
     unit = 'c' if msg.match.group(1) else 'f'
     where = msg.match.group(2).strip() or 'Berkeley, CA'
     location = find_match(where)
