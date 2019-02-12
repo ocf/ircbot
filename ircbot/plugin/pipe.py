@@ -7,6 +7,7 @@ MAX_LENGTH = 5000
 
 def register(bot):
     bot.listen(r'^!pipe (.*)$', pipe)
+    bot.listen(r'^!repeat (\d+) (.*)$', repeat)
 
 
 def pipe(bot, msg):
@@ -29,6 +30,18 @@ def pipe(bot, msg):
         ))
         return
     msg.respond(stream, ping=False)
+
+
+def repeat(bot, msg):
+    """Repeat a command several times."""
+    times = int(msg.match.group(1))
+    full_command = msg.match.group(2)
+    command = full_command.split()[0]
+    if times < 1 or times > 100:
+        msg.respond('Invalid times.')
+        return
+    pipe_command = '!pipe ' + full_command + ('|' + command) * (times - 1)
+    msg.respond(run_command(pipe_command, bot, msg), ping=False)
 
 
 def run_command(command, bot, msg):
