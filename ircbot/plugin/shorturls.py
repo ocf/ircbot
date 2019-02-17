@@ -1,29 +1,19 @@
 """Control ocfweb shorturls through ircbot."""
+from ocflib.misc.shorturls import add_shorturl
+from ocflib.misc.shorturls import delete_shorturl
 from ocflib.misc.shorturls import get_connection as shorturl_db
-
-KEYWORDS = {'add', 'delete', 'rename', 'replace'}
+from ocflib.misc.shorturls import get_shorturl
+from ocflib.misc.shorturls import rename_shorturl
+from ocflib.misc.shorturls import replace_shorturl
 
 
 def register(bot):
     # [!-~] is all printable ascii except spaces
-    bot.listen(r'^!shorturl ([\w/]+)', show)
-    bot.listen(r'^!shorturl add ([\w/]+) (.+)$', add, require_privileged_oper=True)
-    bot.listen(r'^!shorturl delete ([\w/]+)$', delete, require_privileged_oper=True)
-    bot.listen(r'^!shorturl rename ([\w/]+) ([\w/]+)$', rename, require_privileged_oper=True)
-    bot.listen(r'^!shorturl replace ([\w/]+) (.+)$', replace, require_privileged_oper=True)
-
-
-def retrieve(bot, slug):
-    """Reusable function to retrieve a shorturl by slug from the DB."""
-
-    with shorturl_db() as c:
-        c.execute(
-            'SELECT target FROM shorturls_public WHERE slug = %s',
-            (slug,),
-        )
-        target = c.fetchone()
-
-        return target['target'] if target else None
+    bot.listen(r'^!shorturl get (.+)$', show)
+    bot.listen(r'^!shorturl add ([^ ]+) (.+)$', add, require_privileged_oper=True)
+    bot.listen(r'^!shorturl delete ([^ ]+)$', delete, require_privileged_oper=True)
+    bot.listen(r'^!shorturl rename ([^ ]+) ([^ ]+)$', rename, require_privileged_oper=True)
+    bot.listen(r'^!shorturl replace ([^ ]+) (.+)$', replace, require_privileged_oper=True)
 
 
 def show(bot, msg):
@@ -31,12 +21,9 @@ def show(bot, msg):
 
     slug = msg.match.group(1)
 
-    # special case these so show doesn't trigger on add/delete
-    # while still letting the trigger appear anywhere in the msg
-    if slug in KEYWORDS:
-        return
+    with shorturl_db() as ctx:
+        target = get_shorturl(ctx, slug)
 
-    target = retrieve(bot, slug)
     if not target:
         msg.respond('shorturl `{}` does not exist.'.format(slug))
     else:
@@ -49,42 +36,23 @@ def add(bot, msg):
     slug = msg.match.group(1)
     target = msg.match.group(2)
 
-    if slug in KEYWORDS:
-        msg.respond('`{}` is a reserved keyword.'.format(slug))
+    if len(slug) > 100:
+        msg.respond('shorturl slugs must be <= 100 characters')
         return
 
-    if len(slug) > 255:
-        msg.respond('shorturl slugs must be <= 255 characters')
-        return
+    with shorturl_db(user='ocfircbot', password=bot.mysql_password) as ctx:
 
-    with shorturl_db(user='ocfircbot', password=bot.mysql_password) as c:
-
-        c.execute('SELECT * FROM shorturls WHERE slug = %s', (slug,))
-        result = c.fetchone()
-        if result is not None:
-            msg.respond(
-                'shorturl `{}` already exists as {}'.format(
-                    result['slug'],
-                    result['target'],
-                ),
-            )
-        else:
-            c.execute(
-                'INSERT INTO shorturls (slug, target) VALUES (%s, %s)',
-                (slug, target),
-            )
-            msg.respond('shorturl added as `{}`'.format(slug))
+        # if this fails the uniqueness constraint, the exception will propagate up
+        add_shorturl(ctx, slug, target)
+        msg.respond('shorturl added as `{}`'.format(slug))
 
 
 def delete(bot, msg):
     """Delete a shorturl."""
 
     slug = msg.match.group(1)
-    with shorturl_db(user='ocfircbot', password=bot.mysql_password) as c:
-        c.execute(
-            'DELETE FROM shorturls WHERE slug = %s',
-            (slug,),
-        )
+    with shorturl_db(user='ocfircbot', password=bot.mysql_password) as ctx:
+        delete_shorturl(ctx, slug)
         msg.respond('shorturl `{}` has been deleted.'.format(slug))
 
 
@@ -94,15 +62,8 @@ def rename(bot, msg):
     old_slug = msg.match.group(1)
     new_slug = msg.match.group(2)
 
-    if new_slug in KEYWORDS:
-        msg.respond('`{}` is a reserved keyword.'.format(new_slug))
-        return
-
-    with shorturl_db(user='ocfircbot', password=bot.mysql_password) as c:
-        c.execute(
-            'UPDATE shorturls SET slug = %s WHERE slug = %s',
-            (new_slug, old_slug),
-        )
+    with shorturl_db(user='ocfircbot', password=bot.mysql_password) as ctx:
+        rename_shorturl(ctx, old_slug, new_slug)
         msg.respond('shorturl `{}` has been renamed to `{}`'.format(old_slug, new_slug))
 
 
@@ -112,9 +73,6 @@ def replace(bot, msg):
     slug = msg.match.group(1)
     new_target = msg.match.group(2)
 
-    with shorturl_db(user='ocfircbot', password=bot.mysql_password) as c:
-        c.execute(
-            'UPDATE shorturls SET target = %s WHERE slug = %s',
-            (new_target, slug),
-        )
+    with shorturl_db(user='ocfircbot', password=bot.mysql_password) as ctx:
+        replace_shorturl(ctx, slug, new_target)
         msg.respond('shorturl `{}` updated'.format(slug))
