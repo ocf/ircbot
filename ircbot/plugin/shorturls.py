@@ -8,7 +8,6 @@ from ocflib.misc.shorturls import replace_shorturl
 
 
 def register(bot):
-    # [!-~] is all printable ascii except spaces
     bot.listen(r'^!shorturl get (.+)$', show)
     bot.listen(r'^!shorturl add ([^ ]+) (.+)$', add, require_privileged_oper=True)
     bot.listen(r'^!shorturl delete ([^ ]+)$', delete, require_privileged_oper=True)
@@ -42,7 +41,9 @@ def add(bot, msg):
 
     with shorturl_db(user='ocfircbot', password=bot.mysql_password) as ctx:
 
-        # if this fails the uniqueness constraint, the exception will propagate up
+        # validation occurs in ocflib, and uniqueness is guaranteed
+        # by the database constraint. The error will propagate up if
+        # someone tries to add or rename an entry that results in a dupe
         add_shorturl(ctx, slug, target)
         msg.respond('shorturl added as `{}`'.format(slug))
 
