@@ -10,7 +10,7 @@ import jinja2
 def register(bot):
     threading.Thread(target=help_server, args=(bot,), daemon=True).start()
     bot.listen(r'^help$', help, require_mention=True)
-    bot.listen(r'^macros$', help_macro, require_mention=True)
+    bot.listen(r'^macros?$', help_macro, require_mention=True)
 
 
 def help(bot, msg):
@@ -39,6 +39,11 @@ def build_request_handler(bot):
             self.end_headers()
             self.wfile.write(rendered)
 
+        def render_404(self):
+            self.send_response(404, 'File not found')
+            self.end_headers()
+            self.wfile.write(b'404 File not found')
+
         def do_GET(self):
             if self.path == '/':
                 plugins = collections.defaultdict(set)
@@ -55,9 +60,7 @@ def build_request_handler(bot):
                     macros=bot.plugins['macros'].list(bot),
                 )
             else:
-                self.send_response(404, 'File not found')
-                self.end_headers()
-                self.wfile.write(b'404 File not found')
+                self.render_404()
 
     return RequestHandler
 
