@@ -9,10 +9,10 @@ from ocflib.misc.shorturls import replace_shorturl
 
 def register(bot):
     bot.listen(r'^!shorturl get (.+)$', show)
-    bot.listen(r'^!shorturl add ([^ ]+) (.+)$', add, require_privileged_oper=True)
-    bot.listen(r'^!shorturl delete ([^ ]+)$', delete, require_privileged_oper=True)
-    bot.listen(r'^!shorturl rename ([^ ]+) ([^ ]+)$', rename, require_privileged_oper=True)
-    bot.listen(r'^!shorturl replace ([^ ]+) (.+)$', replace, require_privileged_oper=True)
+    bot.listen(r'^!shorturl add ([^ ]+) (.+)$', add, require_oper=True)
+    bot.listen(r'^!shorturl delete ([^ ]+)$', delete, require_oper=True)
+    bot.listen(r'^!shorturl rename ([^ ]+) ([^ ]+)$', rename, require_oper=True)
+    bot.listen(r'^!shorturl replace ([^ ]+) (.+)$', replace, require_oper=True)
 
 
 def show(bot, msg):
