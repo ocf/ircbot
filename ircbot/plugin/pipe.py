@@ -21,13 +21,13 @@ def pipe(bot, msg):
         except Exception as ex:
             msg.respond(str(ex))
             return
-    length = len(stream)
-    if length > MAX_LENGTH:
-        msg.respond('Message length limit exceeded: {} > {}'.format(
-            length,
-            MAX_LENGTH,
-        ))
-        return
+        length = len(stream)
+        if length > MAX_LENGTH:
+            msg.respond('Message length limit exceeded: {} > {}'.format(
+                length,
+                MAX_LENGTH,
+            ))
+            return
     msg.respond(stream, ping=False)
 
 
