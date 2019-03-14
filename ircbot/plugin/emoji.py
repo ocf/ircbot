@@ -3,7 +3,7 @@ import shlex
 import unicodedata
 
 
-char_mapping = []
+char_map = []
 for i in range(0x10ffff):
     c = chr(i)
     try:
@@ -12,8 +12,8 @@ for i in range(0x10ffff):
         continue
     if unicodedata.category(c).startswith('C'):
         continue
-    char_mapping.append((name, c))
-char_mapping = tuple(char_mapping)
+    char_map.append((name, c))
+char_mapping = tuple(char_map)
 
 
 def register(bot):
