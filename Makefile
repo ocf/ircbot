@@ -5,7 +5,6 @@ RANDOM_PORT ?= $(shell expr $$(( 8000 + (`id -u` % 1000) )))
 .PHONY: test
 test: venv install-hooks
 	venv/bin/pre-commit run --all-files
-	venv/bin/mypy --ignore-missing-imports -p ircbot
 
 .PHONY: install-hooks
 install-hooks: venv
