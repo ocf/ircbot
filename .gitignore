@@ -4,7 +4,6 @@
 *~
 .tox
 .version
-.mypy_cache/
 /venv
 build/
 debian/*.debhelper
