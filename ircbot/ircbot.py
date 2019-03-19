@@ -53,9 +53,6 @@ DSA_FREQ = 5
 # amount of text, so cut into small blocks to avoid that.
 MAX_CLIENT_MSG = 435
 
-# Do mentions of this bot require proper case
-MENTIONS_REQUIRE_CASE = False
-
 
 class Listener(collections.namedtuple(
     'Listener',
@@ -199,10 +196,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 full_raw_text = fmt.format(user=user, raw_text=raw_text)
                 self.say(event.target, full_raw_text)
 
-            if MENTIONS_REQUIRE_CASE:
-                was_mentioned = raw_text.startswith((IRC_NICKNAME + ' ', IRC_NICKNAME + ': '))
-            else:
-                was_mentioned = raw_text.lower().startswith((IRC_NICKNAME.lower() + ' ', IRC_NICKNAME.lower() + ': '))
+            was_mentioned = raw_text.lower().startswith((IRC_NICKNAME.lower() + ' ', IRC_NICKNAME.lower() + ': '))
 
             for listener in self.listeners:
                 text = raw_text
