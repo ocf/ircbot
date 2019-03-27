@@ -1,4 +1,4 @@
-"""Scramble the words in your sentence in a readable way."""
+"""Reverse the sentence."""
 
 
 def register(bot):
@@ -12,8 +12,5 @@ def reverse(bot, msg):
         if len(bot.recent_messages[msg.channel]) == 0:
             return
         _, text = bot.recent_messages[msg.channel][0]
-    newText = ''
-    length = len(text)
-    for i in range(length):
-        newText += text[length - i - 1]
+    newText = ''.join(reversed(text))
     msg.respond(newText, ping=False)
