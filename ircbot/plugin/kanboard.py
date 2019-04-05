@@ -1,15 +1,21 @@
 """Kanboard is the hottest new thing"""
 import re
 
+from ocflib.infra.kanboard import KanboardError
+from ocflib.infra.kanboard import KanboardTask
+
 REGEX = re.compile(r'(?:k#)([0-9]+)')
 
 
 def register(bot):
-    bot.listen(REGEX.pattern, show_topic)
+    bot.listen(REGEX.pattern, show_task)
 
 
-def show_topic(bot, msg):
-    """Show the Kanboard topic and don't break the webserver ;)"""
-    for topic in REGEX.findall(msg.text):
-        id = int(topic)
-        msg.respond('https://ocf.io/k/' + str(id))
+def show_task(bot, msg):
+    """Show the Kanboard task and don't break the webserver ;)"""
+    for task in REGEX.findall(msg.text):
+        try:
+            k = KanboardTask.from_number('jsonrpc', bot.kanboard_apikey, int(task))
+            msg.respond(str(k))
+        except KanboardError:
+            pass
