@@ -109,6 +109,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             googlesearch_key,
             googlesearch_cx,
             discourse_apikey,
+            kanboard_apikey,
             twitter_apikeys,
     ):
         self.recent_messages = collections.defaultdict(
@@ -124,6 +125,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         self.googlesearch_key = googlesearch_key
         self.googlesearch_cx = googlesearch_cx
         self.discourse_apikey = discourse_apikey
+        self.kanboard_apikey = kanboard_apikey
         self.twitter_apikeys = twitter_apikeys
         self.listeners = set()
         self.plugins = {}
@@ -395,6 +397,7 @@ def main():
     googlesearch_key = conf.get('googlesearch', 'key')
     googlesearch_cx = conf.get('googlesearch', 'cx')
     discourse_apikey = conf.get('discourse', 'apikey')
+    kanboard_apikey = conf.get('kanboard', 'apikey')
     twitter_apikeys = (
         conf.get('twitter', 'apikey'),
         conf.get('twitter', 'apisecret'),
@@ -405,7 +408,7 @@ def main():
         tasks, nickserv_password, rt_password,
         weather_apikey, mysql_password, marathon_creds,
         googlesearch_key, googlesearch_cx, discourse_apikey,
-        twitter_apikeys,
+        kanboard_apikey, twitter_apikeys,
     )
     bot_thread = threading.Thread(target=bot.start, daemon=True)
     bot_thread.start()
