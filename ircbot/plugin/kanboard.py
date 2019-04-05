@@ -15,7 +15,7 @@ def show_task(bot, msg):
     """Show the Kanboard task and don't break the webserver ;)"""
     for task in REGEX.findall(msg.text):
         try:
-            k = KanboardTask.from_number('jsonrpc', bot.kanboard_apikey, int(task))
+            k = KanboardTask.from_number('gstaff', bot.kanboard_apikey, int(task))
             msg.respond(str(k))
         except KanboardError:
             pass
