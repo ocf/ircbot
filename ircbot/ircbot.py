@@ -44,8 +44,8 @@ else:
 
 NUM_RECENT_MESSAGES = 10
 
-# Check for Debian security announcements every 5 minutes
-DSA_FREQ = 5
+# Check for Debian security announcements every day (temporarily)
+DSA_FREQ = 1440
 
 # 512 bytes is the max message length set by RFC 2812 on the max single message
 # length, so messages need to split up into at least sections of that size,
