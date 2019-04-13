@@ -15,7 +15,10 @@ def dsa_list():
     req = requests.get('https://www.debian.org/security/dsa-long')
     req.raise_for_status()
 
-    root = ElementTree.fromstring(req.content)
+    # temporary fix until debian fixes their & escaping in their DSA xml feed
+    content = req.content.replace(b'&lt;', b'<').replace(b'&gt;', b'>').replace(b'&', b'&amp;')
+
+    root = ElementTree.fromstring(content)
     for item in root.iter('{http://purl.org/rss/1.0/}item'):
         # title is of the form "DSA-3804 linux - security update"
         title = item.find('{http://purl.org/rss/1.0/}title').text
