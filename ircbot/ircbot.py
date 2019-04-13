@@ -331,15 +331,31 @@ def timer(bot):
 
     # TODO: timers should register as plugins like listeners do
     while True:
-        last_date, old = date.today(), last_date
-        if old and last_date != old:
-            bot.bump_topic()
+        try:
+            last_date, old = date.today(), last_date
+            if old and last_date != old:
+                bot.bump_topic()
 
-        if last_dsa_check is None or time.time() - last_dsa_check > 60 * DSA_FREQ:
-            last_dsa_check = time.time()
+            if last_dsa_check is None or time.time() - last_dsa_check > 60 * DSA_FREQ:
+                last_dsa_check = time.time()
 
-            for line in debian_security.get_new_dsas():
-                bot.say('#rebuild', line)
+                for line in debian_security.get_new_dsas():
+                    bot.say('#rebuild', line)
+        except Exception as ex:
+            error_msg = 'ircbot exception: {exception}'.format(exception=ex)
+            bot.say('#rebuild', error_msg)
+            # don't send emails when running as dev
+            if not TESTING:
+                send_problem_report(dedent(
+                    """
+                    {error}
+
+                    {traceback}
+                    """
+                ).format(
+                    error=error_msg,
+                    traceback=format_exc(),
+                ))
 
         time.sleep(1)
 
