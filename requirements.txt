@@ -48,5 +48,5 @@ six==1.11.0
 SQLAlchemy==1.2.11
 tempora==1.13
 uritemplate==3.0.0
-urllib3==1.23
+urllib3==1.24.2
 vine==1.1.4
