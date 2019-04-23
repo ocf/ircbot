@@ -377,8 +377,8 @@ def main():
     conf.read(args.config)
 
     celery = Celery(
-        broker=conf.get('celery', 'broker'),
-        backend=conf.get('celery', 'backend'),
+        broker=conf.get('celery', 'broker').replace('redis://', 'rediss://'),
+        backend=conf.get('celery', 'backend').replace('redis://', 'rediss://'),
     )
     celery.conf.broker_use_ssl = {
         'ssl_ca_certs': '/etc/ssl/certs/ca-certificates.crt',
