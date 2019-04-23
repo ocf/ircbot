@@ -13,9 +13,8 @@ def project_info(bot, msg):
     user, repo_name = msg.match.groups()
 
     github = github3.GitHub()
-    repo = github.repository(user, repo_name)
-
-    if repo is not None:
+    try:
+        repo = github.repository(user, repo_name)
         msg.respond(
             '\x0303{user}/{repo}\x03 | \x0308{stars} stars\x03 | \x0314{description}\x03'.format(
                 user=user,
@@ -25,6 +24,8 @@ def project_info(bot, msg):
             ),
             ping=False,
         )
+    except github3.exceptions.NotFoundError:
+        pass
 
 
 def issue_info(bot, msg):
@@ -32,20 +33,20 @@ def issue_info(bot, msg):
     user, repo_name, issue_num = msg.match.groups()
 
     github = github3.GitHub()
-    repo = github.repository(user, repo_name)
-
-    if repo is not None:
+    try:
+        repo = github.repository(user, repo_name)
         issue = repo.issue(int(issue_num))
-        if issue is not None:
-            msg.respond(
-                '\x0314Issue #{num}: {title}\x03 (\x0308{state}\x03, filed by \x0302{user}\x03)'.format(
-                    num=issue_num,
-                    title=issue.title,
-                    state=issue.state,
-                    user=issue.user.login,
-                ),
-                ping=False,
-            )
+        msg.respond(
+            '\x0314Issue #{num}: {title}\x03 (\x0308{state}\x03, filed by \x0302{user}\x03)'.format(
+                num=issue_num,
+                title=issue.title,
+                state=issue.state,
+                user=issue.user.login,
+            ),
+            ping=False,
+        )
+    except github3.exceptions.NotFoundError:
+        pass
 
 
 def pr_info(bot, msg):
@@ -53,17 +54,17 @@ def pr_info(bot, msg):
     user, repo_name, pr_num = msg.match.groups()
 
     github = github3.GitHub()
-    repo = github.repository(user, repo_name)
-
-    if repo is not None:
+    try:
+        repo = github.repository(user, repo_name)
         pr = repo.pull_request(int(pr_num))
-        if pr is not None:
-            msg.respond(
-                '\x0314PR #{num}: {title}\x03 (\x0308{state}\x03, submitted by \x0302{user}\x03)'.format(
-                    num=pr_num,
-                    title=pr.title,
-                    state=pr.state,
-                    user=pr.user.login,
-                ),
-                ping=False,
-            )
+        msg.respond(
+            '\x0314PR #{num}: {title}\x03 (\x0308{state}\x03, submitted by \x0302{user}\x03)'.format(
+                num=pr_num,
+                title=pr.title,
+                state=pr.state,
+                user=pr.user.login,
+            ),
+            ping=False,
+        )
+    except github3.exceptions.NotFoundError:
+        pass
