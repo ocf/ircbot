@@ -1,4 +1,5 @@
 """Control ocfweb shorturls through ircbot."""
+import pymysql
 from ocflib.misc.shorturls import add_shorturl
 from ocflib.misc.shorturls import delete_shorturl
 from ocflib.misc.shorturls import get_connection as shorturl_db
@@ -40,12 +41,14 @@ def add(bot, msg):
         return
 
     with shorturl_db(user='ocfircbot', password=bot.mysql_password) as ctx:
-
-        # validation occurs in ocflib, and uniqueness is guaranteed
-        # by the database constraint. The error will propagate up if
-        # someone tries to add or rename an entry that results in a dupe
-        add_shorturl(ctx, slug, target)
-        msg.respond(f'shorturl added as `{slug}`')
+        try:
+            add_shorturl(ctx, slug, target)
+        except pymysql.err.IntegrityError:
+            msg.respond(
+                'shorturl already exists, did you mean `!shorturl replace`?',
+            )
+        else:
+            msg.respond(f'shorturl added as `{slug}`')
 
 
 def delete(bot, msg):
