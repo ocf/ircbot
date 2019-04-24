@@ -23,10 +23,12 @@ def pipe(bot, msg):
             return
         length = len(stream)
         if length > MAX_LENGTH:
-            msg.respond('Message length limit exceeded: {} > {}'.format(
-                length,
-                MAX_LENGTH,
-            ))
+            msg.respond(
+                'Message length limit exceeded: {} > {}'.format(
+                    length,
+                    MAX_LENGTH,
+                ),
+            )
             return
     msg.respond(stream, ping=False)
 
@@ -40,9 +42,11 @@ def run_command(command, bot, msg):
             continue
         command_found = True
         if listener.require_oper or listener.require_privileged_oper:
-            raise Exception('Privileged command {} not supported'.format(
-                listener.plugin_name,
-            ))
+            raise Exception(
+                'Privileged command {} not supported'.format(
+                    listener.plugin_name,
+                ),
+            )
 
         def respond(raw_text, ping=True):
             nonlocal ret
@@ -60,10 +64,12 @@ def run_command(command, bot, msg):
         try:
             listener.fn(bot, stub_msg)
         except Exception as ex:
-            raise Exception('Command {} not supported: {}'.format(
-                listener.plugin_name,
-                ex,
-            ))
+            raise Exception(
+                'Command {} not supported: {}'.format(
+                    listener.plugin_name,
+                    ex,
+                ),
+            )
     if not command_found:
         raise Exception('Command {} not found'.format(command.split()[0]))
     return ret

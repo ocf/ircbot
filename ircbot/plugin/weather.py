@@ -75,9 +75,11 @@ def color(temp, text=None, unit='f'):
 
 
 def find_match(query):
-    req = requests.get('http://autocomplete.wunderground.com/aq?' + urllib.parse.urlencode({
-        'query': query,
-    }))
+    req = requests.get(
+        'http://autocomplete.wunderground.com/aq?' + urllib.parse.urlencode({
+            'query': query,
+        }),
+    )
     assert req.status_code == 200, req.status_code
     results = req.json()['RESULTS']
     if len(results) > 1:
@@ -89,10 +91,12 @@ def find_match(query):
 
 
 def get_summary(api_key, result, unit='f'):
-    req = requests.get('http://api.wunderground.com/api/{api_key}/forecast{link}.json'.format(
-        api_key=api_key,
-        link=result['link'],
-    ))
+    req = requests.get(
+        'http://api.wunderground.com/api/{api_key}/forecast{link}.json'.format(
+            api_key=api_key,
+            link=result['link'],
+        ),
+    )
     assert req.status_code == 200, req.status_code
     j = req.json()
 
@@ -103,11 +107,13 @@ def get_summary(api_key, result, unit='f'):
 
     days = []
     for day in j['forecast']['simpleforecast']['forecastday']:
-        days.append('{weekday} {low}-{high}'.format(
-            weekday=day['date']['weekday_short'],
-            low=color(int(day['low'][translation[unit]]), unit=unit),
-            high=color(int(day['high'][translation[unit]]), unit=unit),
-        ))
+        days.append(
+            '{weekday} {low}-{high}'.format(
+                weekday=day['date']['weekday_short'],
+                low=color(int(day['low'][translation[unit]]), unit=unit),
+                high=color(int(day['high'][translation[unit]]), unit=unit),
+            ),
+        )
 
     cur = j['forecast']['simpleforecast']['forecastday'][0]
     current = '{conditions}'.format(

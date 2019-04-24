@@ -39,8 +39,10 @@ def who_is_in_lab(bot, msg):
     else:
         staff_list = ''
 
-    msg.respond('there {} in the lab, including {} staff{}'.format(
-        are_number_people,
-        len(staff),
-        staff_list,
-    ))
+    msg.respond(
+        'there {} in the lab, including {} staff{}'.format(
+            are_number_people,
+            len(staff),
+            staff_list,
+        ),
+    )

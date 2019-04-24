@@ -10,12 +10,14 @@ def register(bot):
 
 def thanks(bot, msg):
     """Thank create for being a helpful robot."""
-    msg.respond(random.choice((
-        "you're welcome",
-        'you are most welcome',
-        'any time',
-        'sure thing boss',
-    )))
+    msg.respond(
+        random.choice((
+            "you're welcome",
+            'you are most welcome',
+            'any time',
+            'sure thing boss',
+        )),
+    )
 
 
 def thank_someone(bot, msg):

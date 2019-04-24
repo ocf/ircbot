@@ -31,9 +31,11 @@ def check(bot, msg):
 
     if attrs is not None:
         groups = [grp.getgrgid(attrs['gidNumber']).gr_name]
-        groups.extend(sorted(
-            group.gr_name for group in grp.getgrall() if user in group.gr_mem
-        ))
+        groups.extend(
+            sorted(
+                group.gr_name for group in grp.getgrall() if user in group.gr_mem
+            ),
+        )
         groups = [
             '{}{}\x0f'.format(GROUP_COLOR_MAPPING.get(group, ''), group)
             for group in groups
@@ -90,13 +92,15 @@ def checkacct(bot, msg):
 
             if len(c.response) > 0:
                 msg.respond(
-                    ', '.join(sorted(
-                        '{} ({})'.format(
-                            entry['attributes']['uid'][0],
-                            entry['attributes']['cn'][0],
-                        )
-                        for entry in c.response
-                    )),
+                    ', '.join(
+                        sorted(
+                            '{} ({})'.format(
+                                entry['attributes']['uid'][0],
+                                entry['attributes']['cn'][0],
+                            )
+                            for entry in c.response
+                        ),
+                    ),
                 )
             else:
                 msg.respond('no results found')

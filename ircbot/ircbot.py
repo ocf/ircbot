@@ -54,10 +54,12 @@ DSA_FREQ = 5
 MAX_CLIENT_MSG = 435
 
 
-class Listener(collections.namedtuple(
-    'Listener',
-    ('pattern', 'fn', 'help_text', 'require_mention', 'require_oper', 'require_privileged_oper'),
-)):
+class Listener(
+    collections.namedtuple(
+        'Listener',
+        ('pattern', 'fn', 'help_text', 'require_mention', 'require_oper', 'require_privileged_oper'),
+    ),
+):
 
     __slots__ = ()
 
@@ -76,10 +78,12 @@ class Listener(collections.namedtuple(
             return self.fn.__module__
 
 
-class MatchedMessage(collections.namedtuple(
-    'MatchedMessage',
-    ('channel', 'text', 'raw_text', 'match', 'is_oper', 'nick', 'respond'),
-)):
+class MatchedMessage(
+    collections.namedtuple(
+        'MatchedMessage',
+        ('channel', 'text', 'raw_text', 'match', 'is_oper', 'nick', 'respond'),
+    ),
+):
     """A message matching a listener.
 
     :param channel: IRC channel (as a string).
@@ -160,14 +164,16 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             require_oper=False,
             require_privileged_oper=False,
     ):
-        self.listeners.add(Listener(
-            pattern=re.compile(pattern, flags),
-            fn=fn,
-            help_text=help_text,
-            require_mention=require_mention,
-            require_oper=require_oper,
-            require_privileged_oper=require_privileged_oper,
-        ))
+        self.listeners.add(
+            Listener(
+                pattern=re.compile(pattern, flags),
+                fn=fn,
+                help_text=help_text,
+                require_mention=require_mention,
+                require_oper=require_oper,
+                require_privileged_oper=require_privileged_oper,
+            ),
+        )
 
     def on_welcome(self, conn, _):
         conn.privmsg('NickServ', f'identify {self.nickserv_password}')
@@ -243,8 +249,9 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                         msg.respond(error_msg, ping=False)
                         # don't send emails when running as dev
                         if not TESTING:
-                            send_problem_report(dedent(
-                                """
+                            send_problem_report(
+                                dedent(
+                                    """
                                 {error}
 
                                 {traceback}
@@ -257,16 +264,17 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                                   * Raw text: {raw_text}
                                   * Match groups: {groups}
                                 """
-                            ).format(
-                                error=error_msg,
-                                traceback=format_exc(),
-                                channel=msg.channel,
-                                nick=msg.nick,
-                                oper=msg.is_oper,
-                                text=msg.text,
-                                raw_text=msg.raw_text,
-                                groups=msg.match.groups(),
-                            ))
+                                ).format(
+                                    error=error_msg,
+                                    traceback=format_exc(),
+                                    channel=msg.channel,
+                                    nick=msg.nick,
+                                    oper=msg.is_oper,
+                                    text=msg.text,
+                                    raw_text=msg.raw_text,
+                                    groups=msg.match.groups(),
+                                ),
+                            )
 
             # everything gets logged except commands
             if raw_text[0] != '!':
@@ -346,16 +354,18 @@ def timer(bot):
             bot.say('#rebuild', error_msg)
             # don't send emails when running as dev
             if not TESTING:
-                send_problem_report(dedent(
-                    """
+                send_problem_report(
+                    dedent(
+                        """
                     {error}
 
                     {traceback}
                     """
-                ).format(
-                    error=error_msg,
-                    traceback=format_exc(),
-                ))
+                    ).format(
+                        error=error_msg,
+                        traceback=format_exc(),
+                    ),
+                )
 
         time.sleep(1)
 
@@ -395,11 +405,13 @@ def main():
     celery.conf.result_serializer = 'pickle'
     celery.conf.accept_content = {'pickle'}
 
-    creds = AccountCreationCredentials(**{
-        field:
-            conf.get(*field.split('_'))
-            for field in AccountCreationCredentials._fields
-    })
+    creds = AccountCreationCredentials(
+        **{
+            field:
+                conf.get(*field.split('_'))
+                for field in AccountCreationCredentials._fields
+        },
+    )
     tasks = get_tasks(celery, credentials=creds)
 
     rt_password = conf.get('rt', 'password')

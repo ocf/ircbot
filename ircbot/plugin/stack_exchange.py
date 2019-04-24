@@ -49,11 +49,13 @@ def _sites():
 
 
 def _question_info(site, question_id):
-    resp = requests.get('{}/questions/{}?{}'.format(
-        API,
-        question_id,
-        urllib.parse.urlencode({'site': site.api_name}),
-    ))
+    resp = requests.get(
+        '{}/questions/{}?{}'.format(
+            API,
+            question_id,
+            urllib.parse.urlencode({'site': site.api_name}),
+        ),
+    )
     resp.raise_for_status()
 
     questions = resp.json()['items']
@@ -71,11 +73,13 @@ def _question_info(site, question_id):
 
 
 def _answer_info(site, answer_id):
-    resp = requests.get('{}/answers/{}?{}'.format(
-        API,
-        answer_id,
-        urllib.parse.urlencode({'site': site.api_name}),
-    ))
+    resp = requests.get(
+        '{}/answers/{}?{}'.format(
+            API,
+            answer_id,
+            urllib.parse.urlencode({'site': site.api_name}),
+        ),
+    )
     resp.raise_for_status()
 
     answers = resp.json()['items']

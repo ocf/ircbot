@@ -8,6 +8,8 @@ def register(bot):
 
 def flip(bot, msg):
     """uʍop ǝpısdn ʇxǝʇ dıןɟ"""
-    msg.respond('(╯°□°）╯︵ ┻━┻ {}'.format(
-        upsidedown.transform(msg.match.group(1)),
-    ))
+    msg.respond(
+        '(╯°□°）╯︵ ┻━┻ {}'.format(
+            upsidedown.transform(msg.match.group(1)),
+        ),
+    )
