@@ -15,7 +15,7 @@ def register(bot):
 @lru_cache(maxsize=1)
 def _get_token(apikeys):
     resp = requests.post(
-        '{}/oauth2/token'.format(TWITTER_API),
+        f'{TWITTER_API}/oauth2/token',
         data={'grant_type': 'client_credentials'},
         auth=apikeys,
     )
@@ -34,7 +34,7 @@ def _get_tweet(apikeys, status_id, retry=True):
             TWITTER_API,
             status_id,
         ), headers={
-            'Authorization': 'Bearer {}'.format(bearer_token),
+            'Authorization': f'Bearer {bearer_token}',
         },
     )
     if resp.status_code == 404 or resp.status_code == 403:

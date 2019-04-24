@@ -24,7 +24,7 @@ def show(bot, msg):
         target = get_shorturl(ctx, slug)
 
     if not target:
-        msg.respond('shorturl `{}` does not exist.'.format(slug))
+        msg.respond(f'shorturl `{slug}` does not exist.')
     else:
         msg.respond(target, ping=False)
 
@@ -45,7 +45,7 @@ def add(bot, msg):
         # by the database constraint. The error will propagate up if
         # someone tries to add or rename an entry that results in a dupe
         add_shorturl(ctx, slug, target)
-        msg.respond('shorturl added as `{}`'.format(slug))
+        msg.respond(f'shorturl added as `{slug}`')
 
 
 def delete(bot, msg):
@@ -54,7 +54,7 @@ def delete(bot, msg):
     slug = msg.match.group(1)
     with shorturl_db(user='ocfircbot', password=bot.mysql_password) as ctx:
         delete_shorturl(ctx, slug)
-        msg.respond('shorturl `{}` has been deleted.'.format(slug))
+        msg.respond(f'shorturl `{slug}` has been deleted.')
 
 
 def rename(bot, msg):
@@ -65,7 +65,7 @@ def rename(bot, msg):
 
     with shorturl_db(user='ocfircbot', password=bot.mysql_password) as ctx:
         rename_shorturl(ctx, old_slug, new_slug)
-        msg.respond('shorturl `{}` has been renamed to `{}`'.format(old_slug, new_slug))
+        msg.respond(f'shorturl `{old_slug}` has been renamed to `{new_slug}`')
 
 
 def replace(bot, msg):
@@ -76,4 +76,4 @@ def replace(bot, msg):
 
     with shorturl_db(user='ocfircbot', password=bot.mysql_password) as ctx:
         replace_shorturl(ctx, slug, new_target)
-        msg.respond('shorturl `{}` updated'.format(slug))
+        msg.respond(f'shorturl `{slug}` updated')

@@ -32,7 +32,7 @@ def rand(bot, msg):
             ) +
             ' ORDER BY RAND() LIMIT 1',
             tuple(
-                '%{}%'.format(a)
+                f'%{a}%'
                 for a in arg
             ),
         )
@@ -53,7 +53,7 @@ def show(bot, msg):
         try:
             quote_ids.append(int(a.lstrip('#')))
         except ValueError:
-            msg.respond('Not a valid ID: {}'.format(a))
+            msg.respond(f'Not a valid ID: {a}')
             break
     else:
         with db.cursor(password=bot.mysql_password) as c:
@@ -66,7 +66,7 @@ def show(bot, msg):
                 if quote is not None:
                     _print_quote(msg.respond, quote)
                 else:
-                    msg.respond('Quote #{} does not exist.'.format(quote_id))
+                    msg.respond(f'Quote #{quote_id} does not exist.')
 
 
 def add(bot, msg):
@@ -77,7 +77,7 @@ def add(bot, msg):
             (msg.match.group(1),),
         )
 
-    msg.respond('Your quote was added as #{}'.format(c.lastrowid))
+    msg.respond(f'Your quote was added as #{c.lastrowid}')
 
 
 def delete(bot, msg):
@@ -86,11 +86,11 @@ def delete(bot, msg):
     try:
         quote_id = int(arg)
     except ValueError:
-        msg.respond('Not a valid ID: {}'.format(arg))
+        msg.respond(f'Not a valid ID: {arg}')
     else:
         with db.cursor(password=bot.mysql_password) as c:
             c.execute(
                 'UPDATE quotes SET is_deleted = 1 WHERE id = %s',
                 (quote_id,),
             )
-        msg.respond('Quote #{} has been deleted.'.format(quote_id))
+        msg.respond(f'Quote #{quote_id} has been deleted.')

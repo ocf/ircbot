@@ -18,8 +18,8 @@ def restart(bot, msg):
     instance = msg.match.group(1)
     client = _client(bot)
     try:
-        client.post('/v2/apps/{}/restart'.format(instance), headers={'Content-Type': 'application/json'})
+        client.post(f'/v2/apps/{instance}/restart', headers={'Content-Type': 'application/json'})
     except AssertionError as ex:
-        msg.respond('error: {}'.format(ex))
+        msg.respond(f'error: {ex}')
     else:
-        msg.respond('restarted {}'.format(instance))
+        msg.respond(f'restarted {instance}')

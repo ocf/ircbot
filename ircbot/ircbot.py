@@ -38,7 +38,7 @@ if not TESTING:
     IRC_CHANNELS_ANNOUNCE = frozenset(('#atool',))
     IRC_CHANNELS_JOIN_MYSQL = True
 else:
-    IRC_NICKNAME = 'create-{}'.format(user)
+    IRC_NICKNAME = f'create-{user}'
     IRC_CHANNELS_OPER = IRC_CHANNELS_ANNOUNCE = frozenset(('#' + user,))
     IRC_CHANNELS_JOIN_MYSQL = False
 
@@ -170,7 +170,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         ))
 
     def on_welcome(self, conn, _):
-        conn.privmsg('NickServ', 'identify {}'.format(self.nickserv_password))
+        conn.privmsg('NickServ', f'identify {self.nickserv_password}')
 
         # Join the "main" IRC channels.
         for channel in IRC_CHANNELS_OPER | IRC_CHANNELS_ANNOUNCE | self.extra_channels:
@@ -296,7 +296,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
 
     def say(self, channel, message):
         # Find the length of the full message
-        msg_len = len('PRIVMSG {} :{}\r\n'.format(channel, message).encode('utf-8'))
+        msg_len = len(f'PRIVMSG {channel} :{message}\r\n'.encode('utf-8'))
 
         # The message must be split up if over the length limit
         if msg_len > MAX_CLIENT_MSG:
@@ -342,7 +342,7 @@ def timer(bot):
                 for line in debian_security.get_new_dsas():
                     bot.say('#rebuild', line)
         except Exception as ex:
-            error_msg = 'ircbot exception: {exception}'.format(exception=ex)
+            error_msg = f'ircbot exception: {ex}'
             bot.say('#rebuild', error_msg)
             # don't send emails when running as dev
             if not TESTING:
@@ -448,7 +448,7 @@ def main():
     while True:
         for thread in (bot_thread, celery_thread, timer_thread):
             if not thread.is_alive():
-                raise RuntimeError('Thread exited: {}'.format(thread))
+                raise RuntimeError(f'Thread exited: {thread}')
 
         time.sleep(0.1)
 

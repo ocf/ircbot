@@ -25,7 +25,7 @@ def replace(bot, msg):
             try:
                 new_msg = re.sub(old, new, recent_msg)
                 if new_msg != recent_msg:
-                    msg.respond('<{}> {}'.format(user, new_msg), ping=False)
+                    msg.respond(f'<{user}> {new_msg}', ping=False)
                     break
             except re.error:
                 continue

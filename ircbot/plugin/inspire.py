@@ -14,9 +14,9 @@ def inspire(bot, msg):
             'SELECT text FROM `inspire` ' +
             'WHERE LOWER(text) LIKE LOWER(%s) ' +
             'ORDER BY RAND() LIMIT 1',
-            '%{}%'.format(term),
+            f'%{term}%',
         )
 
         quote = c.fetchone()
 
-        msg.respond(quote['text'] if quote else "Nothing inspirational matching '{}' found.".format(term))
+        msg.respond(quote['text'] if quote else f"Nothing inspirational matching '{term}' found.")

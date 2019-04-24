@@ -20,7 +20,7 @@ def google(bot, msg):
         },
     )
     if resp.status_code != 200:
-        msg.respond('error searching google: {.status_code}'.format(resp), ping=False)
+        msg.respond(f'error searching google: {resp.status_code}', ping=False)
     else:
         results = resp.json()
         if len(results.get('items', ())) == 0:
@@ -28,6 +28,6 @@ def google(bot, msg):
         else:
             item = results['items'][0]
             msg.respond(
-                '\x0314{0[title]} \x0F| \x0302{0[link]}'.format(item),
+                f'\x0314{item["title"]} \x0F| \x0302{item["link"]}',
                 ping=False,
             )

@@ -48,7 +48,7 @@ def remoji(bot, msg):
             name = unicodedata.name(c)
         except ValueError:
             name = '<<unknown character>>'
-        msg.respond('{}: {}'.format(c, name))
+        msg.respond(f'{c}: {name}')
     rest = query[5:]
     if rest:
         msg.respond('{} characters remaining: {}'.format(len(rest), rest))

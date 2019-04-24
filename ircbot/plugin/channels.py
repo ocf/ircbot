@@ -41,7 +41,7 @@ def join(bot, msg):
 def leave(bot, msg):
     """Leave the current channel."""
     if msg.channel in IRC_CHANNELS_OPER | IRC_CHANNELS_ANNOUNCE:
-        msg.respond("can't leave {}!".format(msg.channel))
+        msg.respond(f"can't leave {msg.channel}!")
     else:
         with db.cursor(password=bot.mysql_password) as c:
             c.execute(

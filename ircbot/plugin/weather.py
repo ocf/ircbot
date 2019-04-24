@@ -21,7 +21,7 @@ def weather(bot, msg):
     if summary:
         msg.respond(summary, ping=False)
     else:
-        msg.respond('idk where {} is'.format(where))
+        msg.respond(f'idk where {where} is')
 
 
 def f2c(temp):
@@ -71,7 +71,7 @@ def color(temp, text=None, unit='f'):
     index = bisect(temps, temp)
     color = temp_ranges[temps[index]]
 
-    return '{}{}\x0F'.format(color, text)
+    return f'{color}{text}\x0F'
 
 
 def find_match(query):
