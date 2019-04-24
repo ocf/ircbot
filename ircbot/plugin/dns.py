@@ -35,7 +35,7 @@ def host(bot, msg):
     if net.is_ocf_ip(ipaddress.ip_address(ip)):
         ocf_host_info = 'OCF host'
 
-        hosts_from_ldap = hosts.hosts_by_filter('(ipHostNumber={})'.format(ip))
+        hosts_from_ldap = hosts.hosts_by_filter(f'(ipHostNumber={ip})')
         if hosts_from_ldap:
             ldap, = hosts_from_ldap
             ocf_host_info += ' ({}, puppet env: {})'.format(

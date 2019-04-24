@@ -55,7 +55,7 @@ def check(bot, msg):
             ping=False,
         )
     else:
-        msg.respond('{} does not exist'.format(user), ping=False)
+        msg.respond(f'{user} does not exist', ping=False)
 
 
 def alphanum(word):

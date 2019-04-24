@@ -30,7 +30,7 @@ def show(bot, msg):
         if macro is not None:
             msg.respond(macro['link'], ping=False)
         else:
-            msg.respond('macro `{}` does not exist.'.format(slug))
+            msg.respond(f'macro `{slug}` does not exist.')
 
 
 def add(bot, msg):
@@ -40,7 +40,7 @@ def add(bot, msg):
     link = msg.match.group(2)
 
     if slug in KEYWORDS:
-        msg.respond('`{}` is a reserved keyword.'.format(slug))
+        msg.respond(f'`{slug}` is a reserved keyword.')
         return
 
     if len(slug) > 50 or len(link) > 100:
@@ -66,7 +66,7 @@ def add(bot, msg):
                 'INSERT INTO macros (slug, link) VALUES (%s, %s)',
                 (slug, link),
             )
-            msg.respond('macro added as `{}`'.format(slug))
+            msg.respond(f'macro added as `{slug}`')
 
 
 def delete(bot, msg):
@@ -78,7 +78,7 @@ def delete(bot, msg):
             'DELETE FROM macros WHERE slug = %s',
             (slug,),
         )
-        msg.respond('macro `{}` has been deleted.'.format(slug))
+        msg.respond(f'macro `{slug}` has been deleted.')
 
 
 def rename(bot, msg):
@@ -88,7 +88,7 @@ def rename(bot, msg):
     new_slug = msg.match.group(2)
 
     if new_slug in KEYWORDS:
-        msg.respond('`{}` is a reserved keyword.'.format(new_slug))
+        msg.respond(f'`{new_slug}` is a reserved keyword.')
         return
 
     with db.cursor(password=bot.mysql_password) as c:
@@ -96,7 +96,7 @@ def rename(bot, msg):
             'UPDATE macros SET slug = %s WHERE slug = %s',
             (new_slug, old_slug),
         )
-        msg.respond('macro `{}` has been renamed to `{}`'.format(old_slug, new_slug))
+        msg.respond(f'macro `{old_slug}` has been renamed to `{new_slug}`')
 
 
 def replace(bot, msg):
@@ -110,7 +110,7 @@ def replace(bot, msg):
             'UPDATE macros SET link = %s WHERE slug = %s',
             (new_link, slug),
         )
-        msg.respond('macro `{}` updated'.format(slug))
+        msg.respond(f'macro `{slug}` updated')
 
 
 def list(bot):

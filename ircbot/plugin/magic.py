@@ -11,7 +11,7 @@ def register(bot):
 
 
 def _magic(thing):
-    return '(ノﾟοﾟ)ノﾐ★゜・。。・゜゜・。{} 。・゜☆゜・。。・゜'.format(thing)
+    return f'(ノﾟοﾟ)ノﾐ★゜・。。・゜゜・。{thing} 。・゜☆゜・。。・゜'
 
 
 def magic(bot, msg):

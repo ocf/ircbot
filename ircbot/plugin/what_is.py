@@ -29,7 +29,7 @@ def what_is(bot, msg):
     if definition is not None:
         msg.respond('{} {} {}'.format(thing, is_are, definition['what_it_is']), ping=False)
     else:
-        msg.respond('idk {} {} {}'.format(what_who, thing, is_are), ping=False)
+        msg.respond(f'idk {what_who} {thing} {is_are}', ping=False)
 
 
 def know_that(bot, msg):
@@ -40,4 +40,4 @@ def know_that(bot, msg):
             'REPLACE INTO what_is (thing, what_it_is) VALUES (%s, %s)',
             (thing, what_it_is),
         )
-    msg.respond('okay, {} {} {}'.format(thing, is_are, what_it_is), ping=False)
+    msg.respond(f'okay, {thing} {is_are} {what_it_is}', ping=False)

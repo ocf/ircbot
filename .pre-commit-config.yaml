@@ -1,3 +1,4 @@
+exclude: (^vendor/)
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.1.0
@@ -23,7 +24,6 @@ repos:
     rev: 3.7.7
     hooks:
     - id: flake8
-      language_version: python3.5
 -   repo: https://github.com/pre-commit/mirrors-autopep8
     rev: v1.4.3
     hooks:
@@ -37,7 +37,13 @@ repos:
     hooks:
     -   id: remove-tabs
         files: \.py$
--   repo: https://github.com/asottile/add-trailing-comma
-    rev: v0.8.0
+-   repo: https://github.com/asottile/pyupgrade
+    sha: v1.16.1
     hooks:
-    -   id: add-trailing-comma
+        -   id: pyupgrade
+            args: ['--py36-plus']
+-   repo: https://github.com/asottile/add-trailing-comma
+    sha: v0.8.0
+    hooks:
+        -   id: add-trailing-comma
+            args: ['--py36-plus']

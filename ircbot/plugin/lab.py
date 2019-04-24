@@ -13,10 +13,10 @@ def in_lab(bot, msg):
     username = msg.match.group(1).strip()
     for session in staff_in_lab():
         if username == session.user:
-            msg.respond('{} is in the lab'.format(username))
+            msg.respond(f'{username} is in the lab')
             break
     else:
-        msg.respond('{} is not in the lab'.format(username))
+        msg.respond(f'{username} is not in the lab')
 
 
 def _prevent_ping(staffer):
@@ -30,7 +30,7 @@ def who_is_in_lab(bot, msg):
     total = users_in_lab_count()
 
     if total != 1:
-        are_number_people = 'are {} people'.format(total)
+        are_number_people = f'are {total} people'
     else:
         are_number_people = 'is 1 person'
 

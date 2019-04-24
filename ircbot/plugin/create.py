@@ -25,14 +25,14 @@ def approve(bot, msg):
     """Approve a pending account."""
     user_name = msg.match.group(1)
     bot.tasks.approve_request.delay(user_name)
-    msg.respond('approved {}, the account is being created'.format(user_name))
+    msg.respond(f'approved {user_name}, the account is being created')
 
 
 def reject(bot, msg):
     """Reject a pending account."""
     user_name = msg.match.group(1)
     bot.tasks.reject_request.delay(user_name)
-    msg.respond('rejected {}, better luck next time'.format(user_name))
+    msg.respond(f'rejected {user_name}, better luck next time')
 
 
 def list_pending(bot, msg):
