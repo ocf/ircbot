@@ -13,6 +13,17 @@ from configparser import ConfigParser
 from datetime import date
 from textwrap import dedent
 from traceback import format_exc
+from types import FunctionType
+from types import ModuleType
+from typing import Any
+from typing import Callable
+from typing import DefaultDict
+from typing import Dict
+from typing import Match
+from typing import NamedTuple
+from typing import Optional
+from typing import Pattern
+from typing import Set
 
 import irc.bot
 import irc.connection
@@ -54,36 +65,30 @@ DSA_FREQ = 5
 MAX_CLIENT_MSG = 435
 
 
-class Listener(
-    collections.namedtuple(
-        'Listener',
-        ('pattern', 'fn', 'help_text', 'require_mention', 'require_oper', 'require_privileged_oper'),
-    ),
-):
-
-    __slots__ = ()
+class Listener(NamedTuple):
+    pattern: Pattern
+    fn: FunctionType
+    help_text: str
+    require_mention: bool
+    require_oper: bool
+    require_privileged_oper: bool
 
     @property
-    def help(self):
+    def help(self) -> Optional[str]:
         if self.help_text:
             return self.help_text
         else:
             return self.fn.__doc__
 
     @property
-    def plugin_name(self):
+    def plugin_name(self) -> str:
         if isinstance(self.fn, functools.partial):
             return self.fn.func.__module__
         else:
             return self.fn.__module__
 
 
-class MatchedMessage(
-    collections.namedtuple(
-        'MatchedMessage',
-        ('channel', 'text', 'raw_text', 'match', 'is_oper', 'nick', 'respond'),
-    ),
-):
+class MatchedMessage(NamedTuple):
     """A message matching a listener.
 
     :param channel: IRC channel (as a string).
@@ -96,8 +101,13 @@ class MatchedMessage(
     :param respond: A function to respond to this message in the correct
                     channel and pinging the correct person.
     """
-
-    __slots__ = ()
+    channel: str
+    text: str
+    raw_text: str
+    match: Match
+    is_oper: bool
+    nick: str
+    respond: Callable
 
 
 class CreateBot(irc.bot.SingleServerIRCBot):
@@ -116,10 +126,10 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             kanboard_apikey,
             twitter_apikeys,
     ):
-        self.recent_messages = collections.defaultdict(
+        self.recent_messages: DefaultDict[str, Any] = collections.defaultdict(
             functools.partial(collections.deque, maxlen=NUM_RECENT_MESSAGES),
         )
-        self.topics = {}
+        self.topics: Dict[str, str] = {}
         self.tasks = tasks
         self.rt_password = rt_password
         self.nickserv_password = nickserv_password
@@ -131,9 +141,9 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         self.discourse_apikey = discourse_apikey
         self.kanboard_apikey = kanboard_apikey
         self.twitter_apikeys = twitter_apikeys
-        self.listeners = set()
-        self.plugins = {}
-        self.extra_channels = set()  # plugins can add stuff here
+        self.listeners: Set[Listener] = set()
+        self.plugins: Dict[str, ModuleType] = {}
+        self.extra_channels: Set[str] = set()  # plugins can add stuff here
 
         # Register plugins before joining the server.
         self.register_plugins()

@@ -13,7 +13,7 @@ for i in range(0x10ffff):
     if unicodedata.category(c).startswith('C'):
         continue
     char_mapping.append((name, c))
-char_mapping = tuple(char_mapping)
+char_map = tuple(char_mapping)
 
 
 def register(bot):
@@ -28,7 +28,7 @@ def emoji(bot, msg):
     ret = ''
     if query == 'DEBIAN':
         ret += '🍥'
-    for name, c in char_mapping:
+    for name, c in char_map:
         if query in name:
             ret += c
     if not ret:

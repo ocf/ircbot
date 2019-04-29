@@ -2,6 +2,7 @@ import operator
 import re
 from collections import namedtuple
 from datetime import datetime
+from typing import List
 from xml.etree import ElementTree
 
 import requests
@@ -18,12 +19,13 @@ def dsa_list():
     root = ElementTree.fromstring(req.content)
     for item in root.iter('{http://purl.org/rss/1.0/}item'):
         # title is of the form "DSA-3804 linux - security update"
-        title = item.find('{http://purl.org/rss/1.0/}title').text
-
+        title = item.find('{http://purl.org/rss/1.0/}title')
+        assert title is not None
+        assert isinstance(title, str)
         # group 1: dsa number, group 2: optional package name
         # line ends with the type of notice, see DSA-4204, DSA-4205 for examples
-        m = re.match(r'DSA-(\d+) ?(.+)? - ', title)
-        assert m, title
+        m = re.match(r'DSA-(\d+) ?(.+)? - ', title.text)
+        assert m, title.text
         dsa_num = int(m.group(1))
         package = m.group(2)
 
@@ -63,7 +65,7 @@ def summarize(description, limit=256):
 def get_new_dsas():
     """Return new DSA summary lines."""
     global last_seen
-    lines = []
+    lines: List[str] = []
     dsas = list(dsa_list())
 
     if last_seen is not None:

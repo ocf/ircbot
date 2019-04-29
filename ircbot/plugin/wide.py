@@ -2,6 +2,8 @@
 import functools
 from string import ascii_lowercase
 from string import ascii_uppercase
+from typing import cast
+from typing import Dict
 
 WIDETEXT_MAP = {i: i + 0xFEE0 for i in range(0x21, 0x7F)}
 
@@ -16,8 +18,8 @@ THICC = '卂乃匚刀乇下厶卄工丁长乚从几口尸㔿尺丂丅凵リ山�
 
 # Little hack, because translation tables are just dicts
 THICC_MAP = {
-    **str.maketrans(ascii_lowercase, THICC),
-    **str.maketrans(ascii_uppercase, THICC),
+    **cast(Dict[int, int], str.maketrans(ascii_lowercase, THICC)),
+    **cast(Dict[int, int], str.maketrans(ascii_uppercase, THICC)),
     SPACE_VALUE: WIDE_SPACE_VALUE,
 }
 

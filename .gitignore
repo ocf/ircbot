@@ -5,6 +5,7 @@
 .tox
 .version
 /venv
+.mypy_cache/
 build/
 debian/*.debhelper
 debian/*.log
