@@ -359,8 +359,8 @@ def timer(bot):
 
                 for line in debian_security.get_new_dsas():
                     bot.say('#rebuild', line)
-        except Exception as ex:
-            error_msg = f'ircbot exception: {ex}'
+        except Exception:
+            error_msg = f'ircbot exception: {format_exc()}'
             bot.say('#rebuild', error_msg)
             # don't send emails when running as dev
             if not TESTING:
