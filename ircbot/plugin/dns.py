@@ -9,7 +9,7 @@ from ocflib.infra import net
 
 def register(bot):
     bot.listen(r'^host (\S+)$', host, require_mention=True)
-    bot.listen(r"^(?:what (?:isn't it|is it not)|(?:dns )?haiku)$", haiku, require_mention=True)
+    bot.listen(r"^(?:what (?:isn't it|is it not)\?*|(?:dns )?haiku)$", haiku, require_mention=True)
 
 
 def host(bot, msg):
