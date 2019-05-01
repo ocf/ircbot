@@ -21,7 +21,7 @@ def dsa_list():
         # title is of the form "DSA-3804 linux - security update"
         title = item.find('{http://purl.org/rss/1.0/}title')
         assert title is not None
-        assert isinstance(title, str)
+        assert isinstance(title, ElementTree.Element)
         # group 1: dsa number, group 2: optional package name
         # line ends with the type of notice, see DSA-4204, DSA-4205 for examples
         m = re.match(r'DSA-(\d+) ?(.+)? - ', title.text)
