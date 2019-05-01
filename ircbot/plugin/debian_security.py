@@ -21,25 +21,28 @@ def dsa_list():
         # title is of the form "DSA-3804 linux - security update"
         title = item.find('{http://purl.org/rss/1.0/}title')
         assert title is not None
-        assert isinstance(title, ElementTree.Element)
+        assert title.text is not None
         # group 1: dsa number, group 2: optional package name
         # line ends with the type of notice, see DSA-4204, DSA-4205 for examples
         m = re.match(r'DSA-(\d+) ?(.+)? - ', title.text)
         assert m, title.text
         dsa_num = int(m.group(1))
         package = m.group(2)
-
-        link = item.find('{http://purl.org/rss/1.0/}link').text
+        link_elt = item.find('{http://purl.org/rss/1.0/}link')
+        assert link_elt is not None
+        link = link_elt.text
 
         # description has random html tags and whitespace
-        description = item.find('{http://purl.org/rss/1.0/}description').text.strip()
+        description_elt = item.find('{http://purl.org/rss/1.0/}description')
+        assert description_elt is not None
+        assert description_elt.text is not None
+        description = description_elt.text.strip()
         description = description.replace('\n', ' ')
         description = re.sub('<[^<]+>', '', description)  # not secure! but good enough
-
-        date = datetime.strptime(
-            item.find('{http://purl.org/dc/elements/1.1/}date').text,
-            '%Y-%m-%d',
-        )
+        date_elt = item.find('{http://purl.org/dc/elements/1.1/}date')
+        assert date_elt is not None
+        assert date_elt.text is not None
+        date = datetime.strptime(date_elt.text, '%Y-%m-%d')
 
         yield DSA(
             number=dsa_num,
