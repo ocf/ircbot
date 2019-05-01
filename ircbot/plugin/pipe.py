@@ -1,4 +1,6 @@
 """Pipe the output of a command to the input of the next command."""
+from typing import Iterator
+
 from ircbot.ircbot import MatchedMessage
 
 
@@ -11,7 +13,7 @@ def register(bot):
 
 def pipe(bot, msg):
     """Pipe the output of a command to the input of the next command."""
-    commands = filter(None, [s.strip() for s in msg.match.group(1).split('|')])
+    commands: Iterator[str] = filter(None, [s.strip() for s in msg.match.group(1).split('|')])
     stream = ''
     for command in commands:
         if stream:

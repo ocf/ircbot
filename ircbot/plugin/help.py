@@ -3,8 +3,15 @@ import collections
 import http.server
 import os
 import threading
+from types import ModuleType
+from typing import DefaultDict
+from typing import Set
+from typing import TYPE_CHECKING
 
 import jinja2
+
+if TYPE_CHECKING:
+    from ircbot.ircbot import Listener
 
 
 def register(bot):
@@ -46,7 +53,7 @@ def build_request_handler(bot):
 
         def do_GET(self):
             if self.path == '/':
-                plugins = collections.defaultdict(set)
+                plugins: DefaultDict[ModuleType, Set[Listener]] = collections.defaultdict(set)
                 for listener in bot.listeners:
                     plugins[bot.plugins[listener.plugin_name]].add(listener)
 

@@ -3,8 +3,12 @@ DOCKER_TAG = docker-push.ocf.berkeley.edu/ircbot:$(DOCKER_REVISION)
 RANDOM_PORT ?= $(shell expr $$(( 8000 + (`id -u` % 1000) )))
 
 .PHONY: test
-test: venv install-hooks
+test: venv install-hooks mypy
 	venv/bin/pre-commit run --all-files
+
+.PHONY: mypy
+mypy: venv
+	venv/bin/mypy -p ircbot
 
 .PHONY: install-hooks
 install-hooks: venv

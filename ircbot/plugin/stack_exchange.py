@@ -1,9 +1,10 @@
 """Print information about Stack Exchange links."""
-import collections
 import functools
 import re
 import urllib.parse
 from datetime import datetime
+from typing import Dict
+from typing import NamedTuple
 
 import requests
 
@@ -11,18 +12,21 @@ import requests
 API = 'https://api.stackexchange.com/2.2'
 
 
-Site = collections.namedtuple('Site', ('api_name', 'name'))
-Question = collections.namedtuple(
-    'Question',
-    (
-        'title',
-        'owner_name',
-        'creation_date',
-        'answer_count',
-        'score',
-    ),
-)
-Answer = collections.namedtuple('Answer', ('question_id',))
+class Site(NamedTuple):
+    api_name: str
+    name: str
+
+
+class Question(NamedTuple):
+    title: str
+    owner_name: str
+    creation_date: datetime
+    answer_count: int
+    score: int
+
+
+class Answer(NamedTuple):
+    question_id: int
 
 
 def register(bot):
@@ -39,13 +43,12 @@ def _sites():
     resp.raise_for_status()
 
     domain_from_url = re.compile(r'^https://([^/]+)$')
-    return {
-        domain_from_url.match(site['site_url']).group(1): Site(
-            api_name=site['api_site_parameter'],
-            name=site['name'],
-        )
-        for site in resp.json()['items']
-    }
+    sites: Dict[str, Site] = {}
+    for site in resp.json()['items']:
+        domain = domain_from_url.match(site['site_url'])
+        if domain is not None:
+            sites[domain.group(1)] = Site(api_name=site['api_site_parameter'], name=site['name'])
+    return sites
 
 
 def _question_info(site, question_id):

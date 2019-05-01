@@ -1,6 +1,7 @@
 """Show information about internal and external hosts."""
 import ipaddress
 import socket
+from typing import Optional
 
 from ocflib.infra import hosts
 from ocflib.infra import net
@@ -27,6 +28,7 @@ def host(bot, msg):
         msg.respond(str(ex))
         return
 
+    reverse_dns: Optional[str]
     try:
         reverse_dns, _, _ = socket.gethostbyaddr(ip)
     except socket.error:
