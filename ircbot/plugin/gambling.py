@@ -1,6 +1,5 @@
 """Outsource all your decision making to create."""
 import random
-import re
 
 
 def register(bot):
@@ -22,7 +21,7 @@ def flip(bot, msg):
 def choose(bot, msg):
     """Make your important life choices, separated with ';', with create.
     (e.g. !choice study for cs61a; don't study for cs61a)"""
-    choices = re.findall(r'\b([^;]+);?', msg.match.group(1))
+    choices = [choice.split() for choice in msg.match.group(1).split(';')]
     if not choices:
         msg.respond("Usage: !choice study for cs61a; don't study for cs61a")
     else:
