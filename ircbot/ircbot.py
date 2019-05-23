@@ -27,13 +27,8 @@ from typing import Set
 
 import irc.bot
 import irc.connection
-from celery import Celery
 from irc.client import NickMask
-from ocflib.account.submission import AccountCreationCredentials
-from ocflib.account.submission import get_tasks
 from ocflib.misc.mail import send_problem_report
-
-from ircbot.plugin import create
 
 IRC_HOST = 'irc'
 IRC_PORT = 6697
@@ -110,7 +105,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
 
     def __init__(
             self,
-            tasks,
+            celery_conf,
             nickserv_password,
             rt_password,
             weather_apikey,
@@ -126,7 +121,8 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             functools.partial(collections.deque, maxlen=NUM_RECENT_MESSAGES),
         )
         self.topics: Dict[str, str] = {}
-        self.tasks = tasks
+        self.celery_conf = celery_conf
+        self.tasks: NamedTuple = ()  # set in create plugin
         self.rt_password = rt_password
         self.nickserv_password = nickserv_password
         self.weather_apikey = weather_apikey
@@ -356,36 +352,13 @@ def main():
     conf = ConfigParser()
     conf.read(args.config)
 
-    celery = Celery(
-        broker=conf.get('celery', 'broker').replace('redis://', 'rediss://'),
-        backend=conf.get('celery', 'backend').replace('redis://', 'rediss://'),
-    )
-    celery.conf.broker_use_ssl = {
-        'ssl_ca_certs': '/etc/ssl/certs/ca-certificates.crt',
-        'ssl_cert_reqs': ssl.CERT_REQUIRED,
-    }
-    # `redis_backend_use_ssl` is an OCF patch which was proposed upstream:
-    # https://github.com/celery/celery/pull/3831
-    celery.conf.redis_backend_use_ssl = {
-        'ssl_cert_reqs': ssl.CERT_NONE,
+    celery_conf = {
+        'broker': conf.get('celery', 'broker'),
+        'backend': conf.get('celery', 'backend'),
     }
 
-    # TODO: stop using pickle
-    celery.conf.task_serializer = 'pickle'
-    celery.conf.result_serializer = 'pickle'
-    celery.conf.accept_content = {'pickle'}
-
-    creds = AccountCreationCredentials(
-        **{
-            field:
-                conf.get(*field.split('_'))
-                for field in AccountCreationCredentials._fields
-        },
-    )
-    tasks = get_tasks(celery, credentials=creds)
-
-    rt_password = conf.get('rt', 'password')
     nickserv_password = conf.get('nickserv', 'password')
+    rt_password = conf.get('rt', 'password')
     weather_apikey = conf.get('weather_underground', 'apikey')
     mysql_password = conf.get('mysql', 'password')
     marathon_creds = (
@@ -403,7 +376,7 @@ def main():
 
     # irc bot thread
     bot = CreateBot(
-        tasks, nickserv_password, rt_password,
+        celery_conf, nickserv_password, rt_password,
         weather_apikey, mysql_password, marathon_creds,
         googlesearch_key, googlesearch_cx, discourse_apikey,
         kanboard_apikey, twitter_apikeys,
@@ -411,15 +384,6 @@ def main():
     bot_thread = threading.Thread(target=bot.start, daemon=True)
     bot_thread.start()
     bot.threads.append(bot_thread)
-
-    # celery thread
-    celery_thread = threading.Thread(
-        target=create.celery_listener,
-        args=(bot, celery, conf.get('celery', 'broker')),
-        daemon=True,
-    )
-    celery_thread.start()
-    bot.threads.append(celery_thread)
 
     while True:
         for thread in bot.threads:

@@ -1,15 +1,40 @@
 """Approve accounts."""
 import ssl
+import threading
+import time
 
+from celery import Celery
 from celery import exceptions
 from celery.events import EventReceiver
 from kombu import Connection
+from ocflib.account.submission import get_tasks
 
 from ircbot.ircbot import IRC_CHANNELS_ANNOUNCE
 from ircbot.ircbot import IRC_CHANNELS_OPER
 
 
 def register(bot):
+    celery = Celery(
+        broker=bot.celery_conf['broker'],
+        backend=bot.celery_conf['backend'],
+    )
+    celery.conf.broker_use_ssl = {
+        'ssl_ca_certs': '/etc/ssl/certs/ca-certificates.crt',
+        'ssl_cert_reqs': ssl.CERT_REQUIRED,
+    }
+    # `redis_backend_use_ssl` is an OCF patch which was proposed upstream:
+    # https://github.com/celery/celery/pull/3831
+    celery.conf.redis_backend_use_ssl = {
+        'ssl_cert_reqs': ssl.CERT_NONE,
+    }
+
+    # TODO: stop using pickle
+    celery.conf.task_serializer = 'pickle'
+    celery.conf.result_serializer = 'pickle'
+    celery.conf.accept_content = {'pickle'}
+
+    bot.tasks = get_tasks(celery)
+
     bot.listen(
         r'^approve (.+)$', approve,
         require_mention=True, require_privileged_oper=True,
@@ -19,6 +44,14 @@ def register(bot):
         require_mention=True, require_privileged_oper=True,
     )
     bot.listen(r'^list$', list_pending, require_mention=True)
+
+    celery_thread = threading.Thread(
+        target=celery_listener,
+        args=(bot, celery, bot.celery_conf['broker']),
+        daemon=True,
+    )
+    celery_thread.start()
+    bot.threads.append(celery_thread)
 
 
 def approve(bot, msg):
@@ -51,6 +84,10 @@ def list_pending(bot, msg):
 
 def celery_listener(bot, celery, uri):
     """Listen for events from Celery, relay to IRC."""
+
+    while not (hasattr(bot, 'connection') and bot.connection.connected):
+        time.sleep(2)
+
     connection = Connection(
         uri, ssl={
             'ssl_ca_certs': '/etc/ssl/certs/ca-certificates.crt',
