@@ -10,7 +10,6 @@ import ssl
 import threading
 import time
 from configparser import ConfigParser
-from datetime import date
 from textwrap import dedent
 from traceback import format_exc
 from types import FunctionType
@@ -19,6 +18,7 @@ from typing import Any
 from typing import Callable
 from typing import DefaultDict
 from typing import Dict
+from typing import List
 from typing import Match
 from typing import NamedTuple
 from typing import Optional
@@ -34,7 +34,6 @@ from ocflib.account.submission import get_tasks
 from ocflib.misc.mail import send_problem_report
 
 from ircbot.plugin import create
-from ircbot.plugin import debian_security
 
 IRC_HOST = 'irc'
 IRC_PORT = 6697
@@ -54,9 +53,6 @@ else:
     IRC_CHANNELS_JOIN_MYSQL = False
 
 NUM_RECENT_MESSAGES = 10
-
-# Check for Debian security announcements every 5 minutes
-DSA_FREQ = 5
 
 # 512 bytes is the max message length set by RFC 2812 on the max single message
 # length, so messages need to split up into at least sections of that size,
@@ -141,6 +137,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         self.discourse_apikey = discourse_apikey
         self.kanboard_apikey = kanboard_apikey
         self.twitter_apikeys = twitter_apikeys
+        self.threads: List[threading.Thread] = []
         self.listeners: Set[Listener] = set()
         self.plugins: Dict[str, ModuleType] = {}
         self.extra_channels: Set[str] = set()  # plugins can add stuff here
@@ -163,6 +160,11 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             register = getattr(mod, 'register', None)
             if register is not None:
                 register(self)
+
+    def handle_error(self, error_message):
+        # don't send emails when running as dev
+        if not TESTING:
+            send_problem_report(error_message)
 
     def listen(
             self,
@@ -257,34 +259,32 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                             exception=ex,
                         )
                         msg.respond(error_msg, ping=False)
-                        # don't send emails when running as dev
-                        if not TESTING:
-                            send_problem_report(
-                                dedent(
-                                    """
-                                {error}
-
-                                {traceback}
-
-                                Message:
-                                  * Channel: {channel}
-                                  * Nick: {nick}
-                                  * Oper?: {oper}
-                                  * Text: {text}
-                                  * Raw text: {raw_text}
-                                  * Match groups: {groups}
+                        self.handle_error(
+                            dedent(
                                 """
-                                ).format(
-                                    error=error_msg,
-                                    traceback=format_exc(),
-                                    channel=msg.channel,
-                                    nick=msg.nick,
-                                    oper=msg.is_oper,
-                                    text=msg.text,
-                                    raw_text=msg.raw_text,
-                                    groups=msg.match.groups(),
-                                ),
-                            )
+                            {error}
+
+                            {traceback}
+
+                            Message:
+                                * Channel: {channel}
+                                * Nick: {nick}
+                                * Oper?: {oper}
+                                * Text: {text}
+                                * Raw text: {raw_text}
+                                * Match groups: {groups}
+                            """
+                            ).format(
+                                error=error_msg,
+                                traceback=format_exc(),
+                                channel=msg.channel,
+                                nick=msg.nick,
+                                oper=msg.is_oper,
+                                text=msg.text,
+                                raw_text=msg.raw_text,
+                                groups=msg.match.groups(),
+                            ),
+                        )
 
             # everything gets logged except commands
             if raw_text[0] != '!':
@@ -338,46 +338,6 @@ def split_utf8(s, n):
         yield s[:k].decode('utf-8')
         s = s[k:]
     yield s.decode('utf-8')
-
-
-def timer(bot):
-    last_date = None
-    last_dsa_check = None
-
-    while not bot.connection.connected:
-        time.sleep(2)
-
-    # TODO: timers should register as plugins like listeners do
-    while True:
-        try:
-            last_date, old = date.today(), last_date
-            if old and last_date != old:
-                bot.bump_topic()
-
-            if last_dsa_check is None or time.time() - last_dsa_check > 60 * DSA_FREQ:
-                last_dsa_check = time.time()
-
-                for line in debian_security.get_new_dsas():
-                    bot.say('#rebuild', line)
-        except Exception:
-            error_msg = f'ircbot exception: {format_exc()}'
-            bot.say('#rebuild', error_msg)
-            # don't send emails when running as dev
-            if not TESTING:
-                send_problem_report(
-                    dedent(
-                        """
-                    {error}
-
-                    {traceback}
-                    """
-                    ).format(
-                        error=error_msg,
-                        traceback=format_exc(),
-                    ),
-                )
-
-        time.sleep(1)
 
 
 def main():
@@ -450,6 +410,7 @@ def main():
     )
     bot_thread = threading.Thread(target=bot.start, daemon=True)
     bot_thread.start()
+    bot.threads.append(bot_thread)
 
     # celery thread
     celery_thread = threading.Thread(
@@ -458,17 +419,10 @@ def main():
         daemon=True,
     )
     celery_thread.start()
-
-    # timer thread
-    timer_thread = threading.Thread(
-        target=timer,
-        args=(bot,),
-        daemon=True,
-    )
-    timer_thread.start()
+    bot.threads.append(celery_thread)
 
     while True:
-        for thread in (bot_thread, celery_thread, timer_thread):
+        for thread in bot.threads:
             if not thread.is_alive():
                 raise RuntimeError(f'Thread exited: {thread}')
 
