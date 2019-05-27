@@ -3,7 +3,6 @@ import html
 from functools import lru_cache
 
 import requests
-from spongebob import spongebobify
 
 TWITTER_API = 'https://api.twitter.com'
 
@@ -71,8 +70,6 @@ def _format_tweet(tweet):
         )
     contents = contents.replace('\n', ' ')
     handle = tweet['user']['screen_name']
-    if handle == 'realDonaldTrump':
-        contents = spongebobify(contents)
     return '@\x02{handle}\x02 ({realname}): {contents}'.format(
         handle=handle,
         realname=tweet['user']['name'],
