@@ -6,7 +6,7 @@ from ocflib.lab.stats import users_in_lab_count
 def register(bot):
     bot.listen(r'is ([a-z]+) in the lab', in_lab, require_mention=True)
     bot.listen(r"(who is|who's) in the lab", who_is_in_lab, require_mention=True)
-    bot.listen(r'(?i)wiitl', who_is_in_lab)
+    bot.listen(r'(?i)w+i+t+l+', who_is_in_lab)
 
 
 def in_lab(bot, msg):
