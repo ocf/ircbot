@@ -1,6 +1,6 @@
 servicePipeline(
     upstreamProjects: ['ocflib/master', 'dockers/master'],
-    deployTargets: ['ircbot'],
+    deployTargets: [],
 )
 
 // vim: ft=groovy
