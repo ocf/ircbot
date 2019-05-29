@@ -37,7 +37,7 @@ spec:
               memory: 1024Mi
               cpu: 750m
           ports:
-            - containerPort: 80
+            - containerPort: 8888
           livenessProbe:
             httpGet:
               path: /
@@ -75,5 +75,5 @@ spec:
       http:
         paths:
           - backend:
-              serviceName: ircbot
+              serviceName: service
               servicePort: 80
