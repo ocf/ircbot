@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: service
+spec:
+  selector:
+    app: ircbot
+  ports:
+    - port: 80
+      targetPort: 8888
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment
+  labels:
+    app: ircbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ircbot
+  # terminate old ircbot before starting new one
+  # otherwise new ircbot won't start
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: ircbot
+    spec:
+      containers:
+        - name: ircbot
+          image: "docker.ocf.berkeley.edu/ircbot:<%= version %>"
+          resources:
+            limits:
+              memory: 1024Mi
+              cpu: 750m
+          ports:
+            - containerPort: 80
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8888
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8888
+            initialDelaySeconds: 5
+            timeoutSeconds: 3
+            periodSeconds: 5
+          volumeMounts:
+            - mountPath: /etc/ocf-ircbot
+              name: secrets
+      volumes:
+        - name: secrets
+          hostPath:
+            path: /opt/share/kubernetes/secrets/ircbot
+            type: Directory
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        searches:
+          - ocf.berkeley.edu
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: virtual-host-ingress
+spec:
+  rules:
+    - host: ircbot.ocf.berkeley.edu
+      http:
+        paths:
+          - backend:
+              serviceName: ircbot
+              servicePort: 80
