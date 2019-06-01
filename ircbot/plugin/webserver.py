@@ -24,22 +24,22 @@ bot_plugins: List[Tuple[ModuleType, Set[Listener]]] = []
 
 
 def register(bot):
-    global bot_plugins
     web_server_thread = threading.Thread(target=start_server, args=(bot,), daemon=True)
     web_server_thread.start()
     bot.threads.append(web_server_thread)
-
-    # Compute and set the bot's plugins
-    bot_plugin_set: DefaultDict[ModuleType, Set[Listener]] = collections.defaultdict(set)
-    for listener in app.bot.listeners:
-        bot_plugin_set[app.bot.plugins[listener.plugin_name]].add(listener)
-
-    bot_plugins = sorted(bot_plugin_set.items(), key=lambda p: p[0].__name__)
 
 
 @app.route('/', methods=['GET'])
 def route_base():
     global bot_plugins
+
+    if not bot_plugins:
+        # Compute and cache the bot's plugins
+        bot_plugin_set: DefaultDict[ModuleType, Set[Listener]] = collections.defaultdict(set)
+        for listener in app.bot.listeners:
+            bot_plugin_set[app.bot.plugins[listener.plugin_name]].add(listener)
+
+        bot_plugins = sorted(bot_plugin_set.items(), key=lambda p: p[0].__name__)
     return render_template(
         'help.html',
         plugins=bot_plugins,
