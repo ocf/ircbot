@@ -4,13 +4,12 @@ import argparse
 import collections
 import functools
 import getpass
+import os
 import pkgutil
 import re
 import ssl
 import threading
-import time
 from configparser import ConfigParser
-from datetime import date
 from textwrap import dedent
 from traceback import format_exc
 from types import FunctionType
@@ -27,14 +26,8 @@ from typing import Set
 
 import irc.bot
 import irc.connection
-from celery import Celery
 from irc.client import NickMask
-from ocflib.account.submission import AccountCreationCredentials
-from ocflib.account.submission import get_tasks
 from ocflib.misc.mail import send_problem_report
-
-from ircbot.plugin import create
-from ircbot.plugin import debian_security
 
 IRC_HOST = 'irc'
 IRC_PORT = 6697
@@ -54,9 +47,6 @@ else:
     IRC_CHANNELS_JOIN_MYSQL = False
 
 NUM_RECENT_MESSAGES = 10
-
-# Check for Debian security announcements every 5 minutes
-DSA_FREQ = 5
 
 # 512 bytes is the max message length set by RFC 2812 on the max single message
 # length, so messages need to split up into at least sections of that size,
@@ -114,7 +104,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
 
     def __init__(
             self,
-            tasks,
+            celery_conf,
             nickserv_password,
             rt_password,
             weather_apikey,
@@ -130,7 +120,8 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             functools.partial(collections.deque, maxlen=NUM_RECENT_MESSAGES),
         )
         self.topics: Dict[str, str] = {}
-        self.tasks = tasks
+        self.celery_conf = celery_conf
+        self.tasks: NamedTuple = ()  # set in create plugin
         self.rt_password = rt_password
         self.nickserv_password = nickserv_password
         self.weather_apikey = weather_apikey
@@ -163,6 +154,14 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             register = getattr(mod, 'register', None)
             if register is not None:
                 register(self)
+
+    def handle_error(self, error_message):
+        # for debugging purposes
+        print(error_message)
+
+        # don't send emails when running as dev
+        if not TESTING:
+            send_problem_report(error_message)
 
     def listen(
             self,
@@ -257,34 +256,32 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                             exception=ex,
                         )
                         msg.respond(error_msg, ping=False)
-                        # don't send emails when running as dev
-                        if not TESTING:
-                            send_problem_report(
-                                dedent(
-                                    """
-                                {error}
-
-                                {traceback}
-
-                                Message:
-                                  * Channel: {channel}
-                                  * Nick: {nick}
-                                  * Oper?: {oper}
-                                  * Text: {text}
-                                  * Raw text: {raw_text}
-                                  * Match groups: {groups}
+                        self.handle_error(
+                            dedent(
                                 """
-                                ).format(
-                                    error=error_msg,
-                                    traceback=format_exc(),
-                                    channel=msg.channel,
-                                    nick=msg.nick,
-                                    oper=msg.is_oper,
-                                    text=msg.text,
-                                    raw_text=msg.raw_text,
-                                    groups=msg.match.groups(),
-                                ),
-                            )
+                            {error}
+
+                            {traceback}
+
+                            Message:
+                                * Channel: {channel}
+                                * Nick: {nick}
+                                * Oper?: {oper}
+                                * Text: {text}
+                                * Raw text: {raw_text}
+                                * Match groups: {groups}
+                            """
+                            ).format(
+                                error=error_msg,
+                                traceback=format_exc(),
+                                channel=msg.channel,
+                                nick=msg.nick,
+                                oper=msg.is_oper,
+                                text=msg.text,
+                                raw_text=msg.raw_text,
+                                groups=msg.match.groups(),
+                            ),
+                        )
 
             # everything gets logged except commands
             if raw_text[0] != '!':
@@ -302,6 +299,37 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         # TODO: make this more plugin-like
         import ircbot.plugin.channels
         return ircbot.plugin.channels.on_invite(self, connection, event)
+
+    def add_thread(self, func):
+        def thread_func():
+            try:
+                func(self)
+            except Exception as ex:
+                error_msg = 'ircbot exception in thread {thread}.{function}: {exception}'.format(
+                    thread=func.__module__,
+                    function=func.__name__,
+                    exception=ex,
+                )
+                self.say('#rebuild', error_msg)
+                self.handle_error(
+                    dedent(
+                        """
+                    {error}
+
+                    {traceback}
+                    """
+                    ).format(
+                        error=error_msg,
+                        traceback=format_exc(),
+                    ),
+                )
+            finally:
+                # The thread has stopped, probably because it threw an error
+                # This shouldn't happen, so we stop the entire bot
+                os._exit(1)
+
+        thread = threading.Thread(target=thread_func, daemon=True)
+        thread.start()
 
     def bump_topic(self):
         for channel, topic in self.topics.items():
@@ -340,46 +368,6 @@ def split_utf8(s, n):
     yield s.decode('utf-8')
 
 
-def timer(bot):
-    last_date = None
-    last_dsa_check = None
-
-    while not bot.connection.connected:
-        time.sleep(2)
-
-    # TODO: timers should register as plugins like listeners do
-    while True:
-        try:
-            last_date, old = date.today(), last_date
-            if old and last_date != old:
-                bot.bump_topic()
-
-            if last_dsa_check is None or time.time() - last_dsa_check > 60 * DSA_FREQ:
-                last_dsa_check = time.time()
-
-                for line in debian_security.get_new_dsas():
-                    bot.say('#rebuild', line)
-        except Exception:
-            error_msg = f'ircbot exception: {format_exc()}'
-            bot.say('#rebuild', error_msg)
-            # don't send emails when running as dev
-            if not TESTING:
-                send_problem_report(
-                    dedent(
-                        """
-                    {error}
-
-                    {traceback}
-                    """
-                    ).format(
-                        error=error_msg,
-                        traceback=format_exc(),
-                    ),
-                )
-
-        time.sleep(1)
-
-
 def main():
     parser = argparse.ArgumentParser(
         description='OCF account creation IRC bot',
@@ -396,36 +384,13 @@ def main():
     conf = ConfigParser()
     conf.read(args.config)
 
-    celery = Celery(
-        broker=conf.get('celery', 'broker').replace('redis://', 'rediss://'),
-        backend=conf.get('celery', 'backend').replace('redis://', 'rediss://'),
-    )
-    celery.conf.broker_use_ssl = {
-        'ssl_ca_certs': '/etc/ssl/certs/ca-certificates.crt',
-        'ssl_cert_reqs': ssl.CERT_REQUIRED,
-    }
-    # `redis_backend_use_ssl` is an OCF patch which was proposed upstream:
-    # https://github.com/celery/celery/pull/3831
-    celery.conf.redis_backend_use_ssl = {
-        'ssl_cert_reqs': ssl.CERT_NONE,
+    celery_conf = {
+        'broker': conf.get('celery', 'broker'),
+        'backend': conf.get('celery', 'backend'),
     }
 
-    # TODO: stop using pickle
-    celery.conf.task_serializer = 'pickle'
-    celery.conf.result_serializer = 'pickle'
-    celery.conf.accept_content = {'pickle'}
-
-    creds = AccountCreationCredentials(
-        **{
-            field:
-                conf.get(*field.split('_'))
-                for field in AccountCreationCredentials._fields
-        },
-    )
-    tasks = get_tasks(celery, credentials=creds)
-
-    rt_password = conf.get('rt', 'password')
     nickserv_password = conf.get('nickserv', 'password')
+    rt_password = conf.get('rt', 'password')
     weather_apikey = conf.get('weather_underground', 'apikey')
     mysql_password = conf.get('mysql', 'password')
     marathon_creds = (
@@ -441,38 +406,15 @@ def main():
         conf.get('twitter', 'apisecret'),
     )
 
-    # irc bot thread
     bot = CreateBot(
-        tasks, nickserv_password, rt_password,
+        celery_conf, nickserv_password, rt_password,
         weather_apikey, mysql_password, marathon_creds,
         googlesearch_key, googlesearch_cx, discourse_apikey,
         kanboard_apikey, twitter_apikeys,
     )
-    bot_thread = threading.Thread(target=bot.start, daemon=True)
-    bot_thread.start()
 
-    # celery thread
-    celery_thread = threading.Thread(
-        target=create.celery_listener,
-        args=(bot, celery, conf.get('celery', 'broker')),
-        daemon=True,
-    )
-    celery_thread.start()
-
-    # timer thread
-    timer_thread = threading.Thread(
-        target=timer,
-        args=(bot,),
-        daemon=True,
-    )
-    timer_thread.start()
-
-    while True:
-        for thread in (bot_thread, celery_thread, timer_thread):
-            if not thread.is_alive():
-                raise RuntimeError(f'Thread exited: {thread}')
-
-        time.sleep(0.1)
+    # Start the bot!
+    bot.start()
 
 
 if __name__ == '__main__':

@@ -1,8 +1,8 @@
 celery[redis]
 ckuehl-upsidedown
+flask
 github3.py
 irc
-jinja2
 markovify
 ocflib
 pymysql
