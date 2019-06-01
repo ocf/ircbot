@@ -156,6 +156,9 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 register(self)
 
     def handle_error(self, error_message):
+        # for debugging purposes
+        print(error_message)
+
         # don't send emails when running as dev
         if not TESTING:
             send_problem_report(error_message)
