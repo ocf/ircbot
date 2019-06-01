@@ -1,5 +1,4 @@
 """Run some timers"""
-import threading
 import time
 from datetime import date
 from textwrap import dedent
@@ -12,9 +11,7 @@ DSA_FREQ = 5
 
 
 def register(bot):
-    timer_thread = threading.Thread(target=timer, args=(bot,), daemon=True)
-    timer_thread.start()
-    bot.threads.append(timer_thread)
+    bot.add_thread(timer)
 
 
 def timer(bot):

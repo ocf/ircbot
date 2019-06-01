@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import collections
 import os
-import threading
 from types import ModuleType
 from typing import DefaultDict
 from typing import List
@@ -24,9 +23,7 @@ bot_plugins: List[Tuple[ModuleType, Set[Listener]]] = []
 
 
 def register(bot):
-    web_server_thread = threading.Thread(target=start_server, args=(bot,), daemon=True)
-    web_server_thread.start()
-    bot.threads.append(web_server_thread)
+    bot.add_thread(start_server)
 
 
 @app.route('/', methods=['GET'])
@@ -40,6 +37,7 @@ def route_base():
             bot_plugin_set[app.bot.plugins[listener.plugin_name]].add(listener)
 
         bot_plugins = sorted(bot_plugin_set.items(), key=lambda p: p[0].__name__)
+
     return render_template(
         'help.html',
         plugins=bot_plugins,

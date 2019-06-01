@@ -4,11 +4,11 @@ import argparse
 import collections
 import functools
 import getpass
+import os
 import pkgutil
 import re
 import ssl
 import threading
-import time
 from configparser import ConfigParser
 from textwrap import dedent
 from traceback import format_exc
@@ -18,7 +18,6 @@ from typing import Any
 from typing import Callable
 from typing import DefaultDict
 from typing import Dict
-from typing import List
 from typing import Match
 from typing import NamedTuple
 from typing import Optional
@@ -133,7 +132,6 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         self.discourse_apikey = discourse_apikey
         self.kanboard_apikey = kanboard_apikey
         self.twitter_apikeys = twitter_apikeys
-        self.threads: List[threading.Thread] = []
         self.listeners: Set[Listener] = set()
         self.plugins: Dict[str, ModuleType] = {}
         self.extra_channels: Set[str] = set()  # plugins can add stuff here
@@ -299,6 +297,37 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         import ircbot.plugin.channels
         return ircbot.plugin.channels.on_invite(self, connection, event)
 
+    def add_thread(self, func):
+        def thread_func():
+            try:
+                func(self)
+            except Exception as ex:
+                error_msg = 'ircbot exception in thread {thread}.{function}: {exception}'.format(
+                    thread=func.__module__,
+                    function=func.__name__,
+                    exception=ex,
+                )
+                self.say('#rebuild', error_msg)
+                self.handle_error(
+                    dedent(
+                        """
+                    {error}
+
+                    {traceback}
+                    """
+                    ).format(
+                        error=error_msg,
+                        traceback=format_exc(),
+                    ),
+                )
+            finally:
+                # The thread has stopped, probably because it threw an error
+                # This shouldn't happen, so we stop the entire bot
+                os._exit(1)
+
+        thread = threading.Thread(target=thread_func, daemon=True)
+        thread.start()
+
     def bump_topic(self):
         for channel, topic in self.topics.items():
             def plusone(m):
@@ -374,23 +403,15 @@ def main():
         conf.get('twitter', 'apisecret'),
     )
 
-    # irc bot thread
     bot = CreateBot(
         celery_conf, nickserv_password, rt_password,
         weather_apikey, mysql_password, marathon_creds,
         googlesearch_key, googlesearch_cx, discourse_apikey,
         kanboard_apikey, twitter_apikeys,
     )
-    bot_thread = threading.Thread(target=bot.start, daemon=True)
-    bot_thread.start()
-    bot.threads.append(bot_thread)
 
-    while True:
-        for thread in bot.threads:
-            if not thread.is_alive():
-                raise RuntimeError(f'Thread exited: {thread}')
-
-        time.sleep(0.1)
+    # Start the bot!
+    bot.start()
 
 
 if __name__ == '__main__':
