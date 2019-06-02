@@ -1,6 +1,6 @@
 DOCKER_REVISION ?= testing-$(USER)
 DOCKER_TAG = docker-push.ocf.berkeley.edu/ircbot:$(DOCKER_REVISION)
-RANDOM_PORT ?= $(shell expr $$(( 8000 + (`id -u` % 1000) )))
+RANDOM_PORT ?= $(shell expr $$(( 8010 + (`id -u` % 1000))))
 
 .PHONY: test
 test: venv install-hooks mypy
