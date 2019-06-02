@@ -10,6 +10,7 @@ final_model = None
 
 def register(bot):
     bot.listen(r'^turing$', markov, flags=re.IGNORECASE, require_mention=True)
+    bot.listen(r'^!t$', markov, flags=re.IGNORECASE)
     bot.listen(r'^turing regen(?:erate)?$', generate_model, flags=re.IGNORECASE, require_mention=True)
 
     generate_model(bot)
