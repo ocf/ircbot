@@ -391,7 +391,7 @@ def main():
 
     nickserv_password = conf.get('nickserv', 'password')
     rt_password = conf.get('rt', 'password')
-    weather_apikey = conf.get('weather_underground', 'apikey')
+    weather_apikey = conf.get('openweathermap', 'apikey')
     mysql_password = conf.get('mysql', 'password')
     marathon_creds = (
         conf.get('marathon', 'user'),

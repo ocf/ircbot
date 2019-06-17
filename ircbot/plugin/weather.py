@@ -1,5 +1,4 @@
 """Show the weather."""
-import urllib.parse
 from bisect import bisect
 
 import requests
@@ -13,11 +12,8 @@ def weather(bot, msg):
     """Show weather for a location (defaults to Berkeley).
     Add the -c flag for celsius output."""
     unit = 'c' if msg.match.group(1) else 'f'
-    where = msg.match.group(2).strip() or 'Berkeley, CA'
-    location = find_match(where)
-    summary = None
-    if location:
-        summary = get_summary(bot.weather_apikey, location, unit)
+    where = msg.match.group(2).strip() or 'Berkeley'
+    summary = get_summary(bot.weather_apikey, where, unit)
     if summary:
         msg.respond(summary, ping=False)
     else:
@@ -26,6 +22,28 @@ def weather(bot, msg):
 
 def f2c(temp):
     return int((32 * temp - 32) * 5 / 9)
+
+
+def deg_to_compass(deg):
+    sector = int((deg + 11.25) // 22.5) % 16
+    return [
+        'N',
+        'NNE',
+        'NE',
+        'ENE',
+        'E',
+        'ESE',
+        'SE',
+        'SSE',
+        'S',
+        'SSW',
+        'SW',
+        'WSW',
+        'W',
+        'WNW',
+        'NW',
+        'NNW',
+    ][sector]
 
 
 def icon(temp, unit='f'):
@@ -37,6 +55,10 @@ def icon(temp, unit='f'):
         return '☀'
     else:
         return '☢'
+
+
+def bold(text):
+    return f'\x02{text}\x0F'
 
 
 def color(temp, text=None, unit='f'):
@@ -57,7 +79,7 @@ def color(temp, text=None, unit='f'):
         '\x0311',  # Light cyan
         '\x0310',  # Teal
         '\x0314',  # Grey
-        '\x0F',    # Reset (default text color)
+        '',        # None (default text color)
         '\x0307',  # Orange
         '\x0305',  # Maroon
         '\x0304',  # Red (> 90)
@@ -74,55 +96,48 @@ def color(temp, text=None, unit='f'):
     return f'{color}{text}\x0F'
 
 
-def find_match(query):
+def get_summary(api_key, location, unit='f'):
+    translation = {'c': 'metric', 'f': 'imperial'}
     req = requests.get(
-        'http://autocomplete.wunderground.com/aq?' + urllib.parse.urlencode({
-            'query': query,
-        }),
+        'https://api.openweathermap.org/data/2.5/weather',
+        params={
+            'q': location,
+            'units': translation[unit],
+            'APPID': api_key,
+        },
     )
-    assert req.status_code == 200, req.status_code
-    results = req.json()['RESULTS']
-    if len(results) > 1:
-        result = results[0]
-        return {
-            'name': result['name'],
-            'link': result['l'],
-        }
+    if req.status_code == requests.codes.not_found:
+        return None
 
-
-def get_summary(api_key, result, unit='f'):
-    req = requests.get(
-        'http://api.wunderground.com/api/{api_key}/forecast{link}.json'.format(
-            api_key=api_key,
-            link=result['link'],
-        ),
-    )
     assert req.status_code == 200, req.status_code
     j = req.json()
 
-    if 'forecast' not in j:
-        return None
-
-    translation = {'c': 'celsius', 'f': 'fahrenheit'}
-
-    days = []
-    for day in j['forecast']['simpleforecast']['forecastday']:
-        days.append(
-            '{weekday} {low}-{high}'.format(
-                weekday=day['date']['weekday_short'],
-                low=color(int(day['low'][translation[unit]]), unit=unit),
-                high=color(int(day['high'][translation[unit]]), unit=unit),
-            ),
-        )
-
-    cur = j['forecast']['simpleforecast']['forecastday'][0]
-    current = '{conditions}'.format(
-        conditions=cur['conditions'],
+    req_uv = requests.get(
+        'https://api.openweathermap.org/data/2.5/uvi',
+        params={
+            **j['coord'],
+            'APPID': api_key,
+        },
     )
+    assert req_uv.status_code == 200, req_uv.status_code
+    j_uv = req_uv.json()
 
-    return '{name}: {current} {icon}; {days}'.format(
-        current=current,
-        icon=icon(int(cur['high'][translation[unit]]), unit),
-        name=result['name'],
-        days=', '.join(days),
-    )
+    name = j['name']
+    temp = j['main']['temp']
+    ico = icon(temp, unit=unit)
+    desc = j['weather'][0]['description']
+
+    windspeed = j['wind']['speed']
+    winddeg = j['wind']['deg']
+    wind_text = f'{windspeed}m/s {winddeg}° ({deg_to_compass(winddeg)})'
+
+    humidity = j['main']['humidity']
+
+    uv_index = j_uv['value']
+
+    return '; '.join([
+        f'{name}: {bold(color(temp, unit=unit))} {ico} {bold(desc)}',
+        f'wind: {bold(wind_text)}',
+        f'humidity: {bold(humidity)}',
+        f'UV index: {bold(uv_index)}',
+    ])
