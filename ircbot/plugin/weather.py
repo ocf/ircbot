@@ -136,11 +136,17 @@ def get_summary(api_key, location, unit='f'):
     name = j['name']
     temp = j['main']['temp']
     ico = icon(temp, unit=unit)
+
     desc = j['weather'][0]['description']
 
     windspeed = j['wind']['speed']
-    winddeg = j['wind']['deg']
-    wind_text = f'{windspeed}m/s {winddeg}° ({deg_to_compass(winddeg)})'
+
+    winddeg_text = ''
+    if 'deg' in j['wind']:
+        winddeg = j['wind']['deg']
+        winddeg_text = f' {winddeg}° ({deg_to_compass(winddeg)})'
+
+    wind_text = f'{windspeed}m/s{winddeg_text}'
 
     humidity = j['main']['humidity']
 
