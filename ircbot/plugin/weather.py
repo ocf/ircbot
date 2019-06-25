@@ -25,6 +25,17 @@ def f2c(temp):
 
 
 def deg_to_compass(deg):
+    """Convert an angle degree to a compass direction with 16 sectors"""
+
+    # deg is from 0-360 (though we use modulo here to wrap just in case we're
+    # out of bounds).
+    #
+    # Each sector is 360/16 = 22.5 degrees wide
+    # 0 degrees is in the *middle* of sector 0, so we adjust the input degree
+    # by adding 22.5/2 = 11.25.
+    #
+    # This way, degrees -11.25 through 11.25 get placed in sector 0,
+    # 11.25 through 33.75 get placed in sector 1, etc.
     sector = int((deg + 11.25) // 22.5) % 16
     return [
         'N',
