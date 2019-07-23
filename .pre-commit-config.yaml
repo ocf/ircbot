@@ -40,10 +40,14 @@ repos:
 -   repo: https://github.com/asottile/pyupgrade
     rev: v1.16.1
     hooks:
-        -   id: pyupgrade
-            args: ['--py36-plus']
+    -   id: pyupgrade
+        args: ['--py36-plus']
 -   repo: https://github.com/asottile/add-trailing-comma
     rev: v1.0.0
     hooks:
-        -   id: add-trailing-comma
-            args: ['--py36-plus']
+    -   id: add-trailing-comma
+        args: ['--py36-plus']
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v0.720
+    hooks:
+    -   id: mypy
