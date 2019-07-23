@@ -20,7 +20,6 @@ from typing import DefaultDict
 from typing import Dict
 from typing import Match
 from typing import NamedTuple
-from typing import Optional
 from typing import Pattern
 from typing import Set
 
@@ -64,11 +63,13 @@ class Listener(NamedTuple):
     require_privileged_oper: bool
 
     @property
-    def help(self) -> Optional[str]:
+    def help(self) -> str:
         if self.help_text:
             return self.help_text
-        else:
+        elif self.fn.__doc__:
             return self.fn.__doc__
+        else:
+            return self.pattern.pattern
 
     @property
     def plugin_name(self) -> str:
