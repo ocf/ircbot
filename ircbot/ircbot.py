@@ -66,10 +66,8 @@ class Listener(NamedTuple):
     def help(self) -> str:
         if self.help_text:
             return self.help_text
-        elif self.fn.__doc__:
-            return self.fn.__doc__
         else:
-            return self.pattern.pattern
+            return self.fn.__doc__ or ''
 
     @property
     def plugin_name(self) -> str:
