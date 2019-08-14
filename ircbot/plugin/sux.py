@@ -6,6 +6,7 @@ BAD_THINGS = (
     '{0} burnt popcorn in the server room',
     '{0} called ABC news',
     '{0} caused a kernel panic',
+    '{0} has a small truck',
     '{0} is dead to me',
     '{0} is dying',
     '{0} is the worst',
