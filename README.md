@@ -12,8 +12,10 @@ all of the configuration files and libraries necessary to run `ircbot`. See our
 [instructions for logging into
 supernova](https://www.ocf.berkeley.edu/docs/staff/procedures/ssh-supernova/).
 
-   $ git clone https://github.com/ocf/ircbot.git
-   $ make install-hooks
+```
+$ git clone https://github.com/ocf/ircbot.git
+$ make install-hooks
+```
 
 Once you've made changes, you can run `make dev` to run the bot in testing mode.
 In this mode, the bot will join `#yourusername` on IRC. Your username's channel
