@@ -144,9 +144,13 @@ def get_summary(api_key, location, unit='f'):
     winddeg_text = ''
     if 'deg' in j['wind']:
         winddeg = j['wind']['deg']
-        winddeg_text = f' {winddeg}° ({deg_to_compass(winddeg)})'
+        winddeg_text = f'{winddeg}° ({deg_to_compass(winddeg)})'
 
-    wind_text = f'{windspeed}m/s{winddeg_text}'
+    windunit_text = 'm/s'
+    if unit == 'f':
+        windunit_text = 'mph'
+
+    wind_text = f'{windspeed} {windunit_text} {winddeg_text}'
 
     humidity = j['main']['humidity']
 
@@ -155,6 +159,6 @@ def get_summary(api_key, location, unit='f'):
     return '; '.join([
         f'{name}: {bold(color(temp, unit=unit))} {ico} {bold(desc)}',
         f'wind: {bold(wind_text)}',
-        f'humidity: {bold(humidity)}',
+        f'humidity: {bold(humidity)}%',
         f'UV index: {bold(uv_index)}',
     ])
