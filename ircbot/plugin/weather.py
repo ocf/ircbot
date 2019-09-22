@@ -21,7 +21,7 @@ def weather(bot, msg):
 
 
 def f2c(temp):
-    return int((32 * temp - 32) * 5 / 9)
+    return int((temp - 32) * 5 / 9)
 
 
 def deg_to_compass(deg):
