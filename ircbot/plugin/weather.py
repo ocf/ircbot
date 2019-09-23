@@ -20,8 +20,8 @@ def weather(bot, msg):
         msg.respond(f'idk where {where} is')
 
 
-def f2c(temp):
-    return int((temp - 32) * 5 / 9)
+def c2f(temp):
+    return temp * (9 / 5) + 32
 
 
 def deg_to_compass(deg):
@@ -57,12 +57,15 @@ def deg_to_compass(deg):
     ][sector]
 
 
-def icon(temp, unit='f'):
+def icon(temp, unit):
+    if unit == 'c':
+        temp = c2f(temp)
+
     # it doesn't get cold in the bay area, anything less than 60°F is a snowman
-    if temp < (60 if unit == 'f' else f2c(60)):
+    if temp < 60:
         return '☃'
     # it doesn't get hot in the bay area, either
-    elif temp < (75 if unit == 'f' else f2c(75)):
+    elif temp < 75:
         return '☀'
     else:
         return '☢'
@@ -72,15 +75,14 @@ def bold(text):
     return f'\x02{text}\x0F'
 
 
-def color(temp, text=None, unit='f'):
-    if text is None:
-        text = '{}°{}'.format(temp, unit.capitalize())
+def color(temp, unit):
+    temp_f = c2f(temp) if unit == 'c' else temp
+
+    text = f'{temp}°{unit.capitalize()}'
 
     # The temperature values that will make the color different.
     # Default is fahrenheit, and will be converted to celsius if wanted.
     temp_cutoffs = [40, 50, 60, 70, 75, 80, 90, 999]
-    if unit == 'c':
-        temp_cutoffs = [f2c(temp) for temp in temp_cutoffs]
 
     # The keys here are the lower bound of these colors, the last key is very
     # large so that it matches anything above the second-to-last key. This
@@ -101,7 +103,7 @@ def color(temp, text=None, unit='f'):
     # Bisect returns where an element falls in an ordered list, so it can be
     # used for numeric table lookups like this:
     # https://docs.python.org/3/library/bisect.html#other-examples
-    index = bisect(temps, temp)
+    index = bisect(temps, temp_f)
     color = temp_ranges[temps[index]]
 
     return f'{color}{text}\x0F'
@@ -144,9 +146,13 @@ def get_summary(api_key, location, unit='f'):
     winddeg_text = ''
     if 'deg' in j['wind']:
         winddeg = j['wind']['deg']
-        winddeg_text = f' {winddeg}° ({deg_to_compass(winddeg)})'
+        winddeg_text = f'{winddeg}° ({deg_to_compass(winddeg)})'
 
-    wind_text = f'{windspeed}m/s{winddeg_text}'
+    windunit_text = 'm/s'
+    if unit == 'f':
+        windunit_text = 'mph'
+
+    wind_text = f'{windspeed} {windunit_text} {winddeg_text}'
 
     humidity = j['main']['humidity']
 
@@ -155,6 +161,6 @@ def get_summary(api_key, location, unit='f'):
     return '; '.join([
         f'{name}: {bold(color(temp, unit=unit))} {ico} {bold(desc)}',
         f'wind: {bold(wind_text)}',
-        f'humidity: {bold(humidity)}',
+        f'humidity: {bold(humidity)}%',
         f'UV index: {bold(uv_index)}',
     ])
