@@ -47,6 +47,8 @@ def add(bot, msg):
             msg.respond(
                 'shorturl already exists, did you mean `!shorturl replace`?',
             )
+        except ValueError as e:
+            msg.respond(e)
         else:
             msg.respond(f'shorturl added as `{slug}`')
 
