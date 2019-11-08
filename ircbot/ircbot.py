@@ -190,101 +190,138 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         for channel in IRC_CHANNELS_OPER | IRC_CHANNELS_ANNOUNCE | self.extra_channels:
             conn.join(channel)
 
+    def handle_chat(
+            self,
+            *,
+            raw_text: str,
+            user: str,
+            channel: str,
+            is_oper: bool,
+            is_privileged_channel: bool,
+            respond: Callable,
+            pretend_mentioned: bool = False,
+    ):
+        was_mentioned = raw_text.lower().startswith((IRC_NICKNAME.lower() + ' ', IRC_NICKNAME.lower() + ': '))
+
+        for listener in self.listeners:
+            text = raw_text
+            if listener.require_mention and not pretend_mentioned:
+                if was_mentioned:
+                    # Chop off the bot nickname.
+                    text = text.split(' ', 1)[1]
+                else:
+                    continue
+
+            if (
+                (listener.require_oper or listener.require_privileged_oper) and
+                not is_oper
+            ):
+                continue
+
+            # Prevent people from creating a channel, becoming oper,
+            # inviting the bot, and approving/rejecting accounts without
+            # "real" oper privilege.
+            if listener.require_privileged_oper and not is_privileged_channel:
+                continue
+
+            match = listener.pattern.search(text)
+            if match is not None:
+                msg = MatchedMessage(
+                    channel=channel,
+                    text=text,
+                    raw_text=raw_text,
+                    match=match,
+                    is_oper=is_oper,
+                    nick=user,
+                    respond=respond,
+                )
+                try:
+                    listener.fn(self, msg)
+                except Exception as ex:
+                    error_msg = 'ircbot exception in {module}/{function}: {exception}'.format(
+                        module=listener.fn.__module__,
+                        function=listener.fn.__name__,
+                        exception=ex,
+                    )
+                    msg.respond(error_msg, ping=False)
+                    self.handle_error(
+                        dedent(
+                            """
+                        {error}
+
+                        {traceback}
+
+                        Message:
+                            * Channel: {channel}
+                            * Nick: {nick}
+                            * Oper?: {oper}
+                            * Text: {text}
+                            * Raw text: {raw_text}
+                            * Match groups: {groups}
+                        """
+                        ).format(
+                            error=error_msg,
+                            traceback=format_exc(),
+                            channel=msg.channel,
+                            nick=msg.nick,
+                            oper=msg.is_oper,
+                            text=msg.text,
+                            raw_text=msg.raw_text,
+                            groups=msg.match.groups(),
+                        ),
+                    )
+
+        # everything gets logged except commands
+        if raw_text[0] != '!':
+            self.recent_messages[channel].appendleft((user, raw_text))
+
     def on_pubmsg(self, conn, event):
         if event.target in self.channels:
-            is_oper = False
-            # event.source is like 'ckuehl!~ckuehl@raziel.ckuehl.me'
-            assert event.source.count('!') == 1
             user = NickMask(event.source).nick
 
             # Don't respond to other create bots to avoid loops
             if user.startswith('create'):
                 return
 
-            if user in self.channels[event.target].opers():
-                is_oper = True
-
-            assert len(event.arguments) == 1
-            raw_text = event.arguments[0]
+            raw_text, = event.arguments
 
             def respond(raw_text, ping=True):
                 fmt = '{user}: {raw_text}' if ping else '{raw_text}'
                 full_raw_text = fmt.format(user=user, raw_text=raw_text)
                 self.say(event.target, full_raw_text)
 
-            was_mentioned = raw_text.lower().startswith((IRC_NICKNAME.lower() + ' ', IRC_NICKNAME.lower() + ': '))
+            self.handle_chat(
+                raw_text=raw_text,
+                user=user,
+                channel=event.target,
+                is_oper=user in self.channels[event.target].opers(),
+                is_privileged_channel=event.target in IRC_CHANNELS_OPER,
+                respond=respond,
+            )
 
-            for listener in self.listeners:
-                text = raw_text
-                if listener.require_mention:
-                    if was_mentioned:
-                        # Chop off the bot nickname.
-                        text = text.split(' ', 1)[1]
-                    else:
-                        continue
+    def on_privmsg(self, conn, event):
+        """Handle private (direct) messages.
 
-                if (
-                    (listener.require_oper or listener.require_privileged_oper) and
-                    not is_oper
-                ):
-                    continue
+        The name is misleading since PRIVMSG is also used for public (channel)
+        messages in the IRC protocol. The library we use splits channel
+        messages into a separate event, `on_pubmsg`.
+        """
+        raw_text, = event.arguments
+        user = NickMask(event.source).nick
 
-                # Prevent people from creating a channel, becoming oper,
-                # inviting the bot, and approving/rejecting accounts without
-                # "real" oper privilege.
-                if listener.require_privileged_oper and event.target not in IRC_CHANNELS_OPER:
-                    continue
+        def respond(raw_text, ping=False):
+            # ping is ignored, since it makes little sense to ping somebody in a private message.
+            self.say(user, raw_text)
 
-                match = listener.pattern.search(text)
-                if match is not None:
-                    msg = MatchedMessage(
-                        channel=event.target,
-                        text=text,
-                        raw_text=raw_text,
-                        match=match,
-                        is_oper=is_oper,
-                        nick=user,
-                        respond=respond,
-                    )
-                    try:
-                        listener.fn(self, msg)
-                    except Exception as ex:
-                        error_msg = 'ircbot exception in {module}/{function}: {exception}'.format(
-                            module=listener.fn.__module__,
-                            function=listener.fn.__name__,
-                            exception=ex,
-                        )
-                        msg.respond(error_msg, ping=False)
-                        self.handle_error(
-                            dedent(
-                                """
-                            {error}
-
-                            {traceback}
-
-                            Message:
-                                * Channel: {channel}
-                                * Nick: {nick}
-                                * Oper?: {oper}
-                                * Text: {text}
-                                * Raw text: {raw_text}
-                                * Match groups: {groups}
-                            """
-                            ).format(
-                                error=error_msg,
-                                traceback=format_exc(),
-                                channel=msg.channel,
-                                nick=msg.nick,
-                                oper=msg.is_oper,
-                                text=msg.text,
-                                raw_text=msg.raw_text,
-                                groups=msg.match.groups(),
-                            ),
-                        )
-
-            # everything gets logged except commands
-            if raw_text[0] != '!':
-                self.recent_messages[event.target].appendleft((user, raw_text))
+        self.handle_chat(
+            raw_text=raw_text,
+            user=user,
+            channel=user,
+            is_oper=False,
+            is_privileged_channel=False,
+            respond=respond,
+            pretend_mentioned=True,
+        )
 
     def on_currenttopic(self, connection, event):
         channel, topic = event.arguments
