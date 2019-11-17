@@ -69,7 +69,10 @@ def get_new_dsas():
     """Return new DSA summary lines."""
     global last_seen
     lines: List[str] = []
-    dsas = list(dsa_list())
+    try:
+        dsas = list(dsa_list())
+    except requests.exceptions.HTTPError as e:
+        return str(e).strip()
 
     if last_seen is not None:
         for dsa in sorted(dsas, key=operator.attrgetter('number')):
