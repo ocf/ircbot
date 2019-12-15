@@ -135,6 +135,9 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         self.plugins: Dict[str, ModuleType] = {}
         self.extra_channels: Set[str] = set()  # plugins can add stuff here
 
+        # As we use threads, we should ensure that we use them safely
+        self.lock = threading.RLock()
+
         # Register plugins before joining the server.
         self.register_plugins()
 
@@ -340,17 +343,19 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                 self.connection.topic(channel, new_topic=new_topic)
 
     def say(self, channel, message):
-        # Find the length of the full message
-        msg_len = len(f'PRIVMSG {channel} :{message}\r\n'.encode('utf-8'))
+        # This is writing to a socket, it should be synchronized
+        with self.lock:
+            # Find the length of the full message
+            msg_len = len(f'PRIVMSG {channel} :{message}\r\n'.encode('utf-8'))
 
-        # The message must be split up if over the length limit
-        if msg_len > MAX_CLIENT_MSG:
-            messages = split_utf8(message.encode('utf-8'), MAX_CLIENT_MSG)
+            # The message must be split up if over the length limit
+            if msg_len > MAX_CLIENT_MSG:
+                messages = split_utf8(message.encode('utf-8'), MAX_CLIENT_MSG)
 
-            for msg in messages:
-                self.connection.privmsg(channel, msg)
-        else:
-            self.connection.privmsg(channel, message)
+                for msg in messages:
+                    self.connection.privmsg(channel, msg)
+            else:
+                self.connection.privmsg(channel, message)
 
 
 # Generator which splits the unicode message string
