@@ -9,8 +9,7 @@ def register(bot):
     bot.listen(r'^#m add (\w+) (.+)$', add)
     bot.listen(r'^#m delete (\w+)$', delete)
     bot.listen(r'^#m rename (\w+) (\w+)$', rename)
-    bot.listen(r'^#m replace (\w+) (.+)$', replace)
-    bot.listen(r'^#m update (\w+) (.+)$', replace)
+    bot.listen(r'^#m (?:replace|update) (\w+) (.+)$', replace)
 
 
 def show(bot, msg):
