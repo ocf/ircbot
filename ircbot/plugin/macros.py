@@ -1,7 +1,7 @@
 """Provide OCF image macros, inspired by Phabricator Macros"""
 from ircbot import db
 
-KEYWORDS = {'add', 'delete', 'rename', 'replace'}
+KEYWORDS = {'add', 'delete', 'rename', 'replace', 'update'}
 
 
 def register(bot):
@@ -10,6 +10,7 @@ def register(bot):
     bot.listen(r'^#m delete (\w+)$', delete)
     bot.listen(r'^#m rename (\w+) (\w+)$', rename)
     bot.listen(r'^#m replace (\w+) (.+)$', replace)
+    bot.listen(r'^#m update (\w+) (.+)$', replace)
 
 
 def show(bot, msg):
