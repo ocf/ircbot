@@ -13,7 +13,7 @@ def register(bot):
     bot.listen(r'^!shorturl add ([^ ]+) (.+)$', add, require_oper=True)
     bot.listen(r'^!shorturl delete ([^ ]+)$', delete, require_oper=True)
     bot.listen(r'^!shorturl rename ([^ ]+) ([^ ]+)$', rename, require_oper=True)
-    bot.listen(r'^!shorturl replace ([^ ]+) (.+)$', replace, require_oper=True)
+    bot.listen(r'^!shorturl (?:replace|update) ([^ ]+) (.+)$', replace, require_oper=True)
 
 
 def show(bot, msg):
