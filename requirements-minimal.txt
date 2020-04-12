@@ -1,4 +1,5 @@
 celery[redis]
+cheroot
 ckuehl-upsidedown
 flask
 github3.py
