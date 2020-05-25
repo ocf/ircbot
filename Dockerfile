@@ -24,7 +24,6 @@ RUN virtualenv -ppython3.7 /opt/ircbot/venv \
 
 COPY ircbot /opt/ircbot/ircbot
 
-COPY services /opt/ircbot/services
 RUN chown -R nobody:nogroup /opt/ircbot
 USER nobody
 
