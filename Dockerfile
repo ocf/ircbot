@@ -30,4 +30,4 @@ USER nobody
 
 WORKDIR /opt/ircbot
 
-CMD ["runsvdir", "/opt/ircbot/services"]
+CMD ["/opt/ircbot/venv/bin/python", "-m", "ircbot.ircbot"]
