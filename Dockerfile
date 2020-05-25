@@ -9,7 +9,6 @@ RUN apt-get update \
         libssl-dev \
         python3.7-dev \
         redis-tools \
-        runit \
         virtualenv \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
