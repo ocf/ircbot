@@ -1,6 +1,0 @@
-#!/bin/bash
-set -euxo pipefail
-exec 2>&1
-
-cd /opt/ircbot
-exec /opt/ircbot/venv/bin/python -m ircbot.ircbot

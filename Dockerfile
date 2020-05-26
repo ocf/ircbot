@@ -9,7 +9,6 @@ RUN apt-get update \
         libssl-dev \
         python3.7-dev \
         redis-tools \
-        runit \
         virtualenv \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -24,10 +23,9 @@ RUN virtualenv -ppython3.7 /opt/ircbot/venv \
 
 COPY ircbot /opt/ircbot/ircbot
 
-COPY services /opt/ircbot/services
 RUN chown -R nobody:nogroup /opt/ircbot
 USER nobody
 
 WORKDIR /opt/ircbot
 
-CMD ["runsvdir", "/opt/ircbot/services"]
+CMD ["/opt/ircbot/venv/bin/python", "-m", "ircbot.ircbot"]
