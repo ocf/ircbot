@@ -2,6 +2,7 @@
 import re
 
 import xkcd
+import urllib
 
 REGEX = re.compile(r'(?:xkcd#|xkcd.com/)([0-9]+)')
 
@@ -15,7 +16,7 @@ def show_comic(_, msg):
     for number in REGEX.findall(msg.text):
         try:
             comic = xkcd.Comic(int(number))
-            reply = f"XKCD#{int(number)} | '{comic.getTitle()}' | {comic.getImageLink()}"
-            msg.respond(str(reply))
-        except AssertionError:
+            reply = f"XKCD#{int(number)} | '{comic.getTitle()}' | {comic.getImageLink()} | {comic.getAltText()}"
+            msg.respond(reply)
+        except urllib.error.HTTPError:
             pass
