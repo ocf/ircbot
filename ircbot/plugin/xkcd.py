@@ -1,8 +1,8 @@
 """Make references to XKCD easier"""
 import re
 
-import xkcd
 import urllib
+import xkcd
 
 REGEX = re.compile(r'(?:xkcd#|xkcd.com/)([0-9]+)')
 
