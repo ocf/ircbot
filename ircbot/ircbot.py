@@ -120,7 +120,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         )
         self.topics: Dict[str, str] = {}
         self.celery_conf = celery_conf
-        self.tasks: NamedTuple = ()  # set in create plugin
+        self.tasks: Any = ()  # set in create plugin
         self.rt_password = rt_password
         self.nickserv_password = nickserv_password
         self.weather_apikey = weather_apikey
