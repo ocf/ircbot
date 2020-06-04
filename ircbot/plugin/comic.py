@@ -1,6 +1,6 @@
 """Make references to XKCD easier"""
 import re
-import urllib
+import urllib.error
 
 import xkcd
 
