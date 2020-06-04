@@ -30,7 +30,7 @@ ldap3==2.7
 markovify==0.8.0
 MarkupSafe==1.1.1
 more-itertools==8.3.0
-ocflib
+ocflib==2020.5.12.14.55
 pexpect==4.8.0
 ply==3.11
 ptyprocess==0.6.0
