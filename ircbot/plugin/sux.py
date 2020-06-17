@@ -15,6 +15,8 @@ BAD_THINGS = (
     '{0} took down NFS',
     '{0} voted for trump',
     '{0} went to stanfurd',
+    'abolish {0}',
+    'society has progressed beyond the need for {0}',
 )
 
 
