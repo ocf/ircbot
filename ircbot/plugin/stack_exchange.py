@@ -98,10 +98,12 @@ def _answer_info(site, answer_id):
 def _format_question(question, site):
     return (
         '\x0314{site.name}:\x03 {question.title} | '
-        '\x0303{question.score} votes\x03, \x0302{question.answer_count} answers\x03 | '
+        '\x0303{votes}\x03, \x0302{answers}\x03 | '
         '\x0314{date}\x03'.format(
             question=question,
             site=site,
+            votes='{} vote{}'.format(question.score, 's' if question.score != 1 else ''),
+            answers='{} answer{}'.format(question.answer_count, 's' if question.answer_count != 1 else ''),
             date=question.creation_date.strftime('%B %-d, %Y'),
         )
     )
