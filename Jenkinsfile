@@ -1,5 +1,5 @@
 servicePipeline(
-    upstreamProjects: ['ocflib/master', 'dockers/master'],
+    upstreamProjects: ['ocf/ocflib/master', 'ocf/dockers/master'],
     deployTargets: [],
 )
 
