@@ -1,6 +1,7 @@
 """A really long winded way of writing return 'Yes'"""
-import requests
 import re
+
+import requests
 
 
 def register(bot):
@@ -9,7 +10,7 @@ def register(bot):
 
 def onfire(bot, msg):
     req = requests.get(
-        "http://iscaliforniaonfire.com/"
+        'http://iscaliforniaonfire.com/',
     )
     req.raise_for_status()
     msg.respond('Yes' if 'yes' in req.text.lower() else 'No', ping=False)
