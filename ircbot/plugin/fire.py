@@ -5,7 +5,7 @@ import requests
 
 
 def register(bot):
-    bot.listen(r'^is california on fire(\?)?$', onfire, flags=re.IGNORECASE)
+    bot.listen(r'^is california on fire(\?)?$', onfire, require_mention=True, flags=re.IGNORECASE)
 
 
 def onfire(bot, msg):
