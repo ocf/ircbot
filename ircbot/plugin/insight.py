@@ -12,4 +12,3 @@ def insight(_, msg):
         s.format(msg.match.group(1)),
         ping=False,
     )
-
