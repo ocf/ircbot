@@ -50,7 +50,7 @@ def timer(bot):
                 {error}
 
                 {traceback}
-                """
+                """,
                 ).format(
                     error=error_msg,
                     traceback=format_exc(),

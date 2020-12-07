@@ -256,7 +256,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                             * Text: {text}
                             * Raw text: {raw_text}
                             * Match groups: {groups}
-                        """
+                        """,
                         ).format(
                             error=error_msg,
                             traceback=format_exc(),
@@ -351,7 +351,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                     {error}
 
                     {traceback}
-                    """
+                    """,
                     ).format(
                         error=error_msg,
                         traceback=format_exc(),
