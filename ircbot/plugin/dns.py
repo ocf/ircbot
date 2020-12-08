@@ -24,14 +24,14 @@ def host(bot, msg):
 
     try:
         ip = socket.gethostbyname(host)
-    except socket.error as ex:
+    except OSError as ex:
         msg.respond(str(ex))
         return
 
     reverse_dns: Optional[str]
     try:
         reverse_dns, _, _ = socket.gethostbyaddr(ip)
-    except socket.error:
+    except OSError:
         reverse_dns = None
 
     if net.is_ocf_ip(ipaddress.ip_address(ip)):
