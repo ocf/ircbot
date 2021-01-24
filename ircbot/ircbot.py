@@ -270,7 +270,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
                     )
 
         # everything gets logged except commands
-        if raw_text[0] != '!':
+        if raw_text[0] != '!' or raw_text[:2] == '!!':
             self.recent_messages[channel].appendleft((user, raw_text))
 
     def on_pubmsg(self, conn, event):
