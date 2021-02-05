@@ -10,7 +10,6 @@ import re
 import ssl
 import threading
 from configparser import ConfigParser
-from importlib.abc import PathEntryFinder
 from textwrap import dedent
 from traceback import format_exc
 from types import FunctionType
@@ -147,10 +146,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
 
     def register_plugins(self):
         for importer, mod_name, _ in pkgutil.iter_modules(['ircbot/plugin']):
-            assert isinstance(importer, PathEntryFinder)
-            loader = importer.find_module(mod_name)
-            assert loader is not None
-            mod = loader.load_module(mod_name)
+            mod = importer.find_module(mod_name).load_module(mod_name)
             self.plugins[mod_name] = mod
             register = getattr(mod, 'register', None)
             if register is not None:
