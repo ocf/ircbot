@@ -7,3 +7,4 @@ markovify
 ocflib
 pymysql
 requests
+xkcd
