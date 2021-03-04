@@ -1,5 +1,6 @@
 celery[redis]
 ckuehl-upsidedown
+cryptography<=3.3.2
 flask
 github3.py
 irc
