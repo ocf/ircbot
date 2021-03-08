@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 app = Flask(__name__)
 
 # Bot plugins, needed for the / route
-bot_plugins: List[Tuple[ModuleType, Set[Listener]]] = []
+bot_plugins: list[tuple[ModuleType, set[Listener]]] = []
 
 
 def register(bot):
@@ -32,7 +32,7 @@ def route_base():
 
     if not bot_plugins:
         # Compute and cache the bot's plugins
-        bot_plugin_set: DefaultDict[ModuleType, Set[Listener]] = collections.defaultdict(set)
+        bot_plugin_set: DefaultDict[ModuleType, set[Listener]] = collections.defaultdict(set)
         for listener in app.bot.listeners:
             bot_plugin_set[app.bot.plugins[listener.plugin_name]].add(listener)
 
