@@ -1,13 +1,9 @@
 """Provides a basic Flask server to handle webhooks and help information"""
 from __future__ import annotations
 
-import collections
 import os
+from collections import defaultdict
 from types import ModuleType
-from typing import DefaultDict
-from typing import List
-from typing import Set
-from typing import Tuple
 from typing import TYPE_CHECKING
 
 from flask import Flask
@@ -32,7 +28,7 @@ def route_base():
 
     if not bot_plugins:
         # Compute and cache the bot's plugins
-        bot_plugin_set: DefaultDict[ModuleType, set[Listener]] = collections.defaultdict(set)
+        bot_plugin_set: defaultdict[ModuleType, set[Listener]] = defaultdict(set)
         for listener in app.bot.listeners:
             bot_plugin_set[app.bot.plugins[listener.plugin_name]].add(listener)
 
