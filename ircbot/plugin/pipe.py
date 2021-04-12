@@ -73,5 +73,5 @@ def run_command(command, bot, msg):
                 ),
             )
     if not command_found:
-        raise Exception('Command {} not found'.format(command.split()[0]))
+        raise Exception(f'Command {command.split()[0]} not found')
     return ret

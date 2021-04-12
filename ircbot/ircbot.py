@@ -372,7 +372,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
     def bump_topic(self):
         for channel, topic in self.topics.items():
             def plusone(m):
-                return '{}: {}'.format(m.group(1), int(m.group(2)) + 1)
+                return f'{m.group(1)}: {int(m.group(2)) + 1}'
 
             new_topic = re.sub(r'(days since.*?): (\d+)', plusone, topic)
             if topic != new_topic:

@@ -22,4 +22,4 @@ def thanks(bot, msg):
 
 def thank_someone(bot, msg):
     """Have create thank somebody on your behalf."""
-    msg.respond('thanks, {}!'.format(msg.match.group(1)), ping=False)
+    msg.respond(f'thanks, {msg.match.group(1)}!', ping=False)

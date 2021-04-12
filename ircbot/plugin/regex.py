@@ -18,7 +18,7 @@ def replace(bot, msg):
     # the replacement, we avoid the parsing of escape sequences.
     # https://github.com/ocf/ircbot/issues/3
     def new(_):
-        return '\x02{}\x02'.format(msg.match.group(3))
+        return f'\x02{msg.match.group(3)}\x02'
 
     for user, recent_msg in bot.recent_messages[msg.channel]:
         if not REGEX.search(recent_msg):

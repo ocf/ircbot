@@ -34,7 +34,7 @@ def emoji(bot, msg):
     if not ret:
         msg.respond('No results 😢')
     elif len(ret) > 50:
-        msg.respond('Showing 1-50 of {} results'.format(len(ret)))
+        msg.respond(f'Showing 1-50 of {len(ret)} results')
         msg.respond(ret[:50])
     else:
         msg.respond(ret)
@@ -51,4 +51,4 @@ def remoji(bot, msg):
         msg.respond(f'{c}: {name}')
     rest = query[5:]
     if rest:
-        msg.respond('{} characters remaining: {}'.format(len(rest), rest))
+        msg.respond(f'{len(rest)} characters remaining: {rest}')
