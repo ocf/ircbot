@@ -55,10 +55,18 @@ spec:
           volumeMounts:
             - mountPath: /etc/ocf-ircbot
               name: secrets
+          volumeMounts:
+            - mountPath: /etc/ocf
+              name: ocf
       volumes:
         - name: secrets
           hostPath:
             path: /opt/share/kubernetes/secrets/ircbot
+            type: Directory
+      volumes:
+        - name: ocf
+          hostPath:
+            path: /etc/ocf
             type: Directory
       dnsPolicy: ClusterFirst
       dnsConfig:
