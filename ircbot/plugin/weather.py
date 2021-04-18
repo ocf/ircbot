@@ -119,7 +119,7 @@ def calculate_aqi(conc):
     aqi_hi_cutoffs = [50, 100, 150, 200, 300, 500]
 
     conc = round(conc, 1)
-    t_idx = [i for i in range(len(conc_lo_cutoffs) - 1) if conc_lo_cutoffs[i] <= conc][-1]
+    t_idx = [i for i in range(len(conc_lo_cutoffs)) if conc_lo_cutoffs[i] <= conc][-1]
 
     conc_lo = conc_lo_cutoffs[t_idx]
     conc_hi = conc_hi_cutoffs[t_idx]
