@@ -110,7 +110,7 @@ def color(temp, unit):
 
 
 def calculate_aqi(conc):
-    """Calculate US EPA AQI score from PM 2.5 concentration in ug/m3 using
+    """Calculate US EPA AQI score from PM 2.5 concentration in µg/m3 using
        using the equation at https://forum.airnowtech.org/t/the-aqi-equation/169"""
 
     conc_lo_cutoffs = [0.0, 12.1, 35.5, 55.5, 150.5, 250.5]
