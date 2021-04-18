@@ -109,6 +109,26 @@ def color(temp, unit):
     return f'{color}{text}\x0F'
 
 
+def calculate_aqi(conc):
+    """Calculate US EPA AQI score from PM 2.5 concentration in µg/m3 using
+       using the equation at https://forum.airnowtech.org/t/the-aqi-equation/169"""
+
+    conc_lo_cutoffs = [0.0, 12.1, 35.5, 55.5, 150.5, 250.5]
+    conc_hi_cutoffs = [12.0, 35.4, 55.4, 150.4, 250.4, 500.4]
+    aqi_lo_cutoffs = [0, 51, 101, 151, 201, 301]
+    aqi_hi_cutoffs = [50, 100, 150, 200, 300, 500]
+
+    conc = round(conc, 1)
+    t_idx = [i for i in range(len(conc_lo_cutoffs)) if conc_lo_cutoffs[i] <= conc][-1]
+
+    conc_lo = conc_lo_cutoffs[t_idx]
+    conc_hi = conc_hi_cutoffs[t_idx]
+    aqi_lo = aqi_lo_cutoffs[t_idx]
+    aqi_hi = aqi_hi_cutoffs[t_idx]
+
+    return round(((aqi_hi - aqi_lo) / (conc_hi - conc_lo)) * (conc - conc_lo) + aqi_lo, 0)
+
+
 def get_summary(api_key, location, unit='f'):
     translation = {'c': 'metric', 'f': 'imperial'}
     req = requests.get(
@@ -135,6 +155,16 @@ def get_summary(api_key, location, unit='f'):
     assert req_uv.status_code == 200, req_uv.status_code
     j_uv = req_uv.json()
 
+    req_aqi = requests.get(
+        'http://api.openweathermap.org/data/2.5/air_pollution',
+        params={
+            **j['coord'],
+            'APPID': api_key,
+        },
+    )
+    assert req_aqi.status_code == 200, req_aqi.status_code
+    j_aqi = req_aqi.json()
+
     name = j['name']
     temp = j['main']['temp']
     ico = icon(temp, unit=unit)
@@ -158,9 +188,12 @@ def get_summary(api_key, location, unit='f'):
 
     uv_index = j_uv['value']
 
+    aqi_index = calculate_aqi(j_aqi['list'][0]['components']['pm2_5'])
+
     return '; '.join([
         f'{name}: {bold(color(temp, unit=unit))} {ico} {bold(desc)}',
         f'wind: {bold(wind_text)}',
         f'humidity: {bold(humidity)}%',
         f'UV index: {bold(uv_index)}',
+        f'PM2.5 AQI: {bold(aqi_index)}',
     ])
