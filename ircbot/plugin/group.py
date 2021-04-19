@@ -7,8 +7,8 @@ from ocflib.vhost.web import get_vhosts
 
 
 def register(bot):
-    bot.listen(r'group (.*)$', group_lookup)
-    bot.listen(r'domain (.*)$', domain_lookup)
+    bot.listen(r'group (.*)$', group_lookup, require_mention=True)
+    bot.listen(r'domain (.*)$', domain_lookup, require_mention=True)
 
 
 def group_lookup(bot, msg):
