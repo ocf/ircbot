@@ -44,8 +44,8 @@ def group_info(user):
         if user == web_vhost[1]['username']:
             web_domains.extend([web_vhost[0]] + web_vhost[1]['aliases'])
             continue
-    for i in mail_vhosts:
-        mail_domains.extend([i[1]])
+    for mail_vhost in mail_vhosts:
+        mail_domains.extend([mail_vhost[1]])
     if web_domains == []:
         web_domains = ['none']
     if mail_vhosts == set():
