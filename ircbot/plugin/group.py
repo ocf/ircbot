@@ -25,6 +25,11 @@ def domain_lookup(bot, msg):
     if user is not None:
         user = user['username']
     if user is None:
+        for web_vhost in get_vhosts().items():
+            if domain in web_vhost[1]['aliases']:
+                user = web_vhost[1]['username']
+                continue
+    if user is None:
         for mail_vhost in get_mail_vhosts():
             if mail_vhost[1] == domain:
                 user = mail_vhost[0]
@@ -58,7 +63,7 @@ def group_info(user):
 
 
 def auto_complete(s):
-    valid_endings = ['.berkeley.edu', '.org', '.com', '.edu']
-    if any([s.rfind(valid_ending) != -1 for valid_ending in valid_endings]):
+    valid_endings = ['.berkeley.edu', '.org', '.com', '.edu', '.io']
+    if any([s.rfind(valid_ending, -1 * len(valid_ending)) != -1 for valid_ending in valid_endings]):
         return s
     return s + '.berkeley.edu'
