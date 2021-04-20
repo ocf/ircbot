@@ -4,6 +4,7 @@ from ocflib.account.search import user_is_group
 from ocflib.vhost.mail import get_mail_vhosts
 from ocflib.vhost.mail import vhosts_for_user
 from ocflib.vhost.web import get_vhosts
+from tld import get_tld
 
 
 def register(bot):
@@ -63,7 +64,7 @@ def group_info(user):
 
 
 def auto_complete(s):
-    valid_endings = ['.berkeley.edu', '.org', '.com', '.edu', '.io']
-    if any([s.rfind(valid_ending, -1 * len(valid_ending)) != -1 for valid_ending in valid_endings]):
-        return s
-    return s + '.berkeley.edu'
+    t = 'http://www.' + s
+    if get_tld(t, fail_silently=True) is None:
+        return s + '.berkeley.edu'
+    return s
