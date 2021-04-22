@@ -17,7 +17,7 @@ def group_lookup(bot, msg):
     if not user_exists(user):
         msg.respond('error: account ' + user + ' does not exist', ping=False)
         return
-    msg.respond(group_info(user), ping=False)
+    msg.respond(acc_info(user), ping=False)
 
 
 def domain_lookup(bot, msg):
@@ -38,10 +38,10 @@ def domain_lookup(bot, msg):
     if user is None:
         msg.respond('error: domain ' + domain + ' does not exist in vhost.conf or vhost-mail.conf', ping=False)
         return
-    msg.respond(group_info(user), ping=False)
+    msg.respond(acc_info(user), ping=False)
 
 
-def group_info(user):
+def acc_info(user):
     web_vhosts = get_vhosts()
     web_domains = []
     mail_vhosts = vhosts_for_user(user)
@@ -64,7 +64,6 @@ def group_info(user):
 
 
 def auto_complete(s):
-    t = 'http://www.' + s
-    if get_tld(t, fail_silently=True) is None:
+    if get_tld('http://www.' + s, fail_silently=True) is None:
         return s + '.berkeley.edu'
     return s
