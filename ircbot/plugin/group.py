@@ -64,6 +64,6 @@ def acc_info(user):
 
 
 def auto_complete(s):
-    if get_tld('http://www.' + s, fail_silently=True) is None:
+    if get_tld('http://' + s, fail_silently=True) is None:
         return s + '.berkeley.edu'
     return s
