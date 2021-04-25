@@ -60,6 +60,13 @@ def get_text(bot, msg):
 
     return text.strip()
 
+def is_emoji(c):
+    if ord(c) in range(0x1f300, 0x1fadf):
+        return True
+    else:
+        return False
+
+
 
 def widetextify(bot, msg, width, translation=WIDETEXT_MAP):
     """ｗｅｌｃｏｍｅ　ｔｏ　ｔｈｅ　ｏｃｆ
@@ -71,5 +78,5 @@ def widetextify(bot, msg, width, translation=WIDETEXT_MAP):
     text = get_text(bot, msg)
 
     if text:
-        response = (c.translate(translation) + WIDE_SPACE_CHAR * width for c in text)
+        response = (c.translate(translation) + WIDE_SPACE_CHAR * width if ord(c) is not 0x200d and not is_emoji(c) else c for c in text)
         msg.respond(''.join(response), ping=False)
