@@ -77,9 +77,7 @@ def widetextify(bot, msg, width, translation=WIDETEXT_MAP):
     """
     text = get_text(bot, msg)
     response = ''
-    char_is_emoji = False
     if text:
-
         for i in range(len(text)):
             if is_emoji(text[i]) and i < len(text) - 1:
                 if ord(text[i + 1]) == 0x200d or ord(text[i + 1]) == 0xfe0f:
