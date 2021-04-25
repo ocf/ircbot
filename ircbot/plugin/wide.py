@@ -60,12 +60,12 @@ def get_text(bot, msg):
 
     return text.strip()
 
+
 def is_emoji(c):
     if ord(c) in range(0x1f300, 0x1fadf) or ord(c) in range(0x2700, 0x27bf):
         return True
     else:
         return False
-
 
 
 def widetextify(bot, msg, width, translation=WIDETEXT_MAP):
@@ -85,8 +85,8 @@ def widetextify(bot, msg, width, translation=WIDETEXT_MAP):
                 else:
                     response += text[i] + WIDE_SPACE_CHAR * width
             elif ord(text[i]) == 0x200d and i < len(text) - 1:
-                    response += text[i]
+                response += text[i]
             else:
-                    response += text[i].translate(translation) + WIDE_SPACE_CHAR * width
+                response += text[i].translate(translation) + WIDE_SPACE_CHAR * width
 
         msg.respond(''.join(response), ping=False)
