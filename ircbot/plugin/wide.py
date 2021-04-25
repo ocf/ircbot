@@ -84,7 +84,7 @@ def widetextify(bot, msg, width, translation=WIDETEXT_MAP):
                     response += text[i]
                 else:
                     response += text[i] + WIDE_SPACE_CHAR * width
-            elif ord(text[i]) == 0x200d:
+            elif ord(text[i]) == 0x200d and i < len(text) - 1:
                     response += text[i]
             else:
                     response += text[i].translate(translation) + WIDE_SPACE_CHAR * width
