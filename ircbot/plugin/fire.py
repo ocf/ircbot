@@ -1,4 +1,4 @@
-"""A really long winded way of writing return 'Yes'"""
+"""A really long winded way of writing return 'yes'"""
 import re
 
 import requests
@@ -13,4 +13,4 @@ def onfire(bot, msg):
         'http://iscaliforniaonfire.com/',
     )
     req.raise_for_status()
-    msg.respond('Yes' if 'yes' in req.text.lower() else 'No', ping=False)
+    msg.respond('yes' if 'yes' in req.text.lower() else 'no', ping=False)
