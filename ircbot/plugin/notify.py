@@ -218,7 +218,7 @@ def list_groups(bot, msg):
     """List all notification groups."""
     with db.cursor(password=bot.mysql_password) as c:
         c.execute('SELECT slug FROM notify')
-        slugs = sorted([group['slug'] for group in c.fetchall()])
+        slugs = sorted(group['slug'] for group in c.fetchall())
         msg.respond(' '.join(slugs))
 
 
