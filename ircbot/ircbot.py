@@ -380,7 +380,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
 
     def say(self, channel, message):
         # Find the length of the full message
-        msg_len = len(f'PRIVMSG {channel} :{message}\r\n'.encode('utf-8'))
+        msg_len = len(f'PRIVMSG {channel} :{message}\r\n'.encode())
 
         # The message must be split up if over the length limit
         if msg_len > MAX_CLIENT_MSG:
