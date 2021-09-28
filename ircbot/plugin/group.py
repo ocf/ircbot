@@ -23,28 +23,32 @@ def group_lookup(bot, msg):
 
 def domain_lookup(bot, msg):
     domain = auto_complete(msg.match.group(1))
-    user = get_vhosts().get(domain)
-    if user is not None:
-        user = user['username']
+    user = None
+    domain_vhost = get_vhosts().get(domain)
+    if domain_vhost is not None:
+        user = domain_vhost['username']
     if user is None:
         for web_vhost in get_vhosts().items():
             if domain in web_vhost[1]['aliases']:
                 user = web_vhost[1]['username']
-                continue
+                if user is not None:
+                    break
     if user is None:
         for mail_vhost in get_mail_vhosts():
             if mail_vhost[1] == domain:
                 user = mail_vhost[0]
-                continue
+                if user is not None:
+                    break
     if user is None:
-        user = get_app_vhosts().get(domain)
-    if user is not None:
-        user = user['username']
+        domain_apphost = get_app_vhosts().get(domain)
+        if domain_apphost is not None:
+            user = domain_apphost['username']
     if user is None:
         for app_vhost in get_app_vhosts().items():
             if domain in app_vhost[1]['aliases']:
                 user = app_vhost[1]['username']
-                continue
+                if user is not None:
+                    break
     if user is None:
         msg.respond('error: domain ' + domain + ' does not exist in etc/configs', ping=False)
         return
