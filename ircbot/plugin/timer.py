@@ -5,11 +5,12 @@ from textwrap import dedent
 from traceback import format_exc
 
 from ircbot.plugin import debian_security
+from ircbot.plugin import rt_summary
 
 # Check for Debian security announcements every 5 minutes
 # If a check fails, we bump add another 5 minutes, until
 # the maximum of 30 minutes
-DSA_FREQ_DEFAULT = 5
+DSA_FREQ_DEFAULT = 1
 DSA_FREQ_BACKOFF = 5
 DSA_FREQ_MAX = 30
 
@@ -32,6 +33,7 @@ def timer(bot):
             last_date, old = date.today(), last_date
             if old and last_date != old:
                 bot.bump_topic()
+                rt_summary.show_tickets(bot, last_date)
 
             if last_dsa_check is None or time.time() - last_dsa_check > 60 * dsa_freq:
                 last_dsa_check = time.time()
