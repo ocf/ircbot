@@ -10,7 +10,7 @@ from ircbot.plugin import rt_summary
 # Check for Debian security announcements every 5 minutes
 # If a check fails, we bump add another 5 minutes, until
 # the maximum of 30 minutes
-DSA_FREQ_DEFAULT = 1
+DSA_FREQ_DEFAULT = 5
 DSA_FREQ_BACKOFF = 5
 DSA_FREQ_MAX = 30
 
