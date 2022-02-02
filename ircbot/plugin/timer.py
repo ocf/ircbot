@@ -5,6 +5,7 @@ from textwrap import dedent
 from traceback import format_exc
 
 from ircbot.plugin import debian_security
+from ircbot.plugin import debian_lts_security
 
 # Check for Debian security announcements every 5 minutes
 # If a check fails, we bump add another 5 minutes, until
@@ -20,9 +21,13 @@ def register(bot):
 
 def timer(bot):
     dsa_freq = DSA_FREQ_DEFAULT
+    dla_freq = DSA_FREQ_DEFAULT
 
     last_date = None
+    last_date_dla = None
+
     last_dsa_check = None
+    last_dla_check = None
 
     while not (hasattr(bot, 'connection') and bot.connection.connected):
         time.sleep(2)
@@ -41,6 +46,7 @@ def timer(bot):
 
                 # After a successful fetch, we reset timer to 5m
                 dsa_freq = DSA_FREQ_DEFAULT
+
         except Exception as ex:
             error_msg = f'ircbot exception in timer: {ex}'
             bot.say('#rebuild', error_msg)
@@ -57,5 +63,35 @@ def timer(bot):
                 ),
             )
             dsa_freq = min(dsa_freq + DSA_FREQ_BACKOFF, DSA_FREQ_MAX)
+
+        try:
+            last_date_dla, old_dla = date.today(), last_date_dla
+            if old_dla and last_date_dla != old_dla:
+                bot.bump_topic()
+
+            if last_dla_check is None or time.time() - last_dla_check > 60 * dla_freq:
+                last_dla_check = time.time()
+
+                for line in debian_lts_security.get_new_dlas():
+                    bot.say('#rebuild', line)
+
+                dla_freq = DSA_FREQ_DEFAULT
+
+        except Exception as ex:
+            error_msg = f'ircbot exception in timer: {ex}'
+            bot.say('#rebuild', error_msg)
+            bot.handle_error(
+                dedent(
+                    """
+                {error}
+
+                {traceback}
+                """,
+                ).format(
+                    error=error_msg,
+                    traceback=format_exc(),
+                ),
+            )
+            dla_freq = min(dla_freq + DSA_FREQ_BACKOFF, DSA_FREQ_MAX)
 
         time.sleep(1)
