@@ -4,8 +4,8 @@ from datetime import date
 from textwrap import dedent
 from traceback import format_exc
 
-from ircbot.plugin import debian_security
 from ircbot.plugin import debian_lts_security
+from ircbot.plugin import debian_security
 
 # Check for Debian security announcements every 5 minutes
 # If a check fails, we bump add another 5 minutes, until
