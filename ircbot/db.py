@@ -1,11 +1,12 @@
 import contextlib
+from typing import Any
 
 import pymysql
 
 
 @contextlib.contextmanager
 def cursor(*, user='ocfircbot', password):
-    conn = pymysql.connect(
+    conn: Any = pymysql.connect(
         user=user,
         password=password,
         db='ocfircbot',

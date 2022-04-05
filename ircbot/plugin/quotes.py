@@ -1,5 +1,6 @@
 """Provide historical OCF quotes."""
 from ircbot import db
+from ircbot.plugin.space_tooling import insert_space_sentence
 
 
 def register(bot):
@@ -12,7 +13,7 @@ def register(bot):
 
 def _print_quote(respond, quote):
     respond(
-        'Quote #{}: {}'.format(quote['id'], quote['quote']),
+        insert_space_sentence('Quote #{}: {}'.format(quote['id'], quote['quote'])),
         ping=False,
     )
 
