@@ -4,6 +4,7 @@ import re
 import markovify
 
 from ircbot import db
+from ircbot.plugin.space_tooling import insert_space_sentence
 
 final_model = None
 
@@ -30,11 +31,8 @@ def markov(bot, msg):
             # using "<@keur>" syntax.  Additionally, remove any -slack at
             # the end of a nick, to avoid inserting a space like
             # abcde|-slack (thus pinging abcde).
-            def insert_space(w):
-                halfway = len(re.sub(r'-slack([^A-Za-z0-9_\-\\\[\]{}^`|]|\Z)', r'\1', w)) // 2
-                return w[:halfway] + '\u2060' + w[halfway:]
             msg.respond(
-                ' '.join(map(insert_space, sentence.split())),
+                insert_space_sentence(sentence),
                 ping=False,
             )
         else:
