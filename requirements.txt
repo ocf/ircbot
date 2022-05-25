@@ -44,7 +44,7 @@ pycparser==2.20
 pycryptodome==3.10.1
 pycryptodomex==3.10.1
 PyGithub==1.54.1
-PyJWT==1.7.1
+PyJWT==2.4.0
 PyMySQL==0.9.3
 pysmi==0.3.4
 pysnmp==4.4.12
