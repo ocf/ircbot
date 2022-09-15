@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from flask import Flask
 from flask import render_template
+from flask import request
 
 if TYPE_CHECKING:
     from ircbot.ircbot import Listener
@@ -46,6 +47,25 @@ def route_macros():
         'macros.html',
         macros=app.bot.plugins['macros'].list(app.bot),
     )
+
+
+@app.route('/hook/prometheus', methods=['POST'])
+def route_prometheus():
+    body_json = request.get_json()
+    for alert in body_json['alerts']:
+        if alert['status'] == 'resolved':
+            status = '\x02\x0303OK\x0F'
+        else:
+            status = '\x02\x0304FIRING\x0F'
+
+        alert = '{status} \x02{alertname}\x0F: {summary}'.format(
+            status=status,
+            alertname=alert['labels']['alertname'],
+            summary=alert['annotations']['summary'],
+        )
+        app.bot.say('#rebuild-spam', alert)
+
+    return ('', 204)
 
 
 def start_server(bot):
