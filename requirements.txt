@@ -57,7 +57,7 @@ six==1.16.0
 SQLAlchemy<2
 tempora==4.0.1
 tld==0.12.5
-typing-extensions==3.7.4.3
+typing-extensions==4.5.0
 Unidecode==1.2.0
 uritemplate==3.0.1
 urllib3
