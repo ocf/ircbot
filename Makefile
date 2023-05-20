@@ -16,7 +16,7 @@ install-hooks: venv
 
 venv: vendor/venv-update requirements.txt requirements-dev.txt
 	vendor/venv-update \
-		venv= -ppython3.7 venv \
+		venv= -ppython3.9 venv \
 		install= -r requirements.txt -r requirements-dev.txt
 
 .PHONY: dev
