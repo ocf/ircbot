@@ -13,7 +13,7 @@ last_seen = None
 
 
 def dsa_list():
-    req = requests.get('https://www.debian.org/security/dsa-long')
+    req = requests.get('https://www.debian.org/security/dsa-long', timeout=30)
     req.raise_for_status()
 
     root = ElementTree.fromstring(req.content)
