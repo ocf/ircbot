@@ -5,7 +5,7 @@ import pymysql
 
 @contextlib.contextmanager
 def cursor(*, user='ocfircbot', password):
-    conn = pymysql.connect(
+    conn: pymysql.connections.Connection = pymysql.connect(
         user=user,
         password=password,
         db='ocfircbot',
