@@ -16,5 +16,6 @@ def onfire(bot, msg):
     req.raise_for_status()
     msg.respond('yes' if 'yes' in req.text.lower() else 'no', ping=False)
 
+
 def frozen(bot, msg):
     msg.respond('yes', ping=False)
