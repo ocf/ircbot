@@ -6,6 +6,7 @@ import requests
 
 def register(bot):
     bot.listen(r'^is california on fire(\?)?$', onfire, require_mention=True, flags=re.IGNORECASE)
+    bot.listen(r'^is texas frozen(\?)?$', frozen, require_mention=True, flags=re.IGNORECASE)
 
 
 def onfire(bot, msg):
@@ -14,3 +15,7 @@ def onfire(bot, msg):
     )
     req.raise_for_status()
     msg.respond('yes' if 'yes' in req.text.lower() else 'no', ping=False)
+
+
+def frozen(bot, msg):
+    msg.respond('yes', ping=False)
