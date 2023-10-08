@@ -111,7 +111,6 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             mysql_password,
             googlesearch_key,
             googlesearch_cx,
-            discourse_apikey,
             kanboard_apikey,
             twitter_apikeys,
     ):
@@ -127,7 +126,6 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         self.mysql_password = mysql_password
         self.googlesearch_key = googlesearch_key
         self.googlesearch_cx = googlesearch_cx
-        self.discourse_apikey = discourse_apikey
         self.kanboard_apikey = kanboard_apikey
         self.twitter_apikeys = twitter_apikeys
         self.listeners: Set[Listener] = set()
@@ -433,7 +431,6 @@ def main():
     mysql_password = conf.get('mysql', 'password')
     googlesearch_key = conf.get('googlesearch', 'key')
     googlesearch_cx = conf.get('googlesearch', 'cx')
-    discourse_apikey = conf.get('discourse', 'apikey')
     kanboard_apikey = conf.get('kanboard', 'apikey')
     twitter_apikeys = (
         conf.get('twitter', 'apikey'),
@@ -443,7 +440,7 @@ def main():
     bot = CreateBot(
         celery_conf, nickserv_password, rt_password,
         weather_apikey, mysql_password, googlesearch_key, googlesearch_cx,
-        discourse_apikey, kanboard_apikey, twitter_apikeys,
+        kanboard_apikey, twitter_apikeys,
     )
 
     # Start the bot!
