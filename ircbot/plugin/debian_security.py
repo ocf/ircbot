@@ -75,6 +75,8 @@ def get_new_dsas():
     lines: List[str] = []
     # exceptions (including HTTP error codes) are handled in timer.py
     dsas = list(dsa_list())
+    # DSA RSS feed is newest first, reverse to make sure the first
+    # revision doesn't get skipped if there's a second revision
     dsas.reverse()
 
     if last_seen_rev is not None:
