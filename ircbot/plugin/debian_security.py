@@ -9,8 +9,8 @@ import requests
 
 
 DSA = namedtuple('DSA', ('number', 'revision', 'package', 'link', 'description', 'date'))
-last_seen = 5500
-last_seen_rev = 1
+last_seen = None
+last_seen_rev = None
 
 
 def dsa_list():
