@@ -8,8 +8,9 @@ from xml.etree import ElementTree
 import requests
 
 
-DSA = namedtuple('DSA', ('number', 'package', 'link', 'description', 'date'))
+DSA = namedtuple('DSA', ('number', 'revision', 'package', 'link', 'description', 'date'))
 last_seen = None
+last_seen_rev = None
 
 
 def dsa_list():
@@ -18,16 +19,17 @@ def dsa_list():
 
     root = ElementTree.fromstring(req.content)
     for item in root.iter('{http://purl.org/rss/1.0/}item'):
-        # title is of the form "DSA-3804 linux - security update"
+        # title is of the form "DSA-5535-1 firefox-esr - security update"
         title = item.find('{http://purl.org/rss/1.0/}title')
         assert title is not None
         assert title.text is not None
-        # group 1: dsa number, group 2: optional package name
+        # group 1: dsa number, group 2: revision, group 3: optional package name
         # line ends with the type of notice, see DSA-4204, DSA-4205 for examples
-        m = re.match(r'DSA-(\d+) ?(.+)? - ', title.text)
+        m = re.match(r'DSA-(\d+)-(\d+) ?(.+)? - ', title.text)
         assert m, title.text
         dsa_num = int(m.group(1))
-        package = m.group(2)
+        dsa_rev = int(m.group(2))
+        package = m.group(3)
         link_elt = item.find('{http://purl.org/rss/1.0/}link')
         assert link_elt is not None
         link = link_elt.text
@@ -46,6 +48,7 @@ def dsa_list():
 
         yield DSA(
             number=dsa_num,
+            revision=dsa_rev,
             package=package,
             link=link,
             description=description,
@@ -68,15 +71,32 @@ def summarize(description, limit=256):
 def get_new_dsas():
     """Return new DSA summary lines."""
     global last_seen
+    global last_seen_rev
     lines: List[str] = []
     # exceptions (including HTTP error codes) are handled in timer.py
     dsas = list(dsa_list())
+    # DSA RSS feed is newest first, reverse to make sure the first
+    # revision doesn't get skipped if there's a second revision
+    dsas.reverse()
 
-    if last_seen is not None:
-        for dsa in sorted(dsas, key=operator.attrgetter('number')):
-            if last_seen < dsa.number:
-                lines.append('\x02\x0304[DSA {dsa.number}] {dsa.package} - {dsa.link}'.format(dsa=dsa))
-                lines.append('\x0304' + summarize(dsa.description))
+    if last_seen_rev is not None:
+        if last_seen is not None:
+            for dsa in sorted(dsas, key=operator.attrgetter('number')):
+                if last_seen < dsa.number or (
+                    last_seen == dsa.number
+                    and last_seen_rev < dsa.revision
+                ):
+                    lines.append(
+                        (
+                            '\x02\x0304[DSA-{dsa.number}-{dsa.revision}] '
+                            '{dsa.package} - {dsa.link}'
+                        ).format(dsa=dsa),
+                    )
+                    lines.append('\x0304' + summarize(dsa.description))
+                    last_seen = dsa.number
+                    last_seen_rev = dsa.revision
+    else:
+        last_seen_rev = 1
 
     last_seen = max(dsa.number for dsa in dsas)
     return lines
