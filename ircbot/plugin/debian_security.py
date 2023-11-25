@@ -82,13 +82,16 @@ def get_new_dsas():
     if last_seen_rev is not None:
         if last_seen is not None:
             for dsa in sorted(dsas, key=operator.attrgetter('number')):
-                if last_seen < dsa.number or (last_seen == dsa.number
-                                              and last_seen_rev < dsa.revision):
+                if last_seen < dsa.number or (
+                    last_seen == dsa.number
+                    and last_seen_rev < dsa.revision
+                ):
                     lines.append(
                         (
                             '\x02\x0304[DSA-{dsa.number}-{dsa.revision}] '
                             '{dsa.package} - {dsa.link}'
-                        ).format(dsa=dsa))
+                        ).format(dsa=dsa),
+                    )
                     lines.append('\x0304' + summarize(dsa.description))
                     last_seen = dsa.number
                     last_seen_rev = dsa.revision
