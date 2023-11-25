@@ -9,8 +9,8 @@ import requests
 
 
 DSA = namedtuple('DSA', ('number', 'revision', 'package', 'link', 'description', 'date'))
-last_seen = None
-last_seen_rev = None
+last_seen = 5500
+last_seen_rev = 1
 
 
 def dsa_list():
@@ -82,8 +82,12 @@ def get_new_dsas():
     if last_seen_rev is not None:
         if last_seen is not None:
             for dsa in sorted(dsas, key=operator.attrgetter('number')):
-                if last_seen < dsa.number or (last_seen == dsa.number and last_seen_rev < dsa.revision):
-                    lines.append('\x02\x0304[DSA-{dsa.number}-{dsa.revision}] {dsa.package} - {dsa.link}'.format(dsa=dsa))
+                if last_seen < dsa.number or (last_seen == dsa.number 
+                                    and last_seen_rev < dsa.revision):
+                    lines.append((
+                        '\x02\x0304[DSA-{dsa.number}-{dsa.revision}] '
+                        '{dsa.package} - {dsa.link}'
+                        ).format(dsa=dsa))
                     lines.append('\x0304' + summarize(dsa.description))
                     last_seen = dsa.number
                     last_seen_rev = dsa.revision
@@ -91,5 +95,4 @@ def get_new_dsas():
         last_seen_rev = 1
 
     last_seen = max(dsa.number for dsa in dsas)
-    print(last_seen, last_seen_rev)
     return lines
