@@ -28,7 +28,7 @@ jaraco.logging==3.1.0
 jaraco.stream==3.0.0
 jaraco.text==3.5.0
 Jinja2==2.11.3
-jwcrypto==0.8
+jwcrypto==1.5.1
 kombu==5.0.2
 ldap3==2.9
 markovify==0.9.0
