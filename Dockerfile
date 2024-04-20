@@ -16,7 +16,7 @@ RUN pip install virtualenv
 RUN install -d --owner=nobody /opt/ircbot /opt/ircbot/venv
 
 COPY requirements.txt /opt/ircbot/
-RUN virtualenv -ppython3.12 /opt/ircbot/venv \
+RUN virtualenv -ppython3.11 /opt/ircbot/venv \
     && /opt/ircbot/venv/bin/pip install \
         -r /opt/ircbot/requirements.txt
 

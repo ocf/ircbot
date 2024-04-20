@@ -34,7 +34,7 @@ ldap3==2.9
 markovify==0.9.0
 MarkupSafe==1.1.1
 more-itertools==8.7.0
-ocflib==2021.1.30.13.10
+ocflib==2023.9.2.12.51
 pexpect==4.8.0
 ply==3.11
 prompt-toolkit==3.0.16
