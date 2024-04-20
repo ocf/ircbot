@@ -1,4 +1,4 @@
-FROM docker.ocf.berkeley.edu/theocf/debian:bullseye-py
+FROM docker.io/python:3.12-slim
 
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
@@ -16,7 +16,7 @@ RUN pip install virtualenv
 RUN install -d --owner=nobody /opt/ircbot /opt/ircbot/venv
 
 COPY requirements.txt /opt/ircbot/
-RUN virtualenv -ppython3.7 /opt/ircbot/venv \
+RUN virtualenv -ppython3.12 /opt/ircbot/venv \
     && /opt/ircbot/venv/bin/pip install \
         -r /opt/ircbot/requirements.txt
 

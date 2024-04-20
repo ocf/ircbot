@@ -50,7 +50,7 @@ pysmi==0.3.4
 pysnmp==4.4.12
 python-dateutil==2.8.1
 pytz==2021.1
-PyYAML==5.4.1
+PyYAML==6.0.1
 redis==3.5.3
 requests==2.24.0
 six==1.15.0
