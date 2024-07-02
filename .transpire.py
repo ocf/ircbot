@@ -1,41 +1,46 @@
 from pathlib import Path
 
-from transpire.resources import Deployment, Ingress, Secret, Service
+from transpire.resources import Deployment
+from transpire.resources import Ingress
+from transpire.resources import Secret
+from transpire.resources import Service
 from transpire.types import Image
-from transpire.utils import get_image_tag, get_revision
+from transpire.utils import get_image_tag
+from transpire.utils import get_revision
 
-name = "ircbot"
+name = 'ircbot'
 auto_sync = True
 
+
 def dep_patches(dep):
-    dep.obj.spec.template.spec.dns_policy = "ClusterFirst"
-    dep.obj.spec.template.spec.dns_config = {"searches": ["ocf.berkeley.edu"]}
+    dep.obj.spec.template.spec.dns_policy = 'ClusterFirst'
+    dep.obj.spec.template.spec.dns_config = {'searches': ['ocf.berkeley.edu']}
 
     dep.obj.spec.template.spec.volumes = [
-        {"name": "config", "secret": {"secretName": "ircbot"}},
+        {'name': 'config', 'secret': {'secretName': 'ircbot'}},
     ]
 
     dep.obj.spec.template.spec.containers[0].volume_mounts = [
-        {"name": "config", "mountPath": "/etc/ocf-ircbot"},
+        {'name': 'config', 'mountPath': '/etc/ocf-ircbot'},
     ]
 
 
 def images():
-    yield Image(name="ircbot", path=Path("/"))
+    yield Image(name='ircbot', path=Path('/'))
 
 
 def objects():
     secret = Secret(
-        name="ircbot",
+        name='ircbot',
         string_data={
-            "ocf-ircbot.conf": "",
+            'ocf-ircbot.conf': '',
         },
     )
     yield secret.build()
 
     dep_bot = Deployment(
         name=name,
-        image=get_image_tag("ircbot"),
+        image=get_image_tag('ircbot'),
         ports=[8888],
     )
     # TODO: Switch this to .patch() API.
@@ -52,7 +57,7 @@ def objects():
 
     ing_bot = Ingress.from_svc(
         svc=svc_bot,
-        host="ircbot.ocf.berkeley.edu",
-        path_prefix="/",
+        host='ircbot.ocf.berkeley.edu',
+        path_prefix='/',
     )
     yield ing_bot.build()
