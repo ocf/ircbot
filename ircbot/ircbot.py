@@ -184,7 +184,7 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         )
 
     def on_welcome(self, conn, _):
-        conn.privmsg('NickServ', f'identify {self.nickserv_password}')
+        conn.privmsg('NickServ', f'identify {IRC_NICKNAME} {self.nickserv_password}')
 
         # Join the "main" IRC channels.
         for channel in IRC_CHANNELS_OPER | IRC_CHANNELS_ANNOUNCE | self.extra_channels:
