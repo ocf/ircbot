@@ -112,7 +112,6 @@ class CreateBot(irc.bot.SingleServerIRCBot):
             googlesearch_key,
             googlesearch_cx,
             kanboard_apikey,
-            twitter_apikeys,
     ):
         self.recent_messages: DefaultDict[str, Any] = collections.defaultdict(
             functools.partial(collections.deque, maxlen=NUM_RECENT_MESSAGES),
@@ -127,7 +126,6 @@ class CreateBot(irc.bot.SingleServerIRCBot):
         self.googlesearch_key = googlesearch_key
         self.googlesearch_cx = googlesearch_cx
         self.kanboard_apikey = kanboard_apikey
-        self.twitter_apikeys = twitter_apikeys
         self.listeners: Set[Listener] = set()
         self.plugins: Dict[str, ModuleType] = {}
         self.extra_channels: Set[str] = set()  # plugins can add stuff here
@@ -432,15 +430,11 @@ def main():
     googlesearch_key = conf.get('googlesearch', 'key')
     googlesearch_cx = conf.get('googlesearch', 'cx')
     kanboard_apikey = conf.get('kanboard', 'apikey')
-    twitter_apikeys = (
-        conf.get('twitter', 'apikey'),
-        conf.get('twitter', 'apisecret'),
-    )
 
     bot = CreateBot(
         celery_conf, nickserv_password, rt_password,
         weather_apikey, mysql_password, googlesearch_key, googlesearch_cx,
-        kanboard_apikey, twitter_apikeys,
+        kanboard_apikey,
     )
 
     # Start the bot!
